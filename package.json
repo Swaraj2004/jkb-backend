@@ -12,11 +12,10 @@
   },
   "license": "ISC",
   "author": "",
-  "type": "module",
   "scripts": {
     "start": "node dist/server.js",
     "build": "tsc",
-    "dev": "nodemon --ext ts --exec ts-node src/server.ts",
+    "dev": "nodemon --exec ts-node src/server.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
