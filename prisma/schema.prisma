@@ -13,6 +13,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Role {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  userRoles UserRole[]
+}
+
 model User {
   id         String   @id @default(uuid()) @db.Uuid
   full_name  String?
@@ -20,6 +29,250 @@ model User {
   phone      String?
   password   String
   location   String?
-  created_at DateTime @default(now()) @map("created_at")
-  updated_at DateTime @updatedAt @map("updated_at")
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  // One-to-one (optional) relationship with StudentDetail
+  studentDetail StudentDetail?
+
+  // Many-to-Many relation with UserRole
+  userRoles UserRole[]
+
+  // Payments created by the user (using the "PaymentCreatedBy" relation)
+  paymentsCreated Payment[] @relation("PaymentCreatedBy")
+
+  SubjectProfessor SubjectProfessor[]
+  Test             Test[]
+  TestSubmission   TestSubmission[]
+
+  Lecture Lecture[]
+}
+
+model UserRole {
+  id      String @id @default(uuid()) @db.Uuid
+  user_id String @db.Uuid
+  role_id String @db.Uuid
+
+  user User @relation(fields: [user_id], references: [id])
+  role Role @relation(fields: [role_id], references: [id])
+}
+
+model Branch {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  studentDetails StudentDetail[]
+}
+
+model Subject {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  lectures              Lecture[]
+  subjectProfessors     SubjectProfessor[]
+  coursePackageSubjects CoursePackageSubject[]
+  studentSubjects       StudentSubject[]
+  tests                 Test[]
+}
+
+model CoursePackage {
+  id           String   @id @default(uuid()) @db.Uuid
+  package_name String
+  package_fees Decimal?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @default(now()) @updatedAt
+
+  coursePackageSubjects CoursePackageSubject[]
+  studentCoursePackages StudentCoursePackage[]
+}
+
+// package fees can be null ask Swaraj Bhaiya
+
+model StudentDetail {
+  id              String   @id @default(uuid()) @db.Uuid
+  user_id         String   @unique @db.Uuid
+  parent_contact  String?
+  branch_id       String?  @db.Uuid
+  diploma_score   Float?
+  xii_score       Float?
+  cet_score       Float?
+  jee_score       Float?
+  college_name    String?
+  referred_by     String?
+  total_fees      Decimal?
+  pending_fees    Decimal?
+  university_name String?
+  status          String?
+  remark          String?
+  enrolled        Boolean  @default(false)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @default(now()) @updatedAt
+
+  user                  User                   @relation(fields: [user_id], references: [id])
+  branch                Branch?                @relation(fields: [branch_id], references: [id])
+  payments              Payment[]
+  studentSubjects       StudentSubject[]
+  studentCoursePackages StudentCoursePackage[]
+  attendance            Attendance[]
+}
+
+model Payment {
+  id             String   @id @default(uuid()) @db.Uuid
+  receipt_number String?  @unique
+  amount         Decimal?
+  mode           String?
+  status         String?
+  student_id     String   @db.Uuid
+  remark         String?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @default(now()) @updatedAt
+  created_by     String?  @db.Uuid
+
+  student   StudentDetail @relation(fields: [student_id], references: [id])
+  createdBy User?         @relation("PaymentCreatedBy", fields: [created_by], references: [id])
+}
+
+model Lecture {
+  id                String   @id @default(uuid()) @db.Uuid
+  subject_id        String   @db.Uuid
+  professor_id      String   @db.Uuid
+  lecture_mode      String
+  remark            String?
+  attendance_toggle Boolean  @default(true)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @default(now()) @updatedAt
+  created_by        String?
+
+  subject    Subject      @relation(fields: [subject_id], references: [id])
+  professor  User         @relation(fields: [professor_id], references: [id])
+  attendance Attendance[]
+}
+
+model Attendance {
+  id         String   @id @default(uuid()) @db.Uuid
+  lecture_id String   @db.Uuid
+  student_id String   @db.Uuid
+  created_at DateTime @default(now())
+
+  lecture Lecture       @relation(fields: [lecture_id], references: [id])
+  student StudentDetail @relation(fields: [student_id], references: [id])
+}
+
+model SubjectProfessor {
+  subject_id   String   @db.Uuid
+  professor_id String   @db.Uuid
+  created_at   DateTime @default(now())
+
+  subject   Subject @relation(fields: [subject_id], references: [id])
+  professor User    @relation(fields: [professor_id], references: [id])
+
+  @@id([subject_id, professor_id]) // composite key
+}
+
+model CoursePackageSubject {
+  package_id String   @db.Uuid
+  subject_id String   @db.Uuid
+  created_at DateTime @default(now())
+
+  coursePackage CoursePackage @relation(fields: [package_id], references: [id])
+  subject       Subject       @relation(fields: [subject_id], references: [id])
+
+  @@id([package_id, subject_id])
+}
+
+model StudentSubject {
+  student_id String   @db.Uuid
+  subject_id String   @db.Uuid
+  created_at DateTime @default(now())
+
+  student StudentDetail @relation(fields: [student_id], references: [id])
+  subject Subject       @relation(fields: [subject_id], references: [id])
+
+  @@id([student_id, subject_id])
+}
+
+model StudentCoursePackage {
+  student_id String   @db.Uuid
+  package_id String   @db.Uuid
+  created_at DateTime @default(now())
+
+  student       StudentDetail @relation(fields: [student_id], references: [id])
+  coursePackage CoursePackage @relation(fields: [package_id], references: [id])
+
+  @@id([student_id, package_id])
+}
+
+model Test {
+  id             String    @id @default(uuid()) @db.Uuid
+  professor_id   String    @db.Uuid
+  subject_id     String    @db.Uuid
+  title          String
+  test_toggle    Boolean   @default(false)
+  conducted      Boolean   @default(false)
+  test_timestamp DateTime?
+  total_marks    Int?
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @default(now()) @updatedAt
+
+  professor       User             @relation(fields: [professor_id], references: [id])
+  subject         Subject          @relation(fields: [subject_id], references: [id])
+  testQuestions   TestQuestion[]
+  testSubmissions TestSubmission[]
+}
+
+model TestQuestion {
+  id                String   @id @default(uuid()) @db.Uuid
+  test_id           String   @db.Uuid
+  question_text     String
+  correct_option_id String   @unique @db.Uuid
+  marks             Int
+  created_at        DateTime @default(now())
+
+  test    Test             @relation(fields: [test_id], references: [id])
+  options QuestionOption[] @relation("QuestionOptions")
+
+  correct_option       QuestionOption         @relation("CorrectOption", fields: [correct_option_id], references: [id])
+  TestSubmissionAnswer TestSubmissionAnswer[]
+}
+
+model QuestionOption {
+  id          String   @id @default(uuid()) @db.Uuid
+  question_id String   @db.Uuid
+  option_text String
+  is_correct  Boolean?
+  created_at  DateTime @default(now())
+
+  // The question this option belongs to.
+  question TestQuestion @relation("QuestionOptions", fields: [question_id], references: [id])
+
+  testQuestionAsCorrect TestQuestion?          @relation("CorrectOption")
+  TestSubmissionAnswer  TestSubmissionAnswer[]
+}
+
+model TestSubmission {
+  id         String   @id @default(uuid()) @db.Uuid
+  test_id    String   @db.Uuid
+  user_id    String   @db.Uuid
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  test    Test                   @relation(fields: [test_id], references: [id])
+  user    User                   @relation(fields: [user_id], references: [id])
+  answers TestSubmissionAnswer[]
+}
+
+model TestSubmissionAnswer {
+  id                 String   @id @default(uuid()) @db.Uuid
+  test_submission_id String   @db.Uuid
+  question_id        String   @db.Uuid
+  selected_option_id String   @db.Uuid
+  created_at         DateTime @default(now())
+
+  testSubmission  TestSubmission @relation(fields: [test_submission_id], references: [id])
+  question        TestQuestion   @relation(fields: [question_id], references: [id])
+  selected_option QuestionOption @relation(fields: [selected_option_id], references: [id])
 }
