@@ -4,8 +4,6 @@ import express from 'express';
 // import { Role, UpdateRole } from '../schemas/roleSchemas'; // Adjust the import based on your project structure
 
 const router = express.Router();
-const ROLE_COLLECTION_NAME = 'roles'; // Define your role collection name
-const USER_COLLECTION_NAME = 'users'; // Define your user collection name
 
 /**
  * @swagger

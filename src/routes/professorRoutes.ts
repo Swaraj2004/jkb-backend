@@ -3,8 +3,6 @@ import express from 'express';
 // import adminController from '../controllers/adminController'; // Adjust the import based on your project structure
 
 const router = express.Router();
-const USER_COLLECTION_NAME = 'users'; // Define your user collection name
-const ROLE_COLLECTION_NAME = 'roles'; // Define your role collection name
 
 /**
  * @swagger
