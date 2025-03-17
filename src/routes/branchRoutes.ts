@@ -5,7 +5,6 @@ import express from 'express';
 // import { Branch, UpdateBranch } from '../schemas/branchSchemas'; // Adjust the import based on your project structure
 
 const router = express.Router();
-const BRANCH_COLLECTION_NAME = 'branches'; // Define your collection name
 /**
  * @swagger
  * tags:

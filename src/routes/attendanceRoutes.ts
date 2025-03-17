@@ -4,12 +4,6 @@ import express from 'express';
 // import { MarkAttendance, LectureUpdateToggle } from '../schemas/attendanceSchemas'; // Adjust the import based on your project structure
 
 const router = express.Router();
-const LECTURE_COLLECTION_NAME = 'lectures'; // Define your lecture collection name
-const ATTENDANCE_COLLECTION_NAME = 'attendance'; // Define your attendance collection name
-const STUDENT_DETAIL_COLLECTION_NAME = 'studentDetails'; // Define your student detail collection name
-const COURSEPACKAGE_COLLECTION_NAME = 'coursePackages'; // Define your course package collection name
-const USER_COLLECTION_NAME = 'users'; // Define your user collection name
-const AUTH_ROLES = ['admin', 'super-admin']; // Define your authorization roles
 
 /**
  * @swagger

@@ -4,10 +4,6 @@ import express from 'express';
 // import { StudentDetail, UpdateStudentDetail } from '../schemas/studentSchemas'; // Adjust the import based on your project structure
 
 const router = express.Router();
-const STUDENT_DETAIL_COLLECTION_NAME = 'studentDetails'; // Define your student detail collection name
-const SUBJECT_COLLECTION_NAME = 'subjects'; // Define your subject collection name
-const COURSEPACKAGE_COLLECTION_NAME = 'coursePackages'; // Define your course package collection name
-const AUTH_ROLES = ['admin', 'super-admin']; // Define your authorization roles
 
 /**
  * @swagger

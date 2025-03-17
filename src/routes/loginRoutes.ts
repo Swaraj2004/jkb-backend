@@ -1,7 +1,6 @@
-import express from 'express';
-// import { checkRole } from '../middlewares/authMiddleware'; // Adjust the import based on your project structure
-// import authController from '../controllers/authController'; // Adjust the import based on your project structure
-// import { LoginTemplate, PasswordResetTemplate } from '../schemas/authSchemas'; // Adjust the import based on your project structure
+import express, { Request, Response } from 'express';
+import { login_user } from '../controllers/authController'; // Adjust the import based on your project structure
+import { prismaClient } from '../utils/database';
 
 const router = express.Router();
 
@@ -28,10 +27,15 @@ const router = express.Router();
  *       200:
  *         description: User logged in successfully
  */
-router.post('/login-user', async (req, res) => {
-    // const request: LoginTemplate = req.body; // Get login data from the request body
-    // const response = await authController.login_user(dbInstance, request); // Call the login function
-    // res.status(200).json(response);
+
+// function is incomplete and not tested
+router.post('/login-user', async (req: Request, res: Response) => {
+    try {
+        const response = await login_user(prismaClient, req);
+        res.status(200).json(response);
+    } catch {
+        res.sendStatus(500);
+    }
 });
 
 /**

@@ -6,13 +6,11 @@ import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger/swaggerConfig";
 import userRoutes from "./routes/userRoutes";
 import productRoutes from "./routes/productRoutes";
-import { PrismaClient } from "@prisma/client";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 8000;
-// const prisma = new PrismaClient();
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
@@ -23,8 +21,6 @@ app.listen(PORT, () => {
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
-
-// const prisma = new PrismaClient();
 
 // API Routes
 app.get("/", (req: Request, res: Response) => {

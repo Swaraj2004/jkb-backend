@@ -4,8 +4,6 @@ import express from 'express';
 // import { Payment, UpdatePayment } from '../schemas/paymentSchemas'; // Adjust the import based on your project structure
 
 const router = express.Router();
-const PAYMENT_COLLECTION_NAME = 'payments'; // Define your collection name
-const STUDENT_DETAIL_COLLECTION_NAME = 'studentDetails'; // Define your student detail collection name
 
 /**
  * @swagger
