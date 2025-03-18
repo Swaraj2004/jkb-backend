@@ -1,7 +1,10 @@
 export const TZ_INDIA = "Asia/Kolkata";
 export const ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24;
-
+export const SECRET_KEY = process.env.SECRET_KEY || "secret_key";
 export const ALGORITHM = process.env.ALGORITHM;
+export const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
+
+export const SALT = 10;         // , here 10 is the round of salt that will be added to hash
 
 // const BRANCH_COLLECTION_NAME = 'branches'; // Define your collection name
 // const COURSEPACKAGE_COLLECTION_NAME = 'coursePackages'; // Define your collection name
