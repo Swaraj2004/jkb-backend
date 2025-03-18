@@ -1,4 +1,5 @@
-import express from 'express';
+import express, { Response, Request } from 'express';
+import { createUser, deleteUser, getUsers } from '../controllers/userController';
 // import { checkRole } from '../middlewares/authMiddleware'; // Adjust the import based on your project structure
 // import authController from '../controllers/authController'; // Adjust the import based on your project structure
 // import { User, UpdateUser } from '../schemas/userSchemas'; // Adjust the import based on your project structure
@@ -30,17 +31,10 @@ const router = express.Router();
  *       200:
  *         description: A single user object
  */
+
+// routes are not yet protected as per the roles
 router.get('/users/:user_id', async (req, res) => {
-    // const userId = req.params.user_id; // Get user ID from the path parameters
-    // const readRecordId = convertToBsonId(userId); // Convert the user ID to BSON format
-    // const user = await authController.get_records(
-    //     dbInstance,
-    //     readRecordId,
-    //     USER_COLLECTION_NAME,
-    //     { password: 0, "user_student_details.student_id": 0 }, // Exclude password and student ID
-    //     [role_aggregate, user_detail_aggregate]
-    // );
-    // res.status(200).json(user);
+    return getUsers(req, res, req.params.user_id);
 });
 
 /**
@@ -60,23 +54,10 @@ router.get('/users/:user_id', async (req, res) => {
  *       200:
  *         description: A list of user objects
  */
-router.get('/users', async (req, res) => {
-    // const { year } = req.query; // Get year from query parameters
-    // let extraFilter = null;
 
-    // if (year) {
-    //     extraFilter = { "$expr": { "$eq": [{ "$year": "$created_at" }, year] } }; // Filter by year
-    // }
-
-    // const users = await authController.get_records(
-    //     dbInstance,
-    //     null,
-    //     USER_COLLECTION_NAME,
-    //     { password: 0, "user_student_details.student_id": 0 }, // Exclude password and student ID
-    //     [role_aggregate, user_detail_aggregate],
-    //     extraFilter
-    // );
-    // res.status(200).json(users);
+// routes are not yet protected as per the roles
+router.get('/users', async (req: Request, res: Response) => {
+    return getUsers(req, res);
 });
 
 /**
@@ -95,31 +76,27 @@ router.get('/users', async (req, res) => {
  *       201:
  *         description: The created user object
  */
-router.post('/users', async (req, res) => {
-    // const createRecord: User = req.body; // Get user data from the request body
-    // const hashInstance = new Hash(); // Create a new Hash instance
-    // createRecord.set_values(); // Set values for the user record
 
-    // const role = await dbInstance[ROLE_COLLECTION_NAME].findOne({ _id: convertToBsonId(createRecord.role_id) }); // Find role by ID
-    // const roleName = role ? role.name : null; // Get role name
+// model UserRole {
+//     id      String @id @default(uuid()) @db.Uuid
+//     user_id String @db.Uuid
+//     role_id String @db.Uuid
 
-    // const valuesToPass = {
-    //     role_name: roleName,
-    //     username: createRecord.username,
-    //     password: createRecord.password,
-    // };
+//     user User @relation(fields: [user_id], references: [id])
+//     role Role @relation(fields: [role_id], references: [id])
+//   }
+//   model Role {
+//     id         String   @id @default(uuid()) @db.Uuid
+//     name       String   @unique
+//     created_at DateTime @default(now())
+//     updated_at DateTime @default(now()) @updatedAt
 
-    // createRecord.password = hashInstance.encrypt_password(createRecord.password); // Hash the password
+//     userRoles UserRole[]
+//   }
 
-    // const newUser = await authController.post_record(
-    //     dbInstance,
-    //     null,
-    //     createRecord,
-    //     USER_COLLECTION_NAME,
-    //     ["role_id"],
-    //     valuesToPass
-    // );
-    // res.status(201).json(newUser);
+// routes are not yet protected as per the roles
+router.post('/users', async (req: Request, res: Response) => {
+    return createUser(req, res);
 });
 
 /**
@@ -139,15 +116,10 @@ router.post('/users', async (req, res) => {
  *       200:
  *         description: User deleted successfully
  */
+
+// routes are not yet protected as per the roles
 router.delete('/users/:user_id', async (req, res) => {
-    // const userId = req.params.user_id; // Get user ID from the path parameters
-    // await authController.delete_record(
-    //     dbInstance,
-    //     req.user,
-    //     userId,
-    //     USER_COLLECTION_NAME
-    // );
-    // res.status(200).send();
+    return deleteUser(req, res);
 });
 
 /**

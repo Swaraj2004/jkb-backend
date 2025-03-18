@@ -1,8 +1,6 @@
 import jwt from "jsonwebtoken";
-import { ALGORITHM } from "./consts";
+import { ALGORITHM, SECRET_KEY } from "./consts";
 import { TokenPayload } from "./jwt_payload";
-
-const SECRET_KEY = process.env.SECRET_KEY || "secret_key";
 
 /**
  * Generates an access token with expiration.
@@ -10,10 +8,7 @@ const SECRET_KEY = process.env.SECRET_KEY || "secret_key";
  * @param expiresIn - Expiry time (default: 30 minutes).
  * @returns JWT token as a string.
  */
-export const createAccessToken = (
-  data: TokenPayload,
-  expiresIn: string | number = "30m"
-): string => {
+export const createAccessToken = (data: TokenPayload, expiresIn: string | number = "30m"): string => {
   return jwt.sign(data, SECRET_KEY, {
     algorithm: ALGORITHM as jwt.Algorithm,
     expiresIn: expiresIn as any,
