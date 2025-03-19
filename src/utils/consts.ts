@@ -13,6 +13,6 @@ export const SALT = 10;         // , here 10 is the round of salt that will be a
 // const PAYMENT_COLLECTION_NAME = 'payments'; // Define your collection name
 // const ROLE_COLLECTION_NAME = 'roles'; // Define your role collection name
 // const SUBJECT_COLLECTION_NAME = 'subjects'; // Define your subject collection name
-// const AUTH_ROLES = ['admin', 'super-admin']; // Define your authorization roles
+export const AUTH_ROLES = ['admin', 'super-admin']; // Define your authorization roles
 // const LECTURE_COLLECTION_NAME = 'lectures'; // Define your lecture collection name
 // const ATTENDANCE_COLLECTION_NAME = 'attendance'; // Define your attendance collection name

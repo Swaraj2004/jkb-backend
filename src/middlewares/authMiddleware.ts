@@ -3,7 +3,7 @@ import { verifyToken } from "../utils/jwt_token";
 import { TokenPayload } from "../utils/jwt_payload";
 import { errorJson } from "../utils/common_funcs";
 
-interface AuthenticatedRequest extends Request{
+export interface AuthenticatedRequest extends Request{
     user? : TokenPayload;
 }
 
@@ -11,7 +11,8 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
     const authHeader = req.header("Authorization");
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json(errorJson("AuthHeader absent or Invalid Format", null));
+        res.status(401).json(errorJson("AuthHeader absent or Invalid Format", null));
+        return;
     }
 
     // at this point we have the proper token
@@ -22,6 +23,6 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
         req.user = user;
         next();
     } catch (error) {
-        return res.status(403).json(errorJson("Forbidden: Invalid or expired token", null));
+        res.status(403).json(errorJson("Forbidden: Invalid or expired token", error));
     }
 };

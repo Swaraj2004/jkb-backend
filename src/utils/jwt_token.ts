@@ -4,7 +4,7 @@ import { TokenPayload } from "./jwt_payload";
 
 /**
  * Generates an access token with expiration.
- * @param data - Payload data (e.g., { username: "aum" }).
+ * @param data - TokenPayload data.
  * @param expiresIn - Expiry time (default: 30 minutes).
  * @returns JWT token as a string.
  */

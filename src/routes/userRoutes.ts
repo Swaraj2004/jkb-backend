@@ -1,5 +1,8 @@
 import express, { Response, Request } from 'express';
 import { createUser, deleteUser, getUsers, updateUser } from '../controllers/userController';
+import { AuthenticatedRequest, authMiddleware } from '../middlewares/authMiddleware';
+import { AUTH_ROLES } from '../utils/consts';
+import { errorJson } from '../utils/common_funcs';
 // import { checkRole } from '../middlewares/authMiddleware'; // Adjust the import based on your project structure
 // import authController from '../controllers/authController'; // Adjust the import based on your project structure
 // import { User, UpdateUser } from '../schemas/userSchemas'; // Adjust the import based on your project structure
@@ -55,9 +58,11 @@ router.get('/:user_id', async (req, res) => {
  *         description: A list of user objects
  */
 
-// routes are not yet protected as per the roles
-router.get('/', async (req: Request, res: Response) => {
-    return getUsers(req, res);
+router.get('/', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+    if(req.user && AUTH_ROLES.includes(req.user.role_name)){
+        return getUsers(req, res);
+    }
+    res.status(401).json(errorJson("Unauthorised", null));
 });
 
 /**
