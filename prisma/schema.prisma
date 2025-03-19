@@ -15,18 +15,18 @@ datasource db {
 
 model Role {
   id         String   @id @default(uuid()) @db.Uuid
-  name       Roles    @unique @default(STUDENT)
+  name       Roles    @unique @default(student)
   created_at DateTime @default(now())
   updated_at DateTime @default(now()) @updatedAt
 
-  userRoles UserRole[]
+  userRoles UserRoles[]
 }
 
 enum Roles {
-  STUDENT
-  PROFESSOR
-  ADMIN
-  SUPER_ADMIN
+  student
+  professor
+  admin
+  super_admin
 }
 
 model User {
@@ -43,7 +43,7 @@ model User {
   studentDetail StudentDetail?
 
   // Many-to-Many relation with UserRole
-  userRoles UserRole[]
+  userRoles UserRoles[]
 
   // Payments created by the user (using the "PaymentCreatedBy" relation)
   paymentsCreated Payment[] @relation("PaymentCreatedBy")
@@ -55,7 +55,7 @@ model User {
   Lecture Lecture[]
 }
 
-model UserRole {
+model UserRoles {
   id      String @id @default(uuid()) @db.Uuid
   user_id String @db.Uuid
   role_id String @db.Uuid
@@ -89,15 +89,13 @@ model Subject {
 model CoursePackage {
   id           String   @id @default(uuid()) @db.Uuid
   package_name String
-  package_fees Decimal?
+  package_fees Decimal
   created_at   DateTime @default(now())
   updated_at   DateTime @default(now()) @updatedAt
 
   coursePackageSubjects CoursePackageSubject[]
   studentCoursePackages StudentCoursePackage[]
 }
-
-// package fees can be null ask Swaraj Bhaiya
 
 model StudentDetail {
   id              String   @id @default(uuid()) @db.Uuid
