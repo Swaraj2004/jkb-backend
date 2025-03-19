@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
-import { login_user } from '../controllers/authController'; // Adjust the import based on your project structure
 import { prismaClient } from '../utils/database';
+import { login } from '../controllers/loginController';
 
 const router = express.Router();
 
@@ -30,12 +30,7 @@ const router = express.Router();
 
 // function is incomplete and not tested
 router.post('/login-user', async (req: Request, res: Response) => {
-    try {
-        const response = await login_user(prismaClient, req);
-        res.status(200).json(response);
-    } catch {
-        res.sendStatus(500);
-    }
+    return login(req, res);
 });
 
 /**

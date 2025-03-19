@@ -5,6 +5,7 @@ import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger/swaggerConfig";
 import userRoutes from "./routes/userRoutes";
+import loginRoutes from "./routes/loginRoutes";
 import productRoutes from "./routes/productRoutes";
 
 dotenv.config();
@@ -27,6 +28,7 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Server is running");
 });
 app.use("/api/users", userRoutes);
+app.use("/", loginRoutes);
 app.use("/api/products", productRoutes);
 
 // Swagger UI
