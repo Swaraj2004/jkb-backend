@@ -1,5 +1,5 @@
 import express, { Response, Request } from 'express';
-import { createUser, deleteUser, getUsers } from '../controllers/userController';
+import { createUser, deleteUser, getUsers, updateUser } from '../controllers/userController';
 // import { checkRole } from '../middlewares/authMiddleware'; // Adjust the import based on your project structure
 // import authController from '../controllers/authController'; // Adjust the import based on your project structure
 // import { User, UpdateUser } from '../schemas/userSchemas'; // Adjust the import based on your project structure
@@ -33,7 +33,7 @@ const router = express.Router();
  */
 
 // routes are not yet protected as per the roles
-router.get('/users/:user_id', async (req, res) => {
+router.get('/:user_id', async (req, res) => {
     return getUsers(req, res, req.params.user_id);
 });
 
@@ -56,7 +56,7 @@ router.get('/users/:user_id', async (req, res) => {
  */
 
 // routes are not yet protected as per the roles
-router.get('/users', async (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response) => {
     return getUsers(req, res);
 });
 
@@ -95,7 +95,7 @@ router.get('/users', async (req: Request, res: Response) => {
 //   }
 
 // routes are not yet protected as per the roles
-router.post('/users', async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
     return createUser(req, res);
 });
 
@@ -118,7 +118,7 @@ router.post('/users', async (req: Request, res: Response) => {
  */
 
 // routes are not yet protected as per the roles
-router.delete('/users/:user_id', async (req, res) => {
+router.delete('/:user_id', async (req, res) => {
     return deleteUser(req, res);
 });
 
@@ -138,22 +138,8 @@ router.delete('/users/:user_id', async (req, res) => {
  *       202:
  *         description: The updated user object
  */
-router.put('/users', async (req, res) => {
-    // const updatedRecord: UpdateUser = req.body; // Get updated user data from the request body
-
-    // if (updatedRecord.password) {
-    //     const hashInstance = new Hash(); // Create a new Hash instance
-    //     updatedRecord.password = hashInstance.encrypt_password(updatedRecord.password); // Hash the new password
-    // }
-
-    // const updatedUser = await authController.update_record(
-    //     dbInstance,
-    //     req.user,
-    //     updatedRecord,
-    //     USER_COLLECTION_NAME,
-    //     ["role_id"]
-    // );
-    // res.status(202).json(updatedUser);
+router.put('/', async (req, res) => {
+    return updateUser(req, res);
 });
 
 export default router;
