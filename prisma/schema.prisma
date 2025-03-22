@@ -205,7 +205,7 @@ model StudentCoursePackage {
   package_id String   @db.Uuid
   created_at DateTime @default(now())
 
-  student       StudentDetail @relation(fields: [student_id], references: [id])
+  student       StudentDetail @relation(fields: [student_id], references: [user_id])
   coursePackage CoursePackage @relation(fields: [package_id], references: [id])
 
   @@id([student_id, package_id])
