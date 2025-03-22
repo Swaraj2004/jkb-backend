@@ -35,13 +35,8 @@ export function authorizeRoles(allowedRoles: string[] = []) {
             return;
         }
 
-        // Full authority users get access to everything
-        if (AUTH_ROLES.includes(req.user.role_name)) {
-            return next();
-        }
-
-        // If allowedRoles is empty, any authenticated user can access
-        if (allowedRoles.length === 0 || allowedRoles.includes(req.user.role_name)) {
+        // Full authority users(AUTH_ROLES) get access to everything
+        if (AUTH_ROLES.includes(req.user.role_name) || allowedRoles.includes(req.user.role_name)) {
             return next();
         }
 

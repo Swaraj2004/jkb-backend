@@ -1,8 +1,6 @@
-import express from 'express';
-// import { checkRole } from '../middlewares/authMiddleware'; // Adjust the import based on your project structure
-// import { checkRole } from '../middlewares/authMiddleware'; // Adjust the import based on your project structure
-// import branchController from '../controllers/branchController'; // Updated import for branchController
-// import { Branch, UpdateBranch } from '../schemas/branchSchemas'; // Adjust the import based on your project structure
+import express, { Request, Response } from 'express';
+import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
+import { createBranch, deleteBranch, editBranch, getAllBranches, getBranchById } from '../controllers/branchController';
 
 const router = express.Router();
 /**
@@ -30,12 +28,8 @@ const router = express.Router();
  *         description: A single branch object
  */
 // Get a specific branch by ID
-router.get('/branches/:branch_id', async (req, res) => {
-  // const branchId = req.params.branch_id;
-  // const readRecordId = convertToBsonId(branchId); // Implement this function as needed
-  // const branch = await branchController.getRecords(dbInstance, readRecordId, BRANCH_COLLECTION_NAME);
-  // res.status(200).json(branch);
-  res.status(200).json();
+router.get('/:branch_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+  return getBranchById(req, res);
 });
 
 /**
@@ -49,10 +43,8 @@ router.get('/branches/:branch_id', async (req, res) => {
  *         description: A list of branch objects
  */
 // Get all branches
-router.get('/branches', async (req, res) => {
-  // const branches = await branchController.getRecords(dbInstance, null, BRANCH_COLLECTION_NAME);
-  // res.status(200).json(branches);
-  res.status(200).json();
+router.get('/', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+  return getAllBranches(req, res);
 });
 
 /**
@@ -72,11 +64,8 @@ router.get('/branches', async (req, res) => {
  *         description: The created branch object
  */
 // Create a new branch
-router.post('/branches', async (req, res) => {
-  // const createRecord: Branch = req.body; // Ensure to validate the body
-  // const newBranch = await branchController.postRecord(dbInstance, req.user, createRecord, BRANCH_COLLECTION_NAME);
-  // res.status(201).json(newBranch);
-  res.status(201).json();
+router.post('/',authMiddleware, authorizeRoles(),async (req: Request, res: Response) => {
+  return createBranch(req, res);
 });
 
 /**
@@ -97,12 +86,9 @@ router.post('/branches', async (req, res) => {
  *         description: Branch deleted successfully
  */
 // Delete a branch by ID
-router.delete('/branches/:branch_id', async (req, res) => {
-  // const branchId = req.params.branch_id;
-  // await branchController.deleteRecord(dbInstance, branchId, BRANCH_COLLECTION_NAME);
-  res.status(204).send();
+router.delete('/:branch_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+  return deleteBranch(req, res);
 });
-
 /**
  * @swagger
  * /branches:
@@ -120,11 +106,8 @@ router.delete('/branches/:branch_id', async (req, res) => {
  *         description: The updated branch object
  */
 // Update a branch
-router.put('/branches', async (req, res) => {
-  // const updatedRecord: UpdateBranch = req.body; // Ensure to validate the body
-  // const updatedBranch = await branchController.updateRecord(dbInstance, req.user, updatedRecord, BRANCH_COLLECTION_NAME);
-  // res.status(202).json(updatedBranch);
-  res.status(202).json();
+router.put('/:branch_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+  return editBranch(req, res);
 });
 
 export default router;

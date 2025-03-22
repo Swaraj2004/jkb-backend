@@ -8,6 +8,7 @@ import userRoutes from "./routes/userRoutes";
 import loginRoutes from "./routes/loginRoutes";
 import productRoutes from "./routes/productRoutes";
 import studentDetailsRoutes from "./routes/studentDetailsRoutes";
+import branchRoutes from "./routes/branchRoutes";
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/api/users", userRoutes);
 app.use("/", loginRoutes);
 app.use("/student-details", studentDetailsRoutes);
+app.use("/branches", branchRoutes);
 app.use("/api/products", productRoutes);
 
 // Swagger UI
