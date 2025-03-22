@@ -12,3 +12,6 @@ export function errorJson(message: string, error: any) {
         error: error
     };
 }
+export function generateOTP(length : number = 4) : string{
+    return Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+}
