@@ -62,7 +62,7 @@ router.get('/:user_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_
  *         description: A list of user objects
  */
 
-router.get('/', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), async (req: AuthenticatedRequest, res: Response) => {
+router.get('/', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async (req: AuthenticatedRequest, res: Response) => {
     return getUsers(req, res);
 });
 

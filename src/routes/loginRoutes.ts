@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
-import { prismaClient } from '../utils/database';
 import { login } from '../controllers/loginController';
+import { resetPassword, sendOTPOverEmail, verifyOTP } from '../utils/send_email';
 
 const router = express.Router();
 
@@ -75,9 +75,7 @@ router.post('/login-status/:user_id', async (req, res) => {
  *         description: OTP sent successfully
  */
 router.post('/send-otp/:user_email', async (req, res) => {
-    // const userEmail = req.params.user_email; // Get user email from the path parameters
-    // const response = await authController.send_otp_over_email(dbInstance, userEmail); // Call the send OTP function
-    // res.status(200).json(response);
+    return sendOTPOverEmail(req, res, req.params.user_email);
 });
 
 /**
@@ -104,10 +102,9 @@ router.post('/send-otp/:user_email', async (req, res) => {
  *         description: OTP verified successfully
  */
 router.post('/verify-otp/:user_email/:otp_code', async (req, res) => {
-    // const userEmail = req.params.user_email; // Get user email from the path parameters
-    // const otpCode = req.params.otp_code; // Get OTP code from the path parameters
-    // const response = await authController.verify_otp(dbInstance, userEmail, otpCode); // Call the verify OTP function
-    // res.status(200).json(response);
+    const userEmail = req.params.user_email;
+    const otpCode = req.params.otp_code;
+    return verifyOTP(req, res, userEmail, parseInt(otpCode));
 });
 
 /**
@@ -127,9 +124,7 @@ router.post('/verify-otp/:user_email/:otp_code', async (req, res) => {
  *         description: Password reset successfully
  */
 router.post('/reset-password', async (req, res) => {
-    // const request: PasswordResetTemplate = req.body; // Get password reset data from the request body
-    // const response = await authController.reset_password(dbInstance, request); // Call the reset password function
-    // res.status(200).json(response);
+    return resetPassword(req, res);
 });
 
 export default router;

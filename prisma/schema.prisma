@@ -20,7 +20,7 @@ model Role {
   updated_at DateTime @default(now()) @updatedAt
 
   userRoles UserRoles[]
-}
+} 
 
 enum Roles {
   student
@@ -53,6 +53,7 @@ model User {
   TestSubmission   TestSubmission[]
 
   Lecture Lecture[]
+  OTP     OTP?
 }
 
 model UserRoles {
@@ -280,4 +281,14 @@ model TestSubmissionAnswer {
   testSubmission  TestSubmission @relation(fields: [test_submission_id], references: [id])
   question        TestQuestion   @relation(fields: [question_id], references: [id])
   selected_option QuestionOption @relation(fields: [selected_option_id], references: [id])
+}
+
+model OTP {
+  user_id    String   @id @db.Uuid
+  email      String   @unique
+  otp_code   String
+  expires_at DateTime
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
