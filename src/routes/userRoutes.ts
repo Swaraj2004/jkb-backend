@@ -101,7 +101,7 @@ router.get('/', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), 
 //   }
 
 // routes are not yet protected as per the roles
-router.post('/', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
     return createUser(req, res);
 });
 
