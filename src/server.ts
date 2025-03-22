@@ -9,6 +9,8 @@ import loginRoutes from "./routes/loginRoutes";
 import productRoutes from "./routes/productRoutes";
 import studentDetailsRoutes from "./routes/studentDetailsRoutes";
 import branchRoutes from "./routes/branchRoutes";
+import coursePackageRoutes from "./routes/coursePackageRoutes";
+import { authMiddleware, authorizeRoles } from "./middlewares/authMiddleware";
 
 dotenv.config();
 
@@ -29,11 +31,12 @@ app.use(cookieParser());
 app.get("/", (req: Request, res: Response) => {
   res.send("Server is running");
 });
-app.use("/api/users", userRoutes);
-app.use("/", loginRoutes);
-app.use("/student-details", studentDetailsRoutes);
-app.use("/branches", branchRoutes);
-app.use("/api/products", productRoutes);
+app.use("/api/v2/users", userRoutes);
+app.use("/api/v2/", loginRoutes);
+app.use("/api/v2/", authMiddleware, authorizeRoles(), coursePackageRoutes);  // only admin and super-admin access
+app.use("/api/v2/student-details", studentDetailsRoutes);
+app.use("/api/v2/branches", authMiddleware, authorizeRoles(), branchRoutes); // only admin and super-admin access
+app.use("/api/v2/api/products", productRoutes);
 
 // Swagger UI
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));

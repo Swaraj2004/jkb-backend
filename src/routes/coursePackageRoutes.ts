@@ -1,7 +1,5 @@
-import express from 'express';
-// import { checkRole } from '../middlewares/authMiddleware'; // Adjust the import based on your project structure
-// import coursePackageController from '../controllers/coursePackageController'; // Adjust the import based on your project structure
-// import { CoursePackage, UpdateCoursePackage } from '../schemas/coursePackageSchemas'; // Adjust the import based on your project structure
+import express,{Request, Response} from 'express';
+import { createCoursePackage, deleteCoursePackage, getAllCoursePackages, getCoursePackageById, getStudentPackages, getSubjectPackageUsers, updateCoursePackage } from '../controllers/coursePackageController';
 
 const router = express.Router();
 
@@ -29,15 +27,8 @@ const router = express.Router();
  *       200:
  *         description: A single course package object
  */
-router.get('/course-packages/:course_package_id', async (req, res) => {
-    // const coursePackageId = req.params.course_package_id;
-    // const readRecordId = convertToBsonId(coursePackageId); // Convert the course package ID to BSON format
-    // const coursePackage = await coursePackageController.getRecords(
-    //     dbInstance,
-    //     readRecordId,
-    //     COURSEPACKAGE_COLLECTION_NAME
-    // );
-    // res.status(200).json(coursePackage);
+router.get('/course-packages/:course_package_id', async (req:Request, res:Response) => {
+    return getCoursePackageById(req, res, req.params.course_package_id);
 });
 
 /**
@@ -50,13 +41,8 @@ router.get('/course-packages/:course_package_id', async (req, res) => {
  *       200:
  *         description: A list of course package objects
  */
-router.get('/course-packages', async (req, res) => {
-    // const coursePackages = await coursePackageController.getRecords(
-    //     dbInstance,
-    //     null,
-    //     COURSEPACKAGE_COLLECTION_NAME
-    // );
-    // res.status(200).json(coursePackages);
+router.get('/course-packages', async (req:Request, res:Response) => {
+    return getAllCoursePackages(req, res);
 });
 
 /**
@@ -82,32 +68,10 @@ router.get('/course-packages', async (req, res) => {
  *       200:
  *         description: A list of users enrolled in the subject package
  */
-router.get('/subject-package-users', async (req, res) => {
-    // const { subject_package_id, year } = req.query;
 
-    // if (!subject_package_id) {
-    //     return res.status(400).json({ success: false, message: "subject_package_id is required" });
-    // }
-
-    // const filter = { packages: subject_package_id };
-    // if (year) {
-    //     filter["$expr"] = { "$eq": [{ "$year": "$created_at" }, year] };
-    // }
-
-    // const aggregateFilter = [
-    //     { $match: filter },
-    //     student_aggregate,
-    //     { $project: { "student.password": 0 } },
-    // ];
-
-    // const studentsWithSubjectPackage = await dbInstance[STUDENT_DETAIL_COLLECTION_NAME].aggregate(aggregateFilter).toArray();
-    // const records = encode(studentsWithSubjectPackage);
-
-    // return res.status(200).json({
-    //     success: true,
-    //     message: "Records fetched successfully",
-    //     result: records,
-    // });
+// this function requires nice testing
+router.get('/subject-package-users', async (req:Request, res:Response) => {
+    return getSubjectPackageUsers(req, res);
 });
 
 /**
@@ -127,27 +91,8 @@ router.get('/subject-package-users', async (req, res) => {
  *       200:
  *         description: A list of course packages for the student
  */
-router.get('/student-packages/:student_id', async (req, res) => {
-    // const studentId = req.params.student_id;
-    // const studentRecordId = convertToBsonId(studentId);
-    // const student = await dbInstance[STUDENT_DETAIL_COLLECTION_NAME].findOne({ student_id: studentRecordId });
-
-    // if (student) {
-    //     const studentPackages = await Promise.all(student.packages.map(async packageId => {
-    //         return await dbInstance[COURSEPACKAGE_COLLECTION_NAME].findOne({ _id: convertToBsonId(packageId) });
-    //     }));
-
-    //     return res.status(200).json({
-    //         success: true,
-    //         message: "Records fetched successfully",
-    //         result: studentPackages.filter(pkg => pkg !== null), // Filter out any null packages
-    //     });
-    // }
-
-    // return res.status(404).json({
-    //     success: false,
-    //     message: "User not found!",
-    // });
+router.get('/student-packages/:student_id', async (req:Request, res:Response) => {
+    return getStudentPackages(req, res, req.params.student_id);
 });
 
 /**
@@ -166,15 +111,8 @@ router.get('/student-packages/:student_id', async (req, res) => {
  *       201:
  *         description: The created course package object
  */
-router.post('/course-packages', async (req, res) => {
-    // const createRecord: CoursePackage = req.body; // Get the course package data from the request body
-    // const newCoursePackage = await coursePackageController.postRecord(
-    //     dbInstance,
-    //     req.user,
-    //     createRecord,
-    //     COURSEPACKAGE_COLLECTION_NAME
-    // );
-    // res.status(201).json(newCoursePackage);
+router.post('/course-packages', async (req:Request, res:Response) => {
+    return createCoursePackage(req, res);
 });
 
 /**
@@ -194,14 +132,8 @@ router.post('/course-packages', async (req, res) => {
  *       204:
  *         description: Course package deleted successfully
  */
-router.delete('/course-packages/:course_package_id', async (req, res) => {
-    // const coursePackageId = req.params.course_package_id;
-    // await coursePackageController.deleteRecord(
-    //     dbInstance,
-    //     coursePackageId,
-    //     COURSEPACKAGE_COLLECTION_NAME
-    // );
-    // res.status(204).send();
+router.delete('/course-packages/:course_package_id', async (req:Request, res:Response) => {
+    return deleteCoursePackage(req, res, req.params.course_package_id);
 });
 
 /**
@@ -220,15 +152,8 @@ router.delete('/course-packages/:course_package_id', async (req, res) => {
  *       202:
  *         description: The updated course package object
  */
-router.put('/course-packages', async (req, res) => {
-    // const updatedRecord: UpdateCoursePackage = req.body; // Get the updated course package data from the request body
-    // const updatedCoursePackage = await coursePackageController.updateRecord(
-    //     dbInstance,
-    //     req.user,
-    //     updatedRecord,
-    //     COURSEPACKAGE_COLLECTION_NAME
-    // );
-    // res.status(202).json(updatedCoursePackage);
+router.put('/course-packages', async (req:Request, res:Response) => {
+    return updateCoursePackage(req, res);
 });
 
 export default router;

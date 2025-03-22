@@ -28,9 +28,12 @@ const router = express.Router();
  *         description: A single branch object
  */
 // Get a specific branch by ID
-router.get('/:branch_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+router.get('/:branch_id', async (req: Request, res: Response) => {
   return getBranchById(req, res);
 });
+
+// branches , packages, subjects and roles -> admin routes
+// return only id and name in normal get routes
 
 /**
  * @swagger
@@ -43,7 +46,7 @@ router.get('/:branch_id', authMiddleware, authorizeRoles(), async (req: Request,
  *         description: A list of branch objects
  */
 // Get all branches
-router.get('/', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response) => {
   return getAllBranches(req, res);
 });
 
@@ -64,7 +67,7 @@ router.get('/', authMiddleware, authorizeRoles(), async (req: Request, res: Resp
  *         description: The created branch object
  */
 // Create a new branch
-router.post('/',authMiddleware, authorizeRoles(),async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
   return createBranch(req, res);
 });
 
@@ -86,7 +89,7 @@ router.post('/',authMiddleware, authorizeRoles(),async (req: Request, res: Respo
  *         description: Branch deleted successfully
  */
 // Delete a branch by ID
-router.delete('/:branch_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+router.delete('/:branch_id', async (req: Request, res: Response) => {
   return deleteBranch(req, res);
 });
 /**
@@ -106,7 +109,7 @@ router.delete('/:branch_id', authMiddleware, authorizeRoles(), async (req: Reque
  *         description: The updated branch object
  */
 // Update a branch
-router.put('/:branch_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+router.put('/:branch_id', async (req: Request, res: Response) => {
   return editBranch(req, res);
 });
 

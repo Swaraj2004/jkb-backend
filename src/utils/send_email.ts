@@ -21,10 +21,9 @@ export async function sendOTPOverEmail(req: Request, res: Response, email:string
 
         // We use Prisma’s upsert method so that if an OTP record already exists for the user
         // (using user_id as unique), it is updated; otherwise, a new record is created.
-        await prismaClient.oTP.upsert({
-            where: { email: user.email },
-            update: { otp_code: otp, expires_at: expiresAt, created_at: new Date() },
-            create: { user_id: user.id, email: user.email, otp_code: otp, expires_at: expiresAt },
+        await prismaClient.user.update({
+            where: { id: user.id },
+            data: { otp_code: otp, },
         });
 
         const subject = "OTP for password reset";
@@ -84,11 +83,11 @@ async function sendEmail(
 
 export async function verifyOTP(req: Request, res: Response, userEmail: string, otp: number) {
     try {
-        const otpDetails = await prismaClient.oTP.findUnique({
+        const otpDetails = await prismaClient.user.findUnique({
             where: { email: userEmail },
         });
 
-        if (!otpDetails) {
+        if (!otpDetails || !otpDetails.otp_code) {
             res.status(400).json(errorJson("OTP not found", null));
             return;
         }
@@ -98,12 +97,11 @@ export async function verifyOTP(req: Request, res: Response, userEmail: string, 
             return;
         }
 
-        if (new Date(otpDetails.expires_at) < new Date()) {
-            res.status(400).json(errorJson("OTP expired", null));
-            return;
-        }
+        // if (new Date(otpDetails.expires_at) < new Date()) {
+        //     res.status(400).json(errorJson("OTP expired", null));
+        //     return;
+        // }
 
-        // await prismaClient.oTP.delete({ where: { email: userEmail } }); // Remove OTP after verification if needed
         res.status(200).json(successJson("OTP verified successfully", null));
     } catch (error) {
         res.status(500).json(errorJson("Error verifying OTP", error));
