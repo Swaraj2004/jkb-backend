@@ -1,7 +1,7 @@
 import { hash } from "bcrypt";
 import { Request, Response } from "express";
 import { prismaClient } from "../utils/database";
-import { SALT } from "../utils/consts";
+import { DEFAULT_QUERRY_SKIP, DEFAULT_QUERRY_TAKE, SALT, STUDENT_ROLE } from "../utils/consts";
 import { User } from "@prisma/client";
 import { successJson, errorJson } from "../utils/common_funcs";
 
@@ -18,7 +18,7 @@ export const createUser = async (req: Request, res: Response) => {
     user.password = await hash(user.password, SALT);      // Hash the password
 
     const studentRole = await prismaClient.role.findUnique({
-      where: { name: "student" }
+      where: { name: STUDENT_ROLE }
     }); // Find student role_id
 
     if (!studentRole) {
@@ -59,7 +59,7 @@ export const getUsers = async (req: Request, res: Response, id: string | null = 
       res.status(200).json(successJson("Users fetched successfully", user));
       return;
     }
-    const { skip = "0", take = "20" } = req.query;
+    const { skip = DEFAULT_QUERRY_SKIP, take = DEFAULT_QUERRY_TAKE } = req.query;
 
     // Ensure skip and take are numbers
     const skipValue = parseInt(skip as string, 10);

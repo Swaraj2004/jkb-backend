@@ -1,7 +1,7 @@
 import express, { Response, Request } from 'express';
 import { createUser, deleteUser, getUsers, updateUser } from '../controllers/userController';
-import { AuthenticatedRequest, authMiddleware } from '../middlewares/authMiddleware';
-import { AUTH_ROLES } from '../utils/consts';
+import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
+import { AUTH_ROLES, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
 import { errorJson } from '../utils/common_funcs';
 // import { checkRole } from '../middlewares/authMiddleware'; // Adjust the import based on your project structure
 // import authController from '../controllers/authController'; // Adjust the import based on your project structure
@@ -36,7 +36,11 @@ const router = express.Router();
  */
 
 // routes are not yet protected as per the roles
-router.get('/:user_id', async (req, res) => {
+router.get('/:user_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), async (req: AuthenticatedRequest, res: Response) => {
+    if(req.user?.id != req.params.user_id){
+        res.status(403).json(errorJson("Unauthorized", null));
+        return;
+    }
     return getUsers(req, res, req.params.user_id);
 });
 
@@ -58,11 +62,8 @@ router.get('/:user_id', async (req, res) => {
  *         description: A list of user objects
  */
 
-router.get('/', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
-    if(req.user && AUTH_ROLES.includes(req.user.role_name)){
-        return getUsers(req, res);
-    }
-    res.status(401).json(errorJson("Unauthorised", null));
+router.get('/', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), async (req: AuthenticatedRequest, res: Response) => {
+    return getUsers(req, res);
 });
 
 /**
@@ -100,7 +101,7 @@ router.get('/', authMiddleware, async (req: AuthenticatedRequest, res: Response)
 //   }
 
 // routes are not yet protected as per the roles
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
     return createUser(req, res);
 });
 
@@ -123,7 +124,7 @@ router.post('/', async (req: Request, res: Response) => {
  */
 
 // routes are not yet protected as per the roles
-router.delete('/:user_id', async (req, res) => {
+router.delete('/:user_id',authMiddleware, authorizeRoles(), async (req: AuthenticatedRequest, res: Response) => {
     return deleteUser(req, res);
 });
 
@@ -143,7 +144,7 @@ router.delete('/:user_id', async (req, res) => {
  *       202:
  *         description: The updated user object
  */
-router.put('/', async (req, res) => {
+router.put('/',authMiddleware, authorizeRoles(),async (req: AuthenticatedRequest, res: Response) => {
     return updateUser(req, res);
 });
 
