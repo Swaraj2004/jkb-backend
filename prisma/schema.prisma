@@ -19,7 +19,7 @@ model Role {
   created_at DateTime @default(now())
   updated_at DateTime @default(now()) @updatedAt
 
-  userRoles UserRoles[]
+  userRoles UserRole[]
 }
 
 enum Roles {
@@ -45,7 +45,7 @@ model User {
   studentDetail StudentDetail?
 
   // Many-to-Many relation with UserRole
-  userRoles UserRoles[]
+  userRoles UserRole[]
 
   // Payments created by the user (using the "PaymentCreatedBy" relation)
   paymentsCreated Payment[] @relation("PaymentCreatedBy")
@@ -57,7 +57,7 @@ model User {
   Lecture Lecture[]
 }
 
-model UserRoles {
+model UserRole {
   id      String @id @default(uuid()) @db.Uuid
   user_id String @db.Uuid
   role_id String @db.Uuid
@@ -76,10 +76,11 @@ model Branch {
 }
 
 model Subject {
-  id         String   @id @default(uuid()) @db.Uuid
-  name       String
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now()) @updatedAt
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  subject_fees Decimal
+  created_at   DateTime @default(now())
+  updated_at   DateTime @default(now()) @updatedAt
 
   lectures              Lecture[]
   subjectProfessors     SubjectProfessor[]
@@ -113,6 +114,8 @@ model StudentDetail {
   total_fees      Decimal?
   pending_fees    Decimal?
   university_name String?
+  jkb_centre      String?
+  semester        String?
   status          String?
   remark          String?
   enrolled        Boolean  @default(false)
@@ -135,6 +138,7 @@ model Payment {
   status         String?
   student_id     String   @db.Uuid
   remark         String?
+  pending        Boolean  @default(true)
   created_at     DateTime @default(now())
   updated_at     DateTime @default(now()) @updatedAt
   created_by     String?  @db.Uuid
@@ -282,4 +286,31 @@ model TestSubmissionAnswer {
   testSubmission  TestSubmission @relation(fields: [test_submission_id], references: [id])
   question        TestQuestion   @relation(fields: [question_id], references: [id])
   selected_option QuestionOption @relation(fields: [selected_option_id], references: [id])
+}
+
+model MhAiCollege {
+  id               String  @id @default(uuid())
+  
+  university_name  String
+  university_code  String
+  college_name     String
+  college_code     String
+  branch_name      String
+  branch_code      String
+  location         String
+  fees             Decimal?
+
+  open             Float?
+  sc               Float?
+  st               Float?
+  vjnt             Float?
+  nt1              Float?
+  nt2              Float?
+  nt3              Float?
+  obc              Float?
+  tfws             Float?
+  ews              Float?
+
+  college_type     String
+  year             Int
 }
