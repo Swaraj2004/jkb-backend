@@ -9,6 +9,8 @@ export interface StudentDetailReqBodyModel {
     pending_fees: number;
     referred_by: string;
     remark: string;
+    jkb_centre: string;
+    semester: string;
     status: string;
     student_id: string;
     subjects: string[]; // Array of UUIDs
