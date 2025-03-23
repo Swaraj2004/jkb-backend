@@ -151,7 +151,7 @@ export async function getProfessors(req: Request, res: Response) {
     try {
         const professors = await prismaClient.user.findMany({
             where: {
-                userRoles: {
+                userRole: {
                     some: {
                         role: {
                             name: PROFESSOR_ROLE

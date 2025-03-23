@@ -175,7 +175,7 @@ router.put('/course-packages', authMiddleware, authorizeRoles(), async (req: Req
  *       200:
  *         description: A list of professor objects
  */
-router.get('/professors', async (req, res) => {
+router.get('/professors',authMiddleware, authorizeRoles(), async (req, res) => {
     return getProfessors(req, res);
 });
 

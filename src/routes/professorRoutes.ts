@@ -1,5 +1,6 @@
 import express from 'express';
 import { createProfessorLectures, deleteProfessorLectures, getProfessorLectures, getProfessorSubjects, updateProfessorLectures } from '../controllers/professorController';
+import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 
 const router = express.Router();
 
@@ -26,7 +27,7 @@ const router = express.Router();
  *       200:
  *         description: A list of subjects for the professor
  */
-router.get('/subjects', async (req, res) => {
+router.get('/subjects', authMiddleware, authorizeRoles(), async (req, res) => {
   return getProfessorSubjects(req, res);
 });
 
@@ -103,7 +104,7 @@ router.post('/lectures', async (req, res) => {
 *       204:
 *         description: Lecture deleted successfully
 */
-router.delete('/professor/lectures/:lecture_id', async (req, res) => {
+router.delete('/lectures/:lecture_id', async (req, res) => {
   return deleteProfessorLectures(req, res);
 });
 
