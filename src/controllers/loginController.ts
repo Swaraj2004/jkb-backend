@@ -31,7 +31,7 @@ export async function login(req: Request, res: Response) {
         });
 
         // Fetch the first user role associated with the given user_id and include the related role details
-        const userRole = await prismaClient.userRoles.findFirst({
+        const userRole = await prismaClient.userRole.findFirst({
             where: { user_id: userRecord.id },
             include: { role: true }, // Fetch associated role details in a single query
         });

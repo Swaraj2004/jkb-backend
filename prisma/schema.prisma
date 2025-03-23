@@ -16,8 +16,8 @@ datasource db {
 model Role {
   id         String   @id @default(uuid()) @db.Uuid
   name       Roles    @unique @default(student)
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now()) @updatedAt
+  created_at DateTime @default(now()) @db.Timestamptz()
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz()
 
   userRoles UserRole[]
 }
@@ -36,10 +36,10 @@ model User {
   phone      String?   @unique
   password   String
   location   String?
-  lastlogin  DateTime?
+  lastlogin  DateTime? @db.Timestamptz()
   otp_code   String?
-  created_at DateTime  @default(now())
-  updated_at DateTime  @default(now()) @updatedAt
+  created_at DateTime  @default(now()) @db.Timestamptz()
+  updated_at DateTime  @default(now()) @updatedAt @db.Timestamptz()
 
   // One-to-one (optional) relationship with StudentDetail
   studentDetail StudentDetail?
@@ -69,8 +69,8 @@ model UserRole {
 model Branch {
   id         String   @id @default(uuid()) @db.Uuid
   name       String
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now()) @updatedAt
+  created_at DateTime @default(now()) @db.Timestamptz()
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz()
 
   studentDetails StudentDetail[]
 }
@@ -79,25 +79,25 @@ model Subject {
   id           String   @id @default(uuid()) @db.Uuid
   name         String
   subject_fees Decimal
-  created_at   DateTime @default(now())
-  updated_at   DateTime @default(now()) @updatedAt
+  created_at   DateTime @default(now()) @db.Timestamptz()
+  updated_at   DateTime @default(now()) @updatedAt @db.Timestamptz()
 
-  lectures              Lecture[]
-  subjectProfessors     SubjectProfessor[]
-  coursePackageSubjects CoursePackageSubject[]
-  studentSubjects       StudentSubject[]
-  tests                 Test[]
+  lectures          Lecture[]
+  subjectProfessors SubjectProfessor[]
+  packageSubjects   PackageSubject[]
+  studentSubjects   StudentSubject[]
+  tests             Test[]
 }
 
-model CoursePackage {
+model Package {
   id           String   @id @default(uuid()) @db.Uuid
   package_name String
   package_fees Decimal
-  created_at   DateTime @default(now())
-  updated_at   DateTime @default(now()) @updatedAt
+  created_at   DateTime @default(now()) @db.Timestamptz()
+  updated_at   DateTime @default(now()) @updatedAt @db.Timestamptz()
 
-  coursePackageSubjects CoursePackageSubject[]
-  studentCoursePackages StudentCoursePackage[]
+  packageSubjects PackageSubject[]
+  studentPackages StudentPackage[]
 }
 
 model StudentDetail {
@@ -119,15 +119,15 @@ model StudentDetail {
   status          String?
   remark          String?
   enrolled        Boolean  @default(false)
-  created_at      DateTime @default(now())
-  updated_at      DateTime @default(now()) @updatedAt
+  created_at      DateTime @default(now()) @db.Timestamptz()
+  updated_at      DateTime @default(now()) @updatedAt @db.Timestamptz()
 
-  user                  User                   @relation(fields: [user_id], references: [id])
-  branch                Branch?                @relation(fields: [branch_id], references: [id])
-  payments              Payment[]
-  studentSubjects       StudentSubject[]
-  studentCoursePackages StudentCoursePackage[]
-  attendance            Attendance[]
+  user            User             @relation(fields: [user_id], references: [id])
+  branch          Branch?          @relation(fields: [branch_id], references: [id])
+  payments        Payment[]
+  studentSubjects StudentSubject[]
+  studentPackages StudentPackage[]
+  attendance      Attendance[]
 }
 
 model Payment {
@@ -139,8 +139,8 @@ model Payment {
   student_id     String   @db.Uuid
   remark         String?
   pending        Boolean  @default(true)
-  created_at     DateTime @default(now())
-  updated_at     DateTime @default(now()) @updatedAt
+  created_at     DateTime @default(now()) @db.Timestamptz()
+  updated_at     DateTime @default(now()) @updatedAt @db.Timestamptz()
   created_by     String?  @db.Uuid
 
   student   StudentDetail @relation(fields: [student_id], references: [id])
@@ -154,8 +154,8 @@ model Lecture {
   lecture_mode      String
   remark            String?
   attendance_toggle Boolean  @default(true)
-  created_at        DateTime @default(now())
-  updated_at        DateTime @default(now()) @updatedAt
+  created_at        DateTime @default(now()) @db.Timestamptz()
+  updated_at        DateTime @default(now()) @updatedAt @db.Timestamptz()
   created_by        String?
 
   subject    Subject      @relation(fields: [subject_id], references: [id])
@@ -167,7 +167,7 @@ model Attendance {
   id         String   @id @default(uuid()) @db.Uuid
   lecture_id String   @db.Uuid
   student_id String   @db.Uuid
-  created_at DateTime @default(now())
+  created_at DateTime @default(now()) @db.Timestamptz()
 
   lecture Lecture       @relation(fields: [lecture_id], references: [id])
   student StudentDetail @relation(fields: [student_id], references: [id])
@@ -176,7 +176,7 @@ model Attendance {
 model SubjectProfessor {
   subject_id   String   @db.Uuid
   professor_id String   @db.Uuid
-  created_at   DateTime @default(now())
+  created_at   DateTime @default(now()) @db.Timestamptz()
 
   subject   Subject @relation(fields: [subject_id], references: [id])
   professor User    @relation(fields: [professor_id], references: [id])
@@ -184,13 +184,13 @@ model SubjectProfessor {
   @@id([subject_id, professor_id]) // composite key
 }
 
-model CoursePackageSubject {
+model PackageSubject {
   package_id String   @db.Uuid
   subject_id String   @db.Uuid
-  created_at DateTime @default(now())
+  created_at DateTime @default(now()) @db.Timestamptz()
 
-  coursePackage CoursePackage @relation(fields: [package_id], references: [id])
-  subject       Subject       @relation(fields: [subject_id], references: [id])
+  package Package @relation(fields: [package_id], references: [id])
+  subject Subject @relation(fields: [subject_id], references: [id])
 
   @@id([package_id, subject_id])
 }
@@ -198,7 +198,7 @@ model CoursePackageSubject {
 model StudentSubject {
   student_id String   @db.Uuid
   subject_id String   @db.Uuid
-  created_at DateTime @default(now())
+  created_at DateTime @default(now()) @db.Timestamptz()
 
   student StudentDetail @relation(fields: [student_id], references: [id])
   subject Subject       @relation(fields: [subject_id], references: [id])
@@ -206,13 +206,13 @@ model StudentSubject {
   @@id([student_id, subject_id])
 }
 
-model StudentCoursePackage {
+model StudentPackage {
   student_id String   @db.Uuid
   package_id String   @db.Uuid
-  created_at DateTime @default(now())
+  created_at DateTime @default(now()) @db.Timestamptz()
 
-  student       StudentDetail @relation(fields: [student_id], references: [user_id])
-  coursePackage CoursePackage @relation(fields: [package_id], references: [id])
+  student StudentDetail @relation(fields: [student_id], references: [user_id])
+  package Package       @relation(fields: [package_id], references: [id])
 
   @@id([student_id, package_id])
 }
@@ -224,10 +224,10 @@ model Test {
   title          String
   test_toggle    Boolean   @default(false)
   conducted      Boolean   @default(false)
-  test_timestamp DateTime?
+  test_timestamp DateTime? @db.Timestamptz()
   total_marks    Int?
-  created_at     DateTime  @default(now())
-  updated_at     DateTime  @default(now()) @updatedAt
+  created_at     DateTime  @default(now()) @db.Timestamptz()
+  updated_at     DateTime  @default(now()) @updatedAt @db.Timestamptz()
 
   professor       User             @relation(fields: [professor_id], references: [id])
   subject         Subject          @relation(fields: [subject_id], references: [id])
@@ -241,7 +241,7 @@ model TestQuestion {
   question_text     String
   correct_option_id String   @unique @db.Uuid
   marks             Int
-  created_at        DateTime @default(now())
+  created_at        DateTime @default(now()) @db.Timestamptz()
 
   test    Test             @relation(fields: [test_id], references: [id])
   options QuestionOption[] @relation("QuestionOptions")
@@ -255,7 +255,7 @@ model QuestionOption {
   question_id String   @db.Uuid
   option_text String
   is_correct  Boolean?
-  created_at  DateTime @default(now())
+  created_at  DateTime @default(now()) @db.Timestamptz()
 
   // The question this option belongs to.
   question TestQuestion @relation("QuestionOptions", fields: [question_id], references: [id])
@@ -268,8 +268,8 @@ model TestSubmission {
   id         String   @id @default(uuid()) @db.Uuid
   test_id    String   @db.Uuid
   user_id    String   @db.Uuid
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now()) @updatedAt
+  created_at DateTime @default(now()) @db.Timestamptz()
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz()
 
   test    Test                   @relation(fields: [test_id], references: [id])
   user    User                   @relation(fields: [user_id], references: [id])
@@ -281,7 +281,7 @@ model TestSubmissionAnswer {
   test_submission_id String   @db.Uuid
   question_id        String   @db.Uuid
   selected_option_id String   @db.Uuid
-  created_at         DateTime @default(now())
+  created_at         DateTime @default(now()) @db.Timestamptz()
 
   testSubmission  TestSubmission @relation(fields: [test_submission_id], references: [id])
   question        TestQuestion   @relation(fields: [question_id], references: [id])
@@ -289,28 +289,28 @@ model TestSubmissionAnswer {
 }
 
 model MhAiCollege {
-  id               String  @id @default(uuid())
-  
-  university_name  String
-  university_code  String
-  college_name     String
-  college_code     String
-  branch_name      String
-  branch_code      String
-  location         String
-  fees             Decimal?
+  id String @id @default(uuid())
 
-  open             Float?
-  sc               Float?
-  st               Float?
-  vjnt             Float?
-  nt1              Float?
-  nt2              Float?
-  nt3              Float?
-  obc              Float?
-  tfws             Float?
-  ews              Float?
+  university_name String
+  university_code String
+  college_name    String
+  college_code    String
+  branch_name     String
+  branch_code     String
+  location        String
+  fees            Decimal?
 
-  college_type     String
-  year             Int
+  open Float?
+  sc   Float?
+  st   Float?
+  vjnt Float?
+  nt1  Float?
+  nt2  Float?
+  nt3  Float?
+  obc  Float?
+  tfws Float?
+  ews  Float?
+
+  college_type String
+  year         Int
 }

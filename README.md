@@ -31,6 +31,10 @@ DATABASE_URL="postgresql://user:password@localhost:5432/dbname"
 ALGORITHM="HS256"
 SECRET_KEY="your_secret_key"
 PORT=3000
+FROM_EMAIL=dummy@gmail.com
+GMAIL_APP_PASSWORD=dummy
+SMTP_SERVER="smtp.gmail.com"
+SMTP_PORT=587
 ```
 
 **Note:** Update `DATABASE_URL` with your actual database credentials.
