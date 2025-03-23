@@ -1,5 +1,7 @@
-import express,{Request, Response} from 'express';
-import { createCoursePackage, deleteCoursePackage, getAllCoursePackages, getCoursePackageById, getStudentPackages, getSubjectPackageUsers, updateCoursePackage } from '../controllers/coursePackageController';
+import express, { Request, Response } from 'express';
+import { createCoursePackage, deleteCoursePackage, getAllCoursePackages, getAllCoursePackagesIdName, getCoursePackageById, getStudentPackages, getSubjectPackageUsers, updateCoursePackage } from '../controllers/coursePackageController';
+import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
+import { GET_ALTERNATIVE, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
 
 const router = express.Router();
 
@@ -27,7 +29,7 @@ const router = express.Router();
  *       200:
  *         description: A single course package object
  */
-router.get('/course-packages/:course_package_id', async (req:Request, res:Response) => {
+router.get('/course-packages/:course_package_id', async (req: Request, res: Response) => {
     return getCoursePackageById(req, res, req.params.course_package_id);
 });
 
@@ -41,7 +43,14 @@ router.get('/course-packages/:course_package_id', async (req:Request, res:Respon
  *       200:
  *         description: A list of course package objects
  */
-router.get('/course-packages', async (req:Request, res:Response) => {
+// It is an open route ask Swaraj Bhaiya
+router.get('/course-packages', async (req: Request, res: Response) => {
+    const { type } = req.query;
+
+    if (type === GET_ALTERNATIVE) {
+        return getAllCoursePackagesIdName(req, res);
+    }
+
     return getAllCoursePackages(req, res);
 });
 
@@ -70,7 +79,7 @@ router.get('/course-packages', async (req:Request, res:Response) => {
  */
 
 // this function requires nice testing
-router.get('/subject-package-users', async (req:Request, res:Response) => {
+router.get('/subject-package-users', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
     return getSubjectPackageUsers(req, res);
 });
 
@@ -91,7 +100,7 @@ router.get('/subject-package-users', async (req:Request, res:Response) => {
  *       200:
  *         description: A list of course packages for the student
  */
-router.get('/student-packages/:student_id', async (req:Request, res:Response) => {
+router.get('/student-packages/:student_id', authMiddleware, authorizeRoles([PROFESSOR_ROLE, STUDENT_ROLE]), async (req: Request, res: Response) => {
     return getStudentPackages(req, res, req.params.student_id);
 });
 
@@ -111,7 +120,7 @@ router.get('/student-packages/:student_id', async (req:Request, res:Response) =>
  *       201:
  *         description: The created course package object
  */
-router.post('/course-packages', async (req:Request, res:Response) => {
+router.post('/course-packages', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
     return createCoursePackage(req, res);
 });
 
@@ -132,7 +141,7 @@ router.post('/course-packages', async (req:Request, res:Response) => {
  *       204:
  *         description: Course package deleted successfully
  */
-router.delete('/course-packages/:course_package_id', async (req:Request, res:Response) => {
+router.delete('/course-packages/:course_package_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
     return deleteCoursePackage(req, res, req.params.course_package_id);
 });
 
@@ -152,7 +161,7 @@ router.delete('/course-packages/:course_package_id', async (req:Request, res:Res
  *       202:
  *         description: The updated course package object
  */
-router.put('/course-packages', async (req:Request, res:Response) => {
+router.put('/course-packages', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
     return updateCoursePackage(req, res);
 });
 

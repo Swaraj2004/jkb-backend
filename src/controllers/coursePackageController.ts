@@ -119,6 +119,16 @@ export async function getAllCoursePackages(req: Request, res: Response) {
         res.status(500).json(errorJson('Server error', error));
     }
 }
+export async function getAllCoursePackagesIdName(req: Request, res: Response) {
+    try {
+        const coursePackages = await prismaClient.coursePackage.findMany({
+            select: { id: true, package_name: true }
+        });
+        res.status(200).json(successJson('Course Packages Fetched Successfully!', coursePackages));
+    } catch (error: any) {
+        res.status(500).json(errorJson('Server error', error));
+    }
+}
 
 export async function getCoursePackageById(req: Request, res: Response, course_package_id: string) {
     try {

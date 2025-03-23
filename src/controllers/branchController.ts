@@ -43,6 +43,7 @@ export async function getBranchById(req: Request, res: Response) {
 
         const branch = await prismaClient.branch.findUnique({
             where: { id: branchId },
+            select: { id: true, name: true }
         });
 
         if (!branch) {
@@ -56,9 +57,11 @@ export async function getBranchById(req: Request, res: Response) {
     }
 }
 
-export async function getAllBranches(req: Request, res: Response) {
+export async function getAllBranchesIdName(req: Request, res: Response) {
     try {
-        const branches = await prismaClient.branch.findMany();
+        const branches = await prismaClient.branch.findMany({
+            select: { id: true, name: true }
+        });
         res.status(200).json(successJson("Get Branches SuccessFul", branches));
     } catch (error) {
         res.status(500).json(errorJson('Internal server error', error));
