@@ -52,9 +52,8 @@ export const getUsers = async (req: Request, res: Response, id: string | null = 
   try {
     if (id) {
       const user = await prismaClient.user.findUnique({
-        where: {
-          id: id
-        }
+        where: { id: id },
+        select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true }
       });
       res.status(200).json(successJson("Users fetched successfully", user));
       return;
@@ -67,7 +66,8 @@ export const getUsers = async (req: Request, res: Response, id: string | null = 
 
     const users = await prismaClient.user.findMany({
       skip: isNaN(skipValue) ? 0 : skipValue,
-      take: isNaN(takeValue) ? 20 : takeValue
+      take: isNaN(takeValue) ? 20 : takeValue,
+      select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true }
     });
 
     res.status(200).json(successJson("Users fetched successfully", users));

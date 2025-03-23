@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { createCoursePackage, deleteCoursePackage, getAllCoursePackages, getAllCoursePackagesIdName, getCoursePackageById, getStudentPackages, getSubjectPackageUsers, updateCoursePackage } from '../controllers/coursePackageController';
+import { createCoursePackage, deleteCoursePackage, getAllCoursePackages, getAllCoursePackagesIdName, getCoursePackageById, getProfessors, getStudentPackages, getSubjectPackageUsers, updateCoursePackage } from '../controllers/coursePackageController';
 import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { GET_ALTERNATIVE, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
 
@@ -163,6 +163,20 @@ router.delete('/course-packages/:course_package_id', authMiddleware, authorizeRo
  */
 router.put('/course-packages', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
     return updateCoursePackage(req, res);
+});
+
+/**
+ * @swagger
+ * /professors:
+ *   get:
+ *     tags: [Professor Management]
+ *     summary: Get all professors and super-admins
+ *     responses:
+ *       200:
+ *         description: A list of professor objects
+ */
+router.get('/professors', async (req, res) => {
+    return getProfessors(req, res);
 });
 
 export default router;

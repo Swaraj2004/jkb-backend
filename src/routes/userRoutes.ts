@@ -1,7 +1,7 @@
 import express, { Response, Request } from 'express';
 import { createUser, deleteUser, getUsers, updateUser } from '../controllers/userController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
-import { PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
+import { AUTH_ROLES, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
 import { errorJson } from '../utils/common_funcs';
 
 const router = express.Router();
@@ -33,7 +33,7 @@ const router = express.Router();
 
 router.get('/:user_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), async (req: AuthenticatedRequest, res: Response) => {
     // another student cant access this route only current authorizedStundent and professor
-    if(req.user?.role_name != PROFESSOR_ROLE && req.user?.id != req.params.user_id){
+    if(!req.user || (!AUTH_ROLES.includes(req.user?.role_name) && req.user?.role_name !== PROFESSOR_ROLE && req.user?.id != req.params.user_id)){
         res.status(403).json(errorJson("Unauthorized", null));
         return;
     }
