@@ -18,5 +18,6 @@ export const STUDENT_ROLE = 'student';
 export const PROFESSOR_ROLE = 'professor';
 export const DEFAULT_QUERRY_SKIP = 0;
 export const DEFAULT_QUERRY_TAKE = 50;
+export const GET_ALTERNATIVE = 'alternative';
 // const LECTURE_COLLECTION_NAME = 'lectures'; // Define your lecture collection name
 // const ATTENDANCE_COLLECTION_NAME = 'attendance'; // Define your attendance collection name
