@@ -70,7 +70,7 @@ export async function updateSubject(req: Request, res: Response) {
             data: { name, subject_fees }
         });
 
-        res.status(200).json(successJson("Subject updated successfully", updatedSubject));
+        res.status(200).json(successJson("Subject updated successfully", 1));
     } catch (error) {
         res.status(500).json(errorJson("Failed to update subject", error));
     }
@@ -91,8 +91,28 @@ export async function deleteSubject(req: Request, res: Response) {
 // Get users enrolled in subjects
 export async function getSubjectUsers(req: Request, res: Response) {
     try {
-        const subjectUsers = await prismaClient.studentSubject.findMany({
-            include: { student: true, subject: true }
+        const { subject_id, year } = req.query;
+        if (!subject_id || !year) {
+            res.status(400).json(errorJson('Subject Id or year absent', null));
+            return;
+        }
+        const numericYear = parseInt(year as string, 10);
+
+        const subjectUsers = await prismaClient.user.findMany({
+            where: {
+                studentDetail: {
+                    studentSubjects: {
+                        some: {
+                            subject_id: subject_id as string,
+                            created_at: {
+                                gte: new Date(`${numericYear}-01-01T00:00:00.000Z`), // Start of the given year
+                                lt: new Date(`${numericYear + 1}-01-01T00:00:00.000Z`), // Start of the next year
+                            },
+                        },
+                    },
+                },
+            },
+            select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true }
         });
 
         res.status(200).json(successJson("Subject users fetched successfully", subjectUsers));
@@ -104,22 +124,23 @@ export async function getSubjectUsers(req: Request, res: Response) {
 
 export async function getSubjectAttendance(req: Request, res: Response) {
     try {
-        const { subject_id } = req.params;
-
+        const { subject_id } = req.query;
+        if (!subject_id) {
+            res.status(400).json(errorJson('Subject Id absent', null));
+            return;
+        }
         const attendanceRecords = await prismaClient.attendance.findMany({
             where: {
-                lecture: {
-                    subject_id: subject_id 
-                }
+                lecture: { subject_id: subject_id as string }
             },
-            include: {
-                lecture: {
-                    select: { id: true, subject_id: true, date: true }
-                },
-                student: {
-                    select: { id: true, full_name: true, email: true }
-                }
-            }
+            // include: {
+            //     lecture: {
+            //         select: { id: true, subject_id: true, created_at: true }
+            //     },
+            //     student: {
+            //         select: { id: true, full_name: true, email: true }
+            //     }
+            // }
         });
 
         res.status(200).json(successJson("Subject attendance fetched successfully", attendanceRecords));
@@ -134,9 +155,16 @@ export async function getStudentSubjects(req: Request, res: Response) {
     try {
         const { student_id } = req.params;
 
-        const studentSubjects = await prismaClient.studentSubject.findMany({
-            where: { studentId: student_id },
-            include: { subject: true }
+        const studentSubjects = await prismaClient.subject.findMany({
+            // where: { student_id: student_id },
+            // include: { subject: true }
+            where: {
+                studentSubjects: {
+                    some: {
+                        student_id: student_id
+                    }
+                }
+            }
         });
 
         res.status(200).json(successJson("Student subjects fetched successfully", studentSubjects));
@@ -144,4 +172,4 @@ export async function getStudentSubjects(req: Request, res: Response) {
         res.status(500).json(errorJson("Failed to fetch student subjects", error));
     }
 }
-    
+

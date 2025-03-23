@@ -1,7 +1,4 @@
-import express from 'express';
-// import { checkRole } from '../middlewares/authMiddleware'; // Adjust the import based on your project structure
-// import subjectController from '../controllers/subjectController'; // Adjust the import based on your project structure
-// import { Subject, UpdateSubject } from '../schemas/subjectSchemas'; // Adjust the import based on your project structure
+import express, { Request, Response } from 'express';
 import {
     createSubject,
     getSubjects,
@@ -12,7 +9,6 @@ import {
     getSubjectAttendance,
     getStudentSubjects,
 } from '../controllers/subjectController';
-import {AUTH_ROLES} from '../utils/consts';
 import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 
 
@@ -42,15 +38,9 @@ const router = express.Router();
  *       200:
  *         description: A single subject object
  */
-router.get('/subjects/:subject_id', async (req, res) => {
-    // const subjectId = req.params.subject_id;
-    // const readRecordId = convertToBsonId(subjectId); // Implement this function as needed
-    // const subject = await subjectController.getRecords(dbInstance, readRecordId, SUBJECT_COLLECTION_NAME);
-    // res.status(200).json(subject);
-   return getSubjectById(req, res);
+router.get('/subjects/:subject_id', async (req: Request, res: Response) => {
+    return getSubjectById(req, res);
 });
-
-
 
 /**
  * @swagger
@@ -62,31 +52,7 @@ router.get('/subjects/:subject_id', async (req, res) => {
  *       200:
  *         description: A list of subject objects
  */
-router.get('/subjects', async (req, res) => {
-    
-    // const subjects = await subjectController.getRecords(dbInstance, null, SUBJECT_COLLECTION_NAME);
-    // const subjectsDict = JSON.parse(subjects.body);
-
-    // const records = subjectsDict['result'].map(subject => {
-    //     const professorIds = subject['professor_user_ids'];
-    //     const professors = professorIds.map(async professorId => {
-    //         return await dbInstance[USER_COLLECTION_NAME].findOne({ _id: convertToBsonId(professorId) });
-    //     });
-
-    //     return {
-    //         ...subject,
-    //         professors: professors.map(professor => ({
-    //             _id: String(professor._id),
-    //             full_name: professor.full_name,
-    //         })),
-    //     };
-    // });
-
-    // return res.status(200).json({
-    //     success: true,
-    //     message: "Records fetched successfully",
-    //     result: records,
-    // });
+router.get('/subjects', async (req: Request, res: Response) => {
     return getSubjects(req, res);
 });
 
@@ -113,34 +79,8 @@ router.get('/subjects', async (req, res) => {
  *       200:
  *         description: A list of users enrolled in the subject
  */
-router.get('/subject-users', async (req, res) => {
-    // const { subject_id, year } = req.query;
-
-    // if (!subject_id) {
-    //     return res.status(400).json({ success: false, message: "subject_id is required" });
-    // }
-
-    // const packages = await dbInstance[COURSEPACKAGE_COLLECTION_NAME].find({ subjects: subject_id }, { _id: 1 }).toArray();
-    // const packageIds = packages.map(doc => String(doc._id));
-    // const filter = { $or: [{ subjects: subject_id }, { packages: { $in: packageIds } }] };
-
-    // if (year) {
-    //     filter["$expr"] = { "$eq": [{ "$year": "$created_at" }, year] };
-    // }
-
-    // const studentsWithSubject = await dbInstance[STUDENT_DETAIL_COLLECTION_NAME].aggregate([
-    //     { $match: filter },
-    //     student_aggregate,
-    //     { $project: { "student.password": 0 } },
-    // ]).toArray();
-
-    // return res.status(200).json({
-    //     success: true,
-    //     message: "Records fetched successfully",
-    //     result: studentsWithSubject,
-    // });
+router.get('/subject-users', async (req: Request, res: Response) => {
     return getSubjectUsers(req, res);
-
 });
 
 /**
@@ -160,74 +100,8 @@ router.get('/subject-users', async (req, res) => {
  *       200:
  *         description: Attendance records for the subject
  */
-router.get('/subject-attendance', async (req, res) => {
+router.get('/subject-attendance', async (req: Request, res: Response) => {
     return getSubjectAttendance(req, res);
-
-    // const { subject_id } = req.query;
-
-    // if (!subject_id) {
-    //     return res.status(400).json({ success: false, message: "subject_id is required" });
-    // }
-
-    // const lectures = await dbInstance[LECTURE_COLLECTION_NAME].find({ subject_id: convertToBsonId(subject_id) }, { _id: 1, created_at: 1 }).toArray();
-
-    // if (!lectures.length) {
-    //     return res.status(200).json({ success: false, message: "No lectures found for this subject", result: [] });
-    // }
-
-    // const lectureIds = lectures.map(lecture => lecture._id);
-    // const lectureDates = lectures.reduce((acc, lecture) => {
-    //     acc[String(lecture._id)] = lecture.created_at.toISOString().split('T')[0]; // Format date
-    //     return acc;
-    // }, {});
-
-    // const packages = await dbInstance[COURSEPACKAGE_COLLECTION_NAME].find({ subjects: subject_id }, { _id: 1 }).toArray();
-    // const packageIds = packages.map(doc => String(doc._id));
-
-    // const students = await dbInstance[STUDENT_DETAIL_COLLECTION_NAME].find({
-    //     $or: [{ subjects: subject_id }, { packages: { $in: packageIds } }]
-    // }).toArray();
-
-    // if (!students.length) {
-    //     return res.status(200).json({ success: false, message: "No students found for this subject", result: [] });
-    // }
-
-    // const attendanceRecords = await dbInstance[ATTENDANCE_COLLECTION_NAME].find({ lecture_id: { $in: lectureIds } }, { student_user_id: 1, lecture_id: 1 }).toArray();
-
-    // const attendanceMap = {};
-    // attendanceRecords.forEach(record => {
-    //     const studentId = String(record.student_user_id);
-    //     const lectureId = String(record.lecture_id);
-    //     if (!attendanceMap[studentId]) {
-    //         attendanceMap[studentId] = {};
-    //     }
-    //     attendanceMap[studentId][lectureId] = "present";
-    // });
-
-    // const userIds = students.map(student => student.student_id).filter(id => id);
-    // const users = await dbInstance[USER_COLLECTION_NAME].find({ _id: { $in: userIds } }).toArray();
-    // const userMap = users.reduce((acc, user) => {
-    //     acc[String(user._id)] = user.full_name || "Unknown";
-    //     return acc;
-    // }, {});
-
-    // const responseData = students.map(student => {
-    //     const studentUserId = String(student.student_id);
-    //     const studentName = userMap[studentUserId] || "Unknown";
-    //     const row = { student_user_id: studentUserId, student_name: studentName };
-
-    //     for (const [lectureId, date] of Object.entries(lectureDates)) {
-    //         row[date] = attendanceMap[studentUserId]?.[lectureId] || "absent";
-    //     }
-
-    //     return row;
-    // });
-
-    // return res.status(200).json({
-    //     success: true,
-    //     message: "Attendance records fetched successfully",
-    //     result: responseData,
-    // });
 });
 
 /**
@@ -247,28 +121,8 @@ router.get('/subject-attendance', async (req, res) => {
  *       200:
  *         description: A list of subjects for the student
  */
-router.get('/student-subjects/:student_id', async (req, res) => {
+router.get('/student-subjects/:student_id', async (req: Request, res: Response) => {
     return getStudentSubjects(req, res);
-    // const studentId = req.params.student_id;
-    // const studentRecordId = convertToBsonId(studentId);
-    // const student = await dbInstance[STUDENT_DETAIL_COLLECTION_NAME].findOne({ student_id: studentRecordId });
-
-    // if (student) {
-    //     const studentSubjects = await Promise.all(student.subjects.map(async subjectId => {
-    //         return await dbInstance[SUBJECT_COLLECTION_NAME].findOne({ _id: convertToBsonId(subjectId) });
-    //     }));
-
-    //     return res.status(200).json({
-    //         success: true,
-    //         message: "Records fetched successfully",
-    //         result: studentSubjects,
-    //     });
-    // }
-
-    // return res.status(404).json({
-    //     success: false,
-    //     message: "User not found!",
-    // });
 });
 
 /**
@@ -287,12 +141,8 @@ router.get('/student-subjects/:student_id', async (req, res) => {
  *       201:
  *         description: The created subject object
  */
-router.post('/subjects', authMiddleware, authorizeRoles(AUTH_ROLES), async (req, res) => {
-    // const createRecord: Subject = req.body; // Ensure to validate the body
-    // const newSubject = await subjectController.postRecord(dbInstance, req.user, createRecord, SUBJECT_COLLECTION_NAME);
-    // res.status(201).json(newSubject);
+router.post('/subjects', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
     return createSubject(req, res);
-
 });
 
 /**
@@ -312,21 +162,8 @@ router.post('/subjects', authMiddleware, authorizeRoles(AUTH_ROLES), async (req,
  *       204:
  *         description: Subject deleted successfully
  */
-router.delete('/subjects/:subject_id', authMiddleware, authorizeRoles(AUTH_ROLES), async (req, res) => {
+router.delete('/subjects/:subject_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
     return deleteSubject(req, res);
-
-    // const subjectId = req.params.subject_id;
-    // const existingPackage = await dbInstance[COURSEPACKAGE_COLLECTION_NAME].find({ subjects: { $elemMatch: { $eq: subjectId } } }).toArray();
-
-    // if (existingPackage.length) {
-    //     return res.status(400).json({
-    //         success: false,
-    //         message: "Record deletion failed! Packages exist within this subject!",
-    //     });
-    // }
-
-    // await subjectController.deleteRecord(dbInstance, subjectId, SUBJECT_COLLECTION_NAME);
-    //res.status(204).send();
 });
 
 /**
@@ -345,10 +182,7 @@ router.delete('/subjects/:subject_id', authMiddleware, authorizeRoles(AUTH_ROLES
  *       202:
  *         description: The updated subject object
  */
-router.put('/subjects', authMiddleware, authorizeRoles(AUTH_ROLES), async (req, res) => {
-    // const updatedRecord: UpdateSubject = req.body; // Ensure to validate the body
-    // const updatedSubject = await subjectController.updateRecord(dbInstance, req.user, updatedRecord, SUBJECT_COLLECTION_NAME);
-    // res.status(202).json(updatedSubject);
+router.put('/subjects', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
     return updateSubject(req, res);
 });
 

@@ -12,6 +12,7 @@ import branchRoutes from "./routes/branchRoutes";
 import coursePackageRoutes from "./routes/coursePackageRoutes";
 import roleRoutes from "./routes/roleRoutes";
 import professorRoutes from "./routes/professorRoutes";
+import subjectRoutes from "./routes/subjectRoutes";
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.use("/api/v2/auth/users", userRoutes);
 app.use("/api/v2/auth", loginRoutes);
 app.use("/api/v2/auth", roleRoutes);
 app.use("/api/v2/admin", coursePackageRoutes);
+app.use("/api/v2/admin", subjectRoutes);
 app.use("/api/v2/admin/branches", branchRoutes);
 app.use("/api/v2/student-details", studentDetailsRoutes);
 app.use("/api/v2/professor", professorRoutes);
