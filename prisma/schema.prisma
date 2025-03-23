@@ -14,12 +14,12 @@ datasource db {
 }
 
 model Role {
-  id         String   @id @default(uuid()) @db.Uuid
-  name       Roles    @unique @default(student)
-  created_at DateTime @default(now()) @db.Timestamptz()
-  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz()
+  id         String    @id @default(uuid()) @db.Uuid
+  name       Roles     @unique @default(student)
+  created_at DateTime  @default(now()) @db.Timestamptz()
+  updated_at DateTime? @updatedAt @db.Timestamptz()
 
-  userRoles UserRole[]
+  userRole UserRole[]
 }
 
 enum Roles {
@@ -39,13 +39,13 @@ model User {
   lastlogin  DateTime? @db.Timestamptz()
   otp_code   String?
   created_at DateTime  @default(now()) @db.Timestamptz()
-  updated_at DateTime  @default(now()) @updatedAt @db.Timestamptz()
+  updated_at DateTime? @updatedAt @db.Timestamptz()
 
   // One-to-one (optional) relationship with StudentDetail
   studentDetail StudentDetail?
 
   // Many-to-Many relation with UserRole
-  userRoles UserRole[]
+  userRole UserRole[]
 
   // Payments created by the user (using the "PaymentCreatedBy" relation)
   paymentsCreated Payment[] @relation("PaymentCreatedBy")
@@ -67,20 +67,20 @@ model UserRole {
 }
 
 model Branch {
-  id         String   @id @default(uuid()) @db.Uuid
+  id         String    @id @default(uuid()) @db.Uuid
   name       String
-  created_at DateTime @default(now()) @db.Timestamptz()
-  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz()
+  created_at DateTime  @default(now()) @db.Timestamptz()
+  updated_at DateTime? @updatedAt @db.Timestamptz()
 
   studentDetails StudentDetail[]
 }
 
 model Subject {
-  id           String   @id @default(uuid()) @db.Uuid
+  id           String    @id @default(uuid()) @db.Uuid
   name         String
   subject_fees Decimal
-  created_at   DateTime @default(now()) @db.Timestamptz()
-  updated_at   DateTime @default(now()) @updatedAt @db.Timestamptz()
+  created_at   DateTime  @default(now()) @db.Timestamptz()
+  updated_at   DateTime? @updatedAt @db.Timestamptz()
 
   lectures          Lecture[]
   subjectProfessors SubjectProfessor[]
@@ -90,21 +90,21 @@ model Subject {
 }
 
 model Package {
-  id           String   @id @default(uuid()) @db.Uuid
+  id           String    @id @default(uuid()) @db.Uuid
   package_name String
   package_fees Decimal
-  created_at   DateTime @default(now()) @db.Timestamptz()
-  updated_at   DateTime @default(now()) @updatedAt @db.Timestamptz()
+  created_at   DateTime  @default(now()) @db.Timestamptz()
+  updated_at   DateTime? @updatedAt @db.Timestamptz()
 
   packageSubjects PackageSubject[]
   studentPackages StudentPackage[]
 }
 
 model StudentDetail {
-  id              String   @id @default(uuid()) @db.Uuid
-  user_id         String   @unique @db.Uuid
+  id              String    @id @default(uuid()) @db.Uuid
+  user_id         String    @unique @db.Uuid
   parent_contact  String?
-  branch_id       String?  @db.Uuid
+  branch_id       String?   @db.Uuid
   diploma_score   Float?
   xii_score       Float?
   cet_score       Float?
@@ -118,9 +118,9 @@ model StudentDetail {
   semester        String?
   status          String?
   remark          String?
-  enrolled        Boolean  @default(false)
-  created_at      DateTime @default(now()) @db.Timestamptz()
-  updated_at      DateTime @default(now()) @updatedAt @db.Timestamptz()
+  enrolled        Boolean   @default(false)
+  created_at      DateTime  @default(now()) @db.Timestamptz()
+  updated_at      DateTime? @updatedAt @db.Timestamptz()
 
   user            User             @relation(fields: [user_id], references: [id])
   branch          Branch?          @relation(fields: [branch_id], references: [id])
@@ -131,31 +131,31 @@ model StudentDetail {
 }
 
 model Payment {
-  id             String   @id @default(uuid()) @db.Uuid
-  receipt_number String?  @unique
+  id             String    @id @default(uuid()) @db.Uuid
+  receipt_number String?   @unique
   amount         Decimal?
   mode           String?
   status         String?
-  student_id     String   @db.Uuid
+  student_id     String    @db.Uuid
   remark         String?
-  pending        Boolean  @default(true)
-  created_at     DateTime @default(now()) @db.Timestamptz()
-  updated_at     DateTime @default(now()) @updatedAt @db.Timestamptz()
-  created_by     String?  @db.Uuid
+  pending        Boolean   @default(true)
+  created_at     DateTime  @default(now()) @db.Timestamptz()
+  updated_at     DateTime? @updatedAt @db.Timestamptz()
+  created_by     String?   @db.Uuid
 
   student   StudentDetail @relation(fields: [student_id], references: [id])
   createdBy User?         @relation("PaymentCreatedBy", fields: [created_by], references: [id])
 }
 
 model Lecture {
-  id                String   @id @default(uuid()) @db.Uuid
-  subject_id        String   @db.Uuid
-  professor_id      String   @db.Uuid
+  id                String    @id @default(uuid()) @db.Uuid
+  subject_id        String    @db.Uuid
+  professor_id      String    @db.Uuid
   lecture_mode      String
   remark            String?
-  attendance_toggle Boolean  @default(true)
-  created_at        DateTime @default(now()) @db.Timestamptz()
-  updated_at        DateTime @default(now()) @updatedAt @db.Timestamptz()
+  attendance_toggle Boolean   @default(true)
+  created_at        DateTime  @default(now()) @db.Timestamptz()
+  updated_at        DateTime? @updatedAt @db.Timestamptz()
   created_by        String?
 
   subject    Subject      @relation(fields: [subject_id], references: [id])
@@ -227,7 +227,7 @@ model Test {
   test_timestamp DateTime? @db.Timestamptz()
   total_marks    Int?
   created_at     DateTime  @default(now()) @db.Timestamptz()
-  updated_at     DateTime  @default(now()) @updatedAt @db.Timestamptz()
+  updated_at     DateTime? @updatedAt @db.Timestamptz()
 
   professor       User             @relation(fields: [professor_id], references: [id])
   subject         Subject          @relation(fields: [subject_id], references: [id])
@@ -265,11 +265,11 @@ model QuestionOption {
 }
 
 model TestSubmission {
-  id         String   @id @default(uuid()) @db.Uuid
-  test_id    String   @db.Uuid
-  user_id    String   @db.Uuid
-  created_at DateTime @default(now()) @db.Timestamptz()
-  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz()
+  id         String    @id @default(uuid()) @db.Uuid
+  test_id    String    @db.Uuid
+  user_id    String    @db.Uuid
+  created_at DateTime  @default(now()) @db.Timestamptz()
+  updated_at DateTime? @updatedAt @db.Timestamptz()
 
   test    Test                   @relation(fields: [test_id], references: [id])
   user    User                   @relation(fields: [user_id], references: [id])

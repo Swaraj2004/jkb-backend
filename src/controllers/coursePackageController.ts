@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { errorJson, successJson } from '../utils/common_funcs';
 import { prismaClient } from '../utils/database';
+import { PROFESSOR_ROLE } from '../utils/consts';
 
 export async function updateCoursePackage(req: Request, res: Response) {
     try {
@@ -141,6 +142,32 @@ export async function getCoursePackageById(req: Request, res: Response, course_p
             return;
         }
         res.status(200).json(successJson('Course Package Fetched Successfully!', coursePackage));
+    } catch (error: any) {
+        res.status(500).json(errorJson('Server error', error));
+    }
+}
+
+export async function getProfessors(req: Request, res: Response) {
+    try {
+        const professors = await prismaClient.user.findMany({
+            where: {
+                userRoles: {
+                    some: {
+                        role: {
+                            name: PROFESSOR_ROLE
+                        }
+                    }
+                }
+            },
+            select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true }
+        });
+
+
+        if (!professors) {
+            res.status(404).json(errorJson('Course package not found', null));
+            return;
+        }
+        res.status(200).json(successJson('Course Package Fetched Successfully!', professors));
     } catch (error: any) {
         res.status(500).json(errorJson('Server error', error));
     }
