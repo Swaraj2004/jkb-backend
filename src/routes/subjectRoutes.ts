@@ -2,6 +2,19 @@ import express from 'express';
 // import { checkRole } from '../middlewares/authMiddleware'; // Adjust the import based on your project structure
 // import subjectController from '../controllers/subjectController'; // Adjust the import based on your project structure
 // import { Subject, UpdateSubject } from '../schemas/subjectSchemas'; // Adjust the import based on your project structure
+import {
+    createSubject,
+    getSubjects,
+    getSubjectById,
+    updateSubject,
+    deleteSubject,
+    getSubjectUsers,
+    getSubjectAttendance,
+    getStudentSubjects,
+} from '../controllers/subjectController';
+import {AUTH_ROLES} from '../utils/consts';
+import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
+
 
 const router = express.Router();
 
@@ -34,7 +47,10 @@ router.get('/subjects/:subject_id', async (req, res) => {
     // const readRecordId = convertToBsonId(subjectId); // Implement this function as needed
     // const subject = await subjectController.getRecords(dbInstance, readRecordId, SUBJECT_COLLECTION_NAME);
     // res.status(200).json(subject);
+   return getSubjectById(req, res);
 });
+
+
 
 /**
  * @swagger
@@ -47,6 +63,7 @@ router.get('/subjects/:subject_id', async (req, res) => {
  *         description: A list of subject objects
  */
 router.get('/subjects', async (req, res) => {
+    
     // const subjects = await subjectController.getRecords(dbInstance, null, SUBJECT_COLLECTION_NAME);
     // const subjectsDict = JSON.parse(subjects.body);
 
@@ -70,6 +87,7 @@ router.get('/subjects', async (req, res) => {
     //     message: "Records fetched successfully",
     //     result: records,
     // });
+    return getSubjects(req, res);
 });
 
 /**
@@ -121,6 +139,8 @@ router.get('/subject-users', async (req, res) => {
     //     message: "Records fetched successfully",
     //     result: studentsWithSubject,
     // });
+    return getSubjectUsers(req, res);
+
 });
 
 /**
@@ -141,6 +161,8 @@ router.get('/subject-users', async (req, res) => {
  *         description: Attendance records for the subject
  */
 router.get('/subject-attendance', async (req, res) => {
+    return getSubjectAttendance(req, res);
+
     // const { subject_id } = req.query;
 
     // if (!subject_id) {
@@ -226,6 +248,7 @@ router.get('/subject-attendance', async (req, res) => {
  *         description: A list of subjects for the student
  */
 router.get('/student-subjects/:student_id', async (req, res) => {
+    return getStudentSubjects(req, res);
     // const studentId = req.params.student_id;
     // const studentRecordId = convertToBsonId(studentId);
     // const student = await dbInstance[STUDENT_DETAIL_COLLECTION_NAME].findOne({ student_id: studentRecordId });
@@ -264,10 +287,12 @@ router.get('/student-subjects/:student_id', async (req, res) => {
  *       201:
  *         description: The created subject object
  */
-router.post('/subjects', async (req, res) => {
+router.post('/subjects', authMiddleware, authorizeRoles(AUTH_ROLES), async (req, res) => {
     // const createRecord: Subject = req.body; // Ensure to validate the body
     // const newSubject = await subjectController.postRecord(dbInstance, req.user, createRecord, SUBJECT_COLLECTION_NAME);
     // res.status(201).json(newSubject);
+    return createSubject(req, res);
+
 });
 
 /**
@@ -287,7 +312,9 @@ router.post('/subjects', async (req, res) => {
  *       204:
  *         description: Subject deleted successfully
  */
-router.delete('/subjects/:subject_id', async (req, res) => {
+router.delete('/subjects/:subject_id', authMiddleware, authorizeRoles(AUTH_ROLES), async (req, res) => {
+    return deleteSubject(req, res);
+
     // const subjectId = req.params.subject_id;
     // const existingPackage = await dbInstance[COURSEPACKAGE_COLLECTION_NAME].find({ subjects: { $elemMatch: { $eq: subjectId } } }).toArray();
 
@@ -299,7 +326,7 @@ router.delete('/subjects/:subject_id', async (req, res) => {
     // }
 
     // await subjectController.deleteRecord(dbInstance, subjectId, SUBJECT_COLLECTION_NAME);
-    res.status(204).send();
+    //res.status(204).send();
 });
 
 /**
@@ -318,10 +345,11 @@ router.delete('/subjects/:subject_id', async (req, res) => {
  *       202:
  *         description: The updated subject object
  */
-router.put('/subjects', async (req, res) => {
+router.put('/subjects', authMiddleware, authorizeRoles(AUTH_ROLES), async (req, res) => {
     // const updatedRecord: UpdateSubject = req.body; // Ensure to validate the body
     // const updatedSubject = await subjectController.updateRecord(dbInstance, req.user, updatedRecord, SUBJECT_COLLECTION_NAME);
     // res.status(202).json(updatedSubject);
+    return updateSubject(req, res);
 });
 
 export default router;
