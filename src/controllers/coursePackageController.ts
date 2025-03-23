@@ -9,7 +9,7 @@ export async function updateCoursePackage(req: Request, res: Response) {
             res.status(400).json(errorJson('Course package id is required', null));
             return;
         }
-        const updatedCoursePackage = await prismaClient.coursePackage.update({
+        const updatedCoursePackage = await prismaClient.package.update({
             where: { id: updatedRecord.id },
             data: updatedRecord,
         });
@@ -21,7 +21,7 @@ export async function updateCoursePackage(req: Request, res: Response) {
 
 export async function deleteCoursePackage(req: Request, res: Response, course_package_id: string) {
     try {
-        await prismaClient.coursePackage.delete({
+        await prismaClient.package.delete({
             where: { id: course_package_id },
         });
         res.status(204).send(successJson('CoursePackage deleted Successfully!', 1));
@@ -33,7 +33,7 @@ export async function deleteCoursePackage(req: Request, res: Response, course_pa
 export async function createCoursePackage(req: Request, res: Response) {
     try {
         const createRecord = req.body;
-        const newCoursePackage = await prismaClient.coursePackage.create({
+        const newCoursePackage = await prismaClient.package.create({
             data: createRecord,
         });
         res.status(201).json(successJson('CoursePackage created successfully!', newCoursePackage.id));
@@ -48,9 +48,9 @@ export async function getStudentPackages(req: Request, res: Response, student_id
         const student = await prismaClient.studentDetail.findUnique({
             where: { user_id: student_id },
             include: {
-                studentCoursePackages: {
+                studentPackages: {
                     include: {
-                        coursePackage: true
+                        package: true
                     }
                 }
             }
@@ -62,7 +62,7 @@ export async function getStudentPackages(req: Request, res: Response, student_id
         }
 
         // Filter out any nulls (if a package wasn't found).
-        const validPackages = student.studentCoursePackages.map((studentCoursePackage) => studentCoursePackage.coursePackage).filter(pkg => pkg !== null);
+        const validPackages = student.studentPackages.map((studentPackage) => studentPackage.package).filter(pkg => pkg !== null);
 
         res.status(200).json(successJson('Record fetched successfully', validPackages));
     } catch (error: any) {
@@ -113,7 +113,7 @@ export async function getSubjectPackageUsers(req: Request, res: Response) {
 
 export async function getAllCoursePackages(req: Request, res: Response) {
     try {
-        const coursePackages = await prismaClient.coursePackage.findMany();
+        const coursePackages = await prismaClient.package.findMany();
         res.status(200).json(successJson('Course Packages Fetched Successfully!', coursePackages));
     } catch (error: any) {
         res.status(500).json(errorJson('Server error', error));
@@ -121,7 +121,7 @@ export async function getAllCoursePackages(req: Request, res: Response) {
 }
 export async function getAllCoursePackagesIdName(req: Request, res: Response) {
     try {
-        const coursePackages = await prismaClient.coursePackage.findMany({
+        const coursePackages = await prismaClient.package.findMany({
             select: { id: true, package_name: true }
         });
         res.status(200).json(successJson('Course Packages Fetched Successfully!', coursePackages));
@@ -132,7 +132,7 @@ export async function getAllCoursePackagesIdName(req: Request, res: Response) {
 
 export async function getCoursePackageById(req: Request, res: Response, course_package_id: string) {
     try {
-        const coursePackage = await prismaClient.coursePackage.findUnique({
+        const coursePackage = await prismaClient.package.findUnique({
             where: { id: course_package_id },
         });
 

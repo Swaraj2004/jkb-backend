@@ -22,14 +22,14 @@ export async function createStudentDetails(req: Request, res: Response) {
     try {
         await prismaClient.$transaction(async (prisma) => {
             for (const packageId in body.packages) {
-                const packageDetails = await prisma.studentCoursePackage.findFirst({
+                const packageDetails = await prisma.studentPackage.findFirst({
                     where: { package_id: packageId },
-                    include: { coursePackage: true }
+                    include: { package: true }
                 });
                 if (!packageDetails) {
                     throw new Error(`No such package found: ${packageId}`);
                 }
-                totalAmount = totalAmount.plus(packageDetails.coursePackage.package_fees);
+                totalAmount = totalAmount.plus(packageDetails.package.package_fees);
             }
         });
 
@@ -48,6 +48,8 @@ export async function createStudentDetails(req: Request, res: Response) {
             referred_by: body.referred_by || null,
             total_fees: new Decimal(0),
             pending_fees: new Decimal(0),
+            jkb_centre: body.jkb_centre || null,
+            semester: body.semester || null,
             university_name: body.university_name || null,
             status: body.status || null,
             remark: body.remark || null,
