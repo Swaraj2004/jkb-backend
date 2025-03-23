@@ -10,6 +10,7 @@ import productRoutes from "./routes/productRoutes";
 import studentDetailsRoutes from "./routes/studentDetailsRoutes";
 import branchRoutes from "./routes/branchRoutes";
 import coursePackageRoutes from "./routes/coursePackageRoutes";
+import roleRoutes from "./routes/roleRoutes";
 
 dotenv.config();
 
@@ -32,9 +33,10 @@ app.get("/", (req: Request, res: Response) => {
 });
 app.use("/api/v2/auth/users", userRoutes);
 app.use("/api/v2/auth", loginRoutes);
+app.use("/api/v2/auth", roleRoutes);
 app.use("/api/v2/admin", coursePackageRoutes);
-app.use("/api/v2/student-details", studentDetailsRoutes);
 app.use("/api/v2/admin/branches", branchRoutes);
+app.use("/api/v2/student-details", studentDetailsRoutes);
 app.use("/api/v2/api/products", productRoutes);
 
 // Swagger UI

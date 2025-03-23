@@ -1,5 +1,5 @@
 import { compare } from 'bcrypt';
-import { format ,toZonedTime } from 'date-fns-tz';
+import { format, toZonedTime } from 'date-fns-tz';
 import { Request, Response } from 'express';
 import { errorJson } from '../utils/common_funcs';
 import { ACCESS_TOKEN_EXPIRE_MINUTES, TZ_INDIA } from '../utils/consts';
@@ -7,7 +7,7 @@ import { prismaClient } from '../utils/database';
 import { TokenPayload } from '../utils/jwt_payload';
 import { createAccessToken } from '../utils/jwt_token';
 
-export async function login(req: Request, res:Response){
+export async function login(req: Request, res: Response) {
     try {
         const { email, password } = req.body;
 
@@ -84,5 +84,38 @@ export async function login(req: Request, res:Response){
         res.status(200).json(result);
     } catch (error) {
         res.status(500).json(errorJson("Failed to login user", error instanceof Error ? error.message : "Unknown error"));
+    }
+}
+
+export async function checkLoginStatus(req: Request, res: Response, userId: string) {
+    try {
+        const userLoginDetail = await prismaClient.user.findFirst({
+            where: { id: userId },
+            select: { lastlogin: true }
+        });
+
+        if (!userLoginDetail || !userLoginDetail.lastlogin) {
+            res.status(404).json(errorJson("User Record Not Found or lastLogin not found", null));
+            return;
+        }
+
+        const lastLogin = new Date(userLoginDetail.lastlogin);
+        const currentTime = new Date();
+        const timeElapsed = (currentTime.getTime() - lastLogin.getTime()) / (1000 * 60); // Convert ms to minutes
+
+        if (timeElapsed > ACCESS_TOKEN_EXPIRE_MINUTES) {
+            res.json(errorJson("User logged out!", 0));
+            return;
+        }
+
+        const timeLeft = ACCESS_TOKEN_EXPIRE_MINUTES - Math.floor(timeElapsed);
+
+        res.json({
+            success: true,
+            message: "User logged in!",
+            time_left: timeLeft
+        });
+    } catch (error) {
+        res.send(500).json(errorJson('Server Error', error));
     }
 }

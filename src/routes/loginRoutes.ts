@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { login } from '../controllers/loginController';
+import { checkLoginStatus, login } from '../controllers/loginController';
 import { resetPassword, sendOTPOverEmail, verifyOTP } from '../utils/send_email';
 
 const router = express.Router();
@@ -51,10 +51,8 @@ router.post('/login-user', async (req: Request, res: Response) => {
  *         description: User login status
  */
 router.post('/login-status/:user_id', async (req, res) => {
-    // const userId = req.params.user_id; // Get user ID from the path parameters
-    // const readUserId = convertToBsonId(userId); // Convert the user ID to BSON format
-    // const response = await authController.check_login_status(dbInstance, readUserId); // Call the check login status function
-    // res.status(200).json(response);
+    const userId = req.params.user_id;
+    return checkLoginStatus(req, res, userId);
 });
 
 /**

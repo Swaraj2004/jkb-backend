@@ -34,7 +34,7 @@ const router = express.Router();
  *         description: A single student record object
  */
 router.get('/:student_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), async (req:AuthenticatedRequest, res:Response) => {
-    if(req.user?.id != req.params.student_id){
+    if(req.user?.role_name != PROFESSOR_ROLE && req.user?.id != req.params.student_id){
         res.status(403).json(errorJson("Unauthorized", null));
         return;
     }

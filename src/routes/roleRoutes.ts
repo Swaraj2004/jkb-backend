@@ -1,7 +1,6 @@
-import express from 'express';
-// import { checkRole } from '../middlewares/authMiddleware'; // Adjust the import based on your project structure
-// import authController from '../controllers/authController'; // Adjust the import based on your project structure
-// import { Role, UpdateRole } from '../schemas/roleSchemas'; // Adjust the import based on your project structure
+import express, { Request, Response } from 'express';
+import { createRole, deleteRole, getAllRoles, getRolesById, updateRole } from '../controllers/roleController';
+import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 
 const router = express.Router();
 
@@ -29,15 +28,8 @@ const router = express.Router();
  *       200:
  *         description: A single role object
  */
-router.get('/roles/:role_id', async (req, res) => {
-    // const roleId = req.params.role_id; // Get role ID from the path parameters
-    // const readRecordId = convertToBsonId(roleId); // Convert the role ID to BSON format
-    // const role = await authController.get_records(
-    //     dbInstance,
-    //     readRecordId,
-    //     ROLE_COLLECTION_NAME
-    // );
-    // res.status(200).json(role);
+router.get('/roles/:role_id', async (req: Request, res: Response) => {
+    return getRolesById(req, res, req.params.role_id);
 });
 
 /**
@@ -50,13 +42,8 @@ router.get('/roles/:role_id', async (req, res) => {
  *       200:
  *         description: A list of role objects
  */
-router.get('/roles', async (req, res) => {
-    // const roles = await authController.get_records(
-    //     dbInstance,
-    //     null,
-    //     ROLE_COLLECTION_NAME
-    // );
-    // res.status(200).json(roles);
+router.get('/roles', async (req: Request, res: Response) => {
+    return getAllRoles(req, res);
 });
 
 /**
@@ -75,15 +62,8 @@ router.get('/roles', async (req, res) => {
  *       201:
  *         description: The created role object
  */
-router.post('/roles', async (req, res) => {
-    // const createRecord: Role = req.body; // Get role data from the request body
-    // const newRole = await authController.post_record(
-    //     dbInstance,
-    //     req.user,
-    //     createRecord,
-    //     ROLE_COLLECTION_NAME
-    // );
-    // res.status(201).json(newRole);
+router.post('/roles', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+    return createRole(req, res);
 });
 
 /**
@@ -103,28 +83,8 @@ router.post('/roles', async (req, res) => {
  *       204:
  *         description: Role deleted successfully
  */
-router.delete('/roles/:role_id', async (req, res) => {
-    // const roleId = req.params.role_id; // Get role ID from the path parameters
-    // const usersWithRole = await dbInstance[USER_COLLECTION_NAME].find({ role_id: convertToBsonId(roleId) }).toArray(); // Find users with this role
-    // const role = await dbInstance[ROLE_COLLECTION_NAME].findOne({ _id: convertToBsonId(roleId) }); // Find the role
-
-    // // Check if the role is super-admin
-    // if (role && role.name === "super-admin") {
-    //     return res.status(400).json({ success: false, message: "Record deletion failed! Super admin cannot be deleted!" });
-    // }
-
-    // // Check if there are users with this role
-    // if (usersWithRole.length > 0) {
-    //     return res.status(400).json({ success: false, message: "Record deletion failed! Users exist within this role!" });
-    // }
-
-    // await authController.delete_record(
-    //     dbInstance,
-    //     req.user,
-    //     roleId,
-    //     ROLE_COLLECTION_NAME
-    // );
-    // res.status(204).send();
+router.delete('/roles/:role_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+    return deleteRole(req, res, req.params.role_id);
 });
 
 /**
@@ -143,15 +103,8 @@ router.delete('/roles/:role_id', async (req, res) => {
  *       202:
  *         description: The updated role object
  */
-router.put('/roles', async (req, res) => {
-    // const updatedRecord: UpdateRole = req.body; // Get updated role data from the request body
-    // const updatedRole = await authController.update_record(
-    //     dbInstance,
-    //     req.user,
-    //     updatedRecord,
-    //     ROLE_COLLECTION_NAME
-    // );
-    // res.status(202).json(updatedRole);
+router.put('/roles', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+    return updateRole(req, res);
 });
 
 export default router;
