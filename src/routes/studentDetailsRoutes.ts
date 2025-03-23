@@ -3,9 +3,6 @@ import { errorJson } from '../utils/common_funcs';
 import { createStudentDetails, deleteStudentDetails, editStudentDetails, getAllStudentDetails, getStudentDetailById } from '../controllers/studentDetailsController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { AUTH_ROLES, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
-// import { checkRole } from '../middlewares/authMiddleware'; // Adjust the import based on your project structure
-// import webController from '../controllers/webController'; // Adjust the import based on your project structure
-// import { StudentDetail, UpdateStudentDetail } from '../schemas/studentSchemas'; // Adjust the import based on your project structure
 
 const router = express.Router();
 
