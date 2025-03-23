@@ -32,7 +32,7 @@ export const createUser = async (req: Request, res: Response) => {
         data: user
       });
 
-      await prisma.userRoles.create({
+      await prisma.userRole.create({
         data: {
           role_id: studentRole.id,
           user_id: createdUser.id
