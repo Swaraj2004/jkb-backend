@@ -31,7 +31,16 @@ const router = express.Router();
  *         description: A single student record object
  */
 router.get('/:student_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), async (req:AuthenticatedRequest, res:Response) => {
-    if(!req.user || (!AUTH_ROLES.includes(req.user?.role_name) && req.user?.role_name != PROFESSOR_ROLE && req.user?.id != req.params.student_id)){
+    if (!req.user) {
+        res.status(401).json(errorJson("Please log in first", null));
+        return;
+    }
+    
+    if (
+        !AUTH_ROLES.includes(req.user.role_name) &&
+        req.user.role_name !== PROFESSOR_ROLE &&
+        req.user.id != req.params.user_id
+    ) {
         res.status(403).json(errorJson("Unauthorized", null));
         return;
     }

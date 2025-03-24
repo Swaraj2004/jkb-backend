@@ -33,7 +33,16 @@ const router = express.Router();
 
 router.get('/:user_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), async (req: AuthenticatedRequest, res: Response) => {
     // another student cant access this route only current authorizedStundent and professor
-    if(!req.user || (!AUTH_ROLES.includes(req.user?.role_name) && req.user?.role_name !== PROFESSOR_ROLE && req.user?.id != req.params.user_id)){
+    if (!req.user) {
+        res.status(401).json(errorJson("Please log in first", null));
+        return;
+    }
+    
+    if (
+        !AUTH_ROLES.includes(req.user.role_name) &&
+        req.user.role_name !== PROFESSOR_ROLE &&
+        req.user.id != req.params.user_id
+    ) {
         res.status(403).json(errorJson("Unauthorized", null));
         return;
     }

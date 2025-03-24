@@ -3,7 +3,7 @@ import { Decimal } from "@prisma/client/runtime/library";
 import { StudentDetailReqBodyModel } from "../models/student_detail_req_body";
 import { successJson, errorJson } from "../utils/common_funcs";
 import { prismaClient } from "../utils/database";
-import express, { Request, Response } from 'express';
+import { Request, Response } from 'express';
 
 export async function createStudentDetails(req: Request, res: Response) {
     const body: StudentDetailReqBodyModel = req.body;
@@ -33,8 +33,7 @@ export async function createStudentDetails(req: Request, res: Response) {
             }
         });
 
-        const createRecord: StudentDetail = {
-            id: crypto.randomUUID(),
+        const createRecord = {
             user_id: body.student_id, // Assign from request body
             created_at: new Date(),
             updated_at: new Date(),
@@ -53,7 +52,7 @@ export async function createStudentDetails(req: Request, res: Response) {
             university_name: body.university_name || null,
             status: body.status || null,
             remark: body.remark || null,
-            enrolled: false,
+            enrolled: body.enrolled || false,
         };
 
         if (totalAmount.gt(0)) {
