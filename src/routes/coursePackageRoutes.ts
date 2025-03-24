@@ -1,7 +1,8 @@
 import express, { Request, Response } from 'express';
 import { createCoursePackage, deleteCoursePackage, getAllCoursePackages, getAllCoursePackagesIdName, getCoursePackageById, getProfessors, getStudentPackages, getSubjectPackageUsers, updateCoursePackage } from '../controllers/coursePackageController';
-import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
-import { GET_ALTERNATIVE, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
+import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
+import { AUTH_ROLES, GET_ALTERNATIVE, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
+import { errorJson } from '../utils/common_funcs';
 
 const router = express.Router();
 
@@ -100,7 +101,20 @@ router.get('/subject-package-users', authMiddleware, authorizeRoles(), async (re
  *       200:
  *         description: A list of course packages for the student
  */
-router.get('/student-packages/:student_id', authMiddleware, authorizeRoles([PROFESSOR_ROLE, STUDENT_ROLE]), async (req: Request, res: Response) => {
+router.get('/student-packages/:student_id', authMiddleware, authorizeRoles([PROFESSOR_ROLE, STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response) => {
+    if (!req.user) {
+        res.status(401).json(errorJson("Please log in first", null));
+        return;
+    }
+
+    if (
+        !AUTH_ROLES.includes(req.user.role_name) &&
+        req.user.role_name !== PROFESSOR_ROLE &&
+        req.user.id != req.params.user_id
+    ) {
+        res.status(403).json(errorJson("Unauthorized", null));
+        return;
+    }
     return getStudentPackages(req, res, req.params.student_id);
 });
 
@@ -175,7 +189,7 @@ router.put('/course-packages', authMiddleware, authorizeRoles(), async (req: Req
  *       200:
  *         description: A list of professor objects
  */
-router.get('/professors',authMiddleware, authorizeRoles(), async (req, res) => {
+router.get('/professors', authMiddleware, authorizeRoles(), async (req:Request, res:Response) => {
     return getProfessors(req, res);
 });
 
