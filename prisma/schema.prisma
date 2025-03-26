@@ -136,6 +136,7 @@ model Payment {
   amount         Decimal?
   mode           String?
   status         String?
+  is_gst         Boolean
   student_id     String    @db.Uuid
   remark         String?
   pending        Boolean   @default(true)
