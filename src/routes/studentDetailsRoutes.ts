@@ -1,8 +1,7 @@
 import express, { Request, Response } from 'express';
-import { errorJson } from '../utils/common_funcs';
 import { createStudentDetails, deleteStudentDetails, editStudentDetails, getAllStudentDetails, getStudentDetailById } from '../controllers/studentDetailsController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
-import { AUTH_ROLES, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
+import { PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
 
 const router = express.Router();
 
@@ -31,19 +30,6 @@ const router = express.Router();
  *         description: A single student record object
  */
 router.get('/:student_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), async (req:AuthenticatedRequest, res:Response) => {
-    if (!req.user) {
-        res.status(401).json(errorJson("Please log in first", null));
-        return;
-    }
-    
-    if (
-        !AUTH_ROLES.includes(req.user.role_name) &&
-        req.user.role_name !== PROFESSOR_ROLE &&
-        req.user.id != req.params.user_id
-    ) {
-        res.status(403).json(errorJson("Unauthorized", null));
-        return;
-    }
     return getStudentDetailById(req, res);
 });
 

@@ -14,6 +14,7 @@ import roleRoutes from "./routes/roleRoutes";
 import professorRoutes from "./routes/professorRoutes";
 import subjectRoutes from "./routes/subjectRoutes";
 import attendanceRoutes from "./routes/attendanceRoutes";
+import paymentRoutes from "./routes/paymentRoutes";
 
 dotenv.config();
 
@@ -44,6 +45,7 @@ app.use("/api/v2/student-details", studentDetailsRoutes);
 app.use("/api/v2/professor", professorRoutes);
 app.use("/api/v2/api/products", productRoutes);
 app.use("/api/v2/", attendanceRoutes);
+app.use("/api/v2/", paymentRoutes);
 
 // Swagger UI
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
