@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { errorJson, successJson } from '../utils/common_funcs';
 import { prismaClient } from '../utils/database';
+import { STATUS_CODES } from '../utils/consts';
 
 export async function editBranch(req: Request, res: Response) {
     try {
@@ -8,7 +9,7 @@ export async function editBranch(req: Request, res: Response) {
 
         const { name } = req.body;
         if (!name) {
-            res.status(400).json(errorJson('Name Parameter is required', null));
+            res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('Name Parameter is required', null));
             return;
         }
 
@@ -17,9 +18,9 @@ export async function editBranch(req: Request, res: Response) {
             data: { name: name },
         });
 
-        res.status(200).json(successJson('Branch Updated Successfully', 1));
+        res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson('Branch Updated Successfully', 1));
     } catch (error) {
-        res.status(500).json(errorJson('Internal server error', error));
+        res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson('Internal server error', error));
     }
 }
 
@@ -31,9 +32,9 @@ export async function deleteBranch(req: Request, res: Response) {
             where: { id: branchId },
         });
 
-        res.status(204).send(successJson("Branch Deleted Succesfully!", 1));
+        res.status(STATUS_CODES.DELETE_SUCCESS).send(successJson("Branch Deleted Succesfully!", 1));
     } catch (error) {
-        res.status(500).json(errorJson('Internal server error', error));
+        res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson('Internal server error', error));
     }
 }
 
@@ -47,13 +48,13 @@ export async function getBranchById(req: Request, res: Response) {
         });
 
         if (!branch) {
-            res.status(404).json(errorJson('Branch not found', null));
+            res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson('Branch not found', null));
             return;
         }
 
-        res.status(200).json(successJson("Get branch SuccessFull!", branch));
+        res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Get branch SuccessFull!", branch));
     } catch (error) {
-        res.status(500).json(errorJson('Internal Server Error', error));
+        res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson('Internal Server Error', error));
     }
 }
 
@@ -62,9 +63,9 @@ export async function getAllBranchesIdName(req: Request, res: Response) {
         const branches = await prismaClient.branch.findMany({
             select: { id: true, name: true }
         });
-        res.status(200).json(successJson("Get Branches SuccessFul", branches));
+        res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Get Branches SuccessFul", branches));
     } catch (error) {
-        res.status(500).json(errorJson('Internal server error', error));
+        res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson('Internal server error', error));
     }
 }
 
@@ -73,7 +74,7 @@ export async function createBranch(req: Request, res: Response) {
         const { name } = req.body;
 
         if (!name) {
-            res.status(400).json(errorJson('Name is required', null));
+            res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('Name is required', null));
             return;
         }
 
@@ -81,8 +82,8 @@ export async function createBranch(req: Request, res: Response) {
             data: { name: name },
         });
 
-        res.status(201).json(successJson('Branch Created successfully!', newBranch.id));
+        res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson('Branch Created successfully!', newBranch.id));
     } catch (error) {
-        res.status(500).json(errorJson('Internal server error', error));
+        res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson('Internal server error', error));
     }
 }

@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { verifyToken } from "../utils/jwt_token";
 import { TokenPayload } from "../utils/jwt_payload";
 import { errorJson } from "../utils/common_funcs";
-import { AUTH_ROLES } from "../utils/consts";
+import { AUTH_ROLES, STATUS_CODES } from "../utils/consts";
 
 export interface AuthenticatedRequest extends Request{
     user? : TokenPayload;
@@ -12,7 +12,7 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
     const authHeader = req.header("Authorization");
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        res.status(401).json(errorJson("AuthHeader absent or Invalid Format", null));
+        res.status(STATUS_CODES.UNAUTHORIZED).json(errorJson("AuthHeader absent or Invalid Format", null));
         return;
     }
 
@@ -24,14 +24,14 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
         req.user = user;
         next();
     } catch (error) {
-        res.status(403).json(errorJson("Forbidden: Invalid or expired token", error));
+        res.status(STATUS_CODES.FORBIDDEN_REQUEST).json(errorJson("Forbidden: Invalid or expired token", error));
     }
 };
 
 export function authorizeRoles(allowedRoles: string[] = []) {
     return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
         if (!req.user) {
-            res.status(401).json(errorJson("Unauthorized", null));
+            res.status(STATUS_CODES.UNAUTHORIZED).json(errorJson("Unauthorized", null));
             return;
         }
 
@@ -40,6 +40,6 @@ export function authorizeRoles(allowedRoles: string[] = []) {
             return next();
         }
 
-        res.status(403).json(errorJson("Forbidden: Access denied", null));
+        res.status(STATUS_CODES.FORBIDDEN_REQUEST).json(errorJson("Forbidden: Access denied", null));
     };
 }

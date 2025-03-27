@@ -4,6 +4,7 @@ import { StudentDetailReqBodyModel } from "../models/student_detail_req_body";
 import { successJson, errorJson } from "../utils/common_funcs";
 import { prismaClient } from "../utils/database";
 import { Request, Response } from 'express';
+import { STATUS_CODES } from "../utils/consts";
 
 export async function createStudentDetails(req: Request, res: Response) {
     const body: StudentDetailReqBodyModel = req.body;
@@ -64,9 +65,9 @@ export async function createStudentDetails(req: Request, res: Response) {
         const newStudentDetail: StudentDetail = await prismaClient.studentDetail.create({
             data: createRecord
         });
-        res.status(201).json(successJson("Record Inserted Successfully", newStudentDetail.id));
+        res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Record Inserted Successfully", newStudentDetail.id));
     } catch (error) {
-        res.status(500).json(errorJson('Error creating student record', error));
+        res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson('Error creating student record', error));
     }
 }
 
@@ -94,9 +95,9 @@ export async function editStudentDetails(req: Request, res: Response) {
                 enrolled: body.enrolled ?? undefined, // Keep existing if not provided
             },
         });
-        res.status(200).json(successJson("Record Updated Successfully", updatedStudent));
+        res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Record Updated Successfully", updatedStudent));
     } catch (error) {
-        res.status(500).json(errorJson("Error updating student record", error));
+        res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Error updating student record", error));
     }
 }
 
@@ -107,9 +108,9 @@ export async function deleteStudentDetails(req: Request, res: Response) {
         const deletedStudent: StudentDetail = await prismaClient.studentDetail.delete({
             where: { user_id: studentId }
         });
-        res.status(200).json(successJson("Record Deleted Successfully", deletedStudent.id));
+        res.status(STATUS_CODES.DELETE_SUCCESS).json(successJson("Record Deleted Successfully", deletedStudent.id));
     } catch (error) {
-        res.status(500).json(errorJson("Error deleting student record", error));
+        res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Error deleting student record", error));
     }
 }
 
@@ -117,9 +118,9 @@ export async function deleteStudentDetails(req: Request, res: Response) {
 export async function getAllStudentDetails(req: Request, res: Response) {
     try {
         const studentDetails: StudentDetail[] = await prismaClient.studentDetail.findMany();
-        res.status(200).json(successJson("Records fetched successfully", studentDetails));
+        res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Records fetched successfully", studentDetails));
     } catch (error) {
-        res.status(500).json(errorJson("Error fetching student records", error));
+        res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Error fetching student records", error));
     }
 }
 
@@ -131,11 +132,11 @@ export async function getStudentDetailById(req: Request, res: Response) {
             where: { user_id: studentId }
         });
         if (!studentDetail) {
-            res.status(404).json(errorJson("Student record not found", null));
+            res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Student record not found", null));
             return;
         }
-        res.status(200).json(successJson("Record fetched successfully", studentDetail));
+        res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Record fetched successfully", studentDetail));
     } catch (error) {
-        res.status(500).json(errorJson("Error fetching student record", error));
+        res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Error fetching student record", error));
     }
 }

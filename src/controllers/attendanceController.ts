@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prismaClient } from '../utils/database';
 import { errorJson, successJson } from '../utils/common_funcs';
+import { STATUS_CODES } from '../utils/consts';
 
 export async function getLectureAttendance(req: Request, res: Response, lectureId: string) {
     try {
@@ -11,7 +12,7 @@ export async function getLectureAttendance(req: Request, res: Response, lectureI
         });
 
         if (!lecture) {
-            res.status(404).json(errorJson("Lecture not found", null));
+            res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Lecture not found", null));
             return;
         }
 
@@ -54,9 +55,9 @@ export async function getLectureAttendance(req: Request, res: Response, lectureI
             present: presentStudentIds.has(student.id)
         }));
 
-        res.status(200).json(successJson("Records fetched successfully", studentAttendance));
+        res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Records fetched successfully", studentAttendance));
     } catch (error) {
-        res.status(500).json(errorJson("Internal server error", error));
+        res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal server error", error));
     }
 }
 export async function getStudentAttendance(req: Request, res: Response, studentId: string) {
@@ -77,7 +78,7 @@ export async function getStudentAttendance(req: Request, res: Response, studentI
         });
 
         if (!student) {
-            res.status(404).json(errorJson("Student not found", null));
+            res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Student not found", null));
             return;
         }
 
@@ -99,7 +100,7 @@ export async function getStudentAttendance(req: Request, res: Response, studentI
         });
 
         if (subjectIds.size === 0) {
-            res.status(200).json(errorJson("No enrolled subjects/packages found", null));
+            res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("No enrolled subjects/packages found", null));
             return;
         }
 
@@ -141,16 +142,16 @@ export async function getStudentAttendance(req: Request, res: Response, studentI
             created_at: lecture.created_at
         }));
 
-        res.status(200).json(successJson("Attendance records retrieved successfully", attendanceData));
+        res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Attendance records retrieved successfully", attendanceData));
     } catch (error) {
-        res.status(500).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
+        res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
     }
 }
 
 export async function markAttendance(req: Request, res: Response, lectureId: string, studentId: string) {
     try {
         if (!lectureId || !studentId) {
-            res.status(404).json(errorJson("LectureId and StudentId required", null));
+            res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("LectureId and StudentId required", null));
             return;
         }
 
@@ -161,8 +162,8 @@ export async function markAttendance(req: Request, res: Response, lectureId: str
             }
         });
 
-        res.status(201).json(successJson("Attendance Marked Successfully", attendance.id));
+        res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Attendance Marked Successfully", attendance.id));
     } catch (error) {
-        res.status(500).json(errorJson("Internal server error", error));
+        res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Internal server error", error));
     }
 }

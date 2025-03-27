@@ -1,15 +1,15 @@
-import express, { Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { errorJson, successJson } from '../utils/common_funcs';
 import { prismaClient } from '../utils/database';
-import { PrismaClient } from "@prisma/client";
+import { STATUS_CODES } from '../utils/consts';
 
 // Get all subjects
 export async function getSubjects(req: Request, res: Response) {
     try {
         const subjects = await prismaClient.subject.findMany();
-        res.status(200).json(successJson("Subjects fetched successfully", subjects));
+        res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Subjects fetched successfully", subjects));
     } catch (error) {
-        res.status(500).json(errorJson("Failed to fetch subjects", error));
+        res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch subjects", error));
     }
 }
 
@@ -24,13 +24,13 @@ export async function getSubjectById(req: Request, res: Response) {
         });
 
         if (!subject) {
-            res.status(404).json(errorJson("Subject not found", null));
+            res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Subject not found", null));
             return;
         }
 
-        res.status(200).json(successJson("Subject fetched successfully", subject));
+        res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Subject fetched successfully", subject));
     } catch (error) {
-        res.status(500).json(errorJson("Failed to fetch subject", error));
+        res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch subject", error));
     }
 }
 
@@ -41,7 +41,7 @@ export async function createSubject(req: Request, res: Response) {
         const { name, subject_fees } = req.body;
 
         if (!name || !subject_fees) {
-            res.status(400).json(errorJson("Name and Subject Fees are required", null));
+            res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Name and Subject Fees are required", null));
             return;
         }
 
@@ -49,9 +49,9 @@ export async function createSubject(req: Request, res: Response) {
             data: { name, subject_fees }
         });
 
-        res.status(201).json(successJson("Subject created successfully", subject.id));
+        res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Subject created successfully", subject.id));
     } catch (error) {
-        res.status(500).json(errorJson("Failed to create subject", error));
+        res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Failed to create subject", error));
     }
 }
 
@@ -61,7 +61,7 @@ export async function updateSubject(req: Request, res: Response) {
         const { id, name, subject_fees } = req.body;
 
         if (!id || !name || !subject_fees) {
-            res.status(400).json(errorJson("ID, Name, and Subject Fees are required", null));
+            res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("ID, Name, and Subject Fees are required", null));
             return;
         }
 
@@ -70,9 +70,9 @@ export async function updateSubject(req: Request, res: Response) {
             data: { name, subject_fees }
         });
 
-        res.status(200).json(successJson("Subject updated successfully", 1));
+        res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Subject updated successfully", 1));
     } catch (error) {
-        res.status(500).json(errorJson("Failed to update subject", error));
+        res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Failed to update subject", error));
     }
 }
 
@@ -82,9 +82,9 @@ export async function deleteSubject(req: Request, res: Response) {
 
         await prismaClient.subject.delete({ where: { id: subject_id } });
 
-        res.status(200).json(successJson("Subject deleted successfully", 1));
+        res.status(STATUS_CODES.DELETE_SUCCESS).json(successJson("Subject deleted successfully", 1));
     } catch (error) {
-        res.status(500).json(errorJson("Failed to delete subject", error));
+        res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Failed to delete subject", error));
     }
 }
 
@@ -93,7 +93,7 @@ export async function getSubjectUsers(req: Request, res: Response) {
     try {
         const { subject_id, year } = req.query;
         if (!subject_id || !year) {
-            res.status(400).json(errorJson('Subject Id or year absent', null));
+            res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('Subject Id or year absent', null));
             return;
         }
         const numericYear = parseInt(year as string, 10);
@@ -115,9 +115,9 @@ export async function getSubjectUsers(req: Request, res: Response) {
             select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true }
         });
 
-        res.status(200).json(successJson("Subject users fetched successfully", subjectUsers));
+        res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Subject users fetched successfully", subjectUsers));
     } catch (error) {
-        res.status(500).json(errorJson("Failed to fetch subject users", error));
+        res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch subject users", error));
     }
 }
 
@@ -126,7 +126,7 @@ export async function getSubjectAttendance(req: Request, res: Response) {
     try {
         const { subject_id } = req.query;
         if (!subject_id) {
-            res.status(400).json(errorJson('Subject Id absent', null));
+            res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('Subject Id absent', null));
             return;
         }
         const attendanceRecords = await prismaClient.attendance.findMany({
@@ -143,9 +143,9 @@ export async function getSubjectAttendance(req: Request, res: Response) {
             // }
         });
 
-        res.status(200).json(successJson("Subject attendance fetched successfully", attendanceRecords));
+        res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Subject attendance fetched successfully", attendanceRecords));
     } catch (error) {
-        res.status(500).json(errorJson("Failed to fetch subject attendance", error));
+        res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch subject attendance", error));
     }
 }
 
@@ -167,9 +167,8 @@ export async function getStudentSubjects(req: Request, res: Response) {
             }
         });
 
-        res.status(200).json(successJson("Student subjects fetched successfully", studentSubjects));
+        res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Student subjects fetched successfully", studentSubjects));
     } catch (error) {
-        res.status(500).json(errorJson("Failed to fetch student subjects", error));
+        res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch student subjects", error));
     }
 }
-

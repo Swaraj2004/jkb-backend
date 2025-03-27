@@ -2,7 +2,7 @@ import { compare } from 'bcrypt';
 import { format, toZonedTime } from 'date-fns-tz';
 import { Request, Response } from 'express';
 import { errorJson } from '../utils/common_funcs';
-import { ACCESS_TOKEN_EXPIRE_MINUTES, TZ_INDIA } from '../utils/consts';
+import { ACCESS_TOKEN_EXPIRE_MINUTES, STATUS_CODES, TZ_INDIA } from '../utils/consts';
 import { prismaClient } from '../utils/database';
 import { TokenPayload } from '../utils/jwt_payload';
 import { createAccessToken } from '../utils/jwt_token';
@@ -16,7 +16,7 @@ export async function login(req: Request, res: Response) {
         });
 
         if (!userRecord) {
-            res.status(404).json(errorJson("User Record Not Found", null));
+            res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("User Record Not Found", null));
             return;
         }
 
@@ -37,7 +37,7 @@ export async function login(req: Request, res: Response) {
         });
 
         if (!userRole) {
-            res.status(404).json(errorJson("User Record Not Found", null));
+            res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("User Record Not Found", null));
             return;
         }
 
@@ -81,9 +81,9 @@ export async function login(req: Request, res: Response) {
             token_type: "bearer"
         };
 
-        res.status(200).json(result);
+        res.status(STATUS_CODES.SELECT_SUCCESS).json(result);
     } catch (error) {
-        res.status(500).json(errorJson("Failed to login user", error instanceof Error ? error.message : "Unknown error"));
+        res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to login user", error instanceof Error ? error.message : "Unknown error"));
     }
 }
 
@@ -95,7 +95,7 @@ export async function checkLoginStatus(req: Request, res: Response, userId: stri
         });
 
         if (!userLoginDetail || !userLoginDetail.lastlogin) {
-            res.status(404).json(errorJson("User Record Not Found or lastLogin not found", null));
+            res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("User Record Not Found or lastLogin not found", null));
             return;
         }
 
@@ -104,13 +104,13 @@ export async function checkLoginStatus(req: Request, res: Response, userId: stri
         const timeElapsed = (currentTime.getTime() - lastLogin.getTime()) / (1000 * 60); // Convert ms to minutes
 
         if (timeElapsed > ACCESS_TOKEN_EXPIRE_MINUTES) {
-            res.json(errorJson("User logged out!", 0));
+            res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("User logged out!", 0));
             return;
         }
 
         const timeLeft = ACCESS_TOKEN_EXPIRE_MINUTES - Math.floor(timeElapsed);
 
-        res.json({
+        res.status(STATUS_CODES.SELECT_SUCCESS).json({
             success: true,
             message: "User logged in!",
             time_left: timeLeft

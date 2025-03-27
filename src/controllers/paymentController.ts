@@ -4,6 +4,7 @@ import { prismaClient } from '../utils/database';
 import { Decimal } from '@prisma/client/runtime/library';
 import { PaymentBody } from '../models/paymet_req_body';
 import { AuthenticatedRequest } from '../middlewares/authMiddleware';
+import { STATUS_CODES } from '../utils/consts';
 
 export async function getPaymentById(req: Request, res: Response, paymentId: string) {
     try {
@@ -11,22 +12,22 @@ export async function getPaymentById(req: Request, res: Response, paymentId: str
             where: { id: paymentId }
         });
 
-        res.status(200).json(successJson("Payment fetched successfully", payment));
+        res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Payment fetched successfully", payment));
     } catch (error) {
-        res.status(500).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
+        res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
     }
 }
 
 export async function getAllPayments(req: Request, res: Response, start_date: string, end_date: string) {
     if (!start_date || !end_date) {
-        res.status(400).json(errorJson("Start date and end date are required", null));
+        res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Start date and end date are required", null));
         return;
     }
     const startDate = new Date(start_date as string);
     const endDate = new Date(end_date as string);
 
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-        res.status(400).json(errorJson("Invalid date format", null));
+        res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Invalid date format", null));
         return;
     }
 
@@ -40,15 +41,15 @@ export async function getAllPayments(req: Request, res: Response, start_date: st
             }
         });
 
-        res.status(200).json(successJson("Payments fetched successfully", payments));
+        res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Payments fetched successfully", payments));
     } catch (error) {
-        res.status(500).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
+        res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
     }
 }
 
 export async function getStudentPayments(req: Request, res: Response, studentId: string) {
     if (!studentId || studentId.trim().length === 0) {
-        res.status(400).json(errorJson("Student Id Required", null));
+        res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Student Id Required", null));
         return;
     }
     try {
@@ -56,9 +57,9 @@ export async function getStudentPayments(req: Request, res: Response, studentId:
             where: { student_id: studentId }
         });
 
-        res.status(200).json(successJson("Payment fetched successfully", payment));
+        res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Payment fetched successfully", payment));
     } catch (error) {
-        res.status(500).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
+        res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
     }
 }
 
@@ -73,7 +74,7 @@ export async function createPayment(req: AuthenticatedRequest, res: Response) {
         });
 
         if (!student) {
-            res.status(404).json(errorJson("Student not found", null));
+            res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Student not found", null));
             return;
         }
 
@@ -107,7 +108,7 @@ export async function createPayment(req: AuthenticatedRequest, res: Response) {
         const amountPaid = new Decimal(paymentBody.amount);
 
         if (pendingFees.lessThan(amountPaid)) {
-            res.status(400).json(errorJson("Amount paid cannot be greater than pending fees", null));
+            res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Amount paid cannot be greater than pending fees", null));
             return;
         }
 
@@ -138,20 +139,20 @@ export async function createPayment(req: AuthenticatedRequest, res: Response) {
             return newPayment;
         });
 
-        res.status(201).json(successJson("Payment created successfully", payment.id));
+        res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Payment created successfully", payment.id));
     } catch (error) {
-        res.status(500).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
+        res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
     }
 }
 
 export async function deletePayment(req: Request, res: Response, paymentId: string) {
     if (!paymentId || paymentId.trim().length === 0) {
-        res.status(400).json(errorJson("Payment Id Required", null));
+        res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Payment Id Required", null));
         return;
     }
 
     if (!paymentId || paymentId.trim().length === 0) {
-        res.status(400).json(errorJson("Payment Id Required", null));
+        res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Payment Id Required", null));
         return;
     }
 
@@ -163,7 +164,7 @@ export async function deletePayment(req: Request, res: Response, paymentId: stri
         });
 
         if (!payment || !payment.amount) {
-            res.status(404).json(errorJson("Payment not found", null));
+            res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Payment not found", null));
             return;
         }
 
@@ -174,7 +175,7 @@ export async function deletePayment(req: Request, res: Response, paymentId: stri
         });
 
         if (!student || !student.pending_fees) {
-            res.status(404).json(errorJson("Student not found", null));
+            res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Student not found", null));
             return;
         }
 
@@ -195,9 +196,9 @@ export async function deletePayment(req: Request, res: Response, paymentId: stri
             });
         });
 
-        res.status(200).json(successJson("Payment deleted successfully", 1));
+        res.status(STATUS_CODES.DELETE_SUCCESS).json(successJson("Payment deleted successfully", 1));
     } catch (error) {
-        res.status(500).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
+        res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
     }
 }
 
@@ -212,7 +213,7 @@ export async function editPayment(req: AuthenticatedRequest, res: Response) {
         });
 
         if (!existingPayment || !existingPayment.amount) {
-            res.status(404).json(errorJson("Payment record not found or payment amount is null", null));
+            res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Payment record not found or payment amount is null", null));
             return;
         }
 
@@ -222,11 +223,11 @@ export async function editPayment(req: AuthenticatedRequest, res: Response) {
         });
 
         if (!student) {
-            res.status(404).json(errorJson("Student not found", null));
+            res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Student not found", null));
             return;
         }
         if (!student.pending_fees || student.pending_fees.lessThanOrEqualTo(0)) {
-            res.status(400).json(errorJson("Student has no pending fees to pay", null));
+            res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Student has no pending fees to pay", null));
             return;
         }
 
@@ -236,7 +237,7 @@ export async function editPayment(req: AuthenticatedRequest, res: Response) {
         let pendingFees = student.pending_fees.plus(previousAmount).minus(newAmount);   // calculation
 
         if (pendingFees.lessThan(0)) {
-            res.status(400).json(errorJson("Amount paid cannot be greater than pending fees", null));
+            res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Amount paid cannot be greater than pending fees", null));
             return;
         }
 
@@ -266,8 +267,8 @@ export async function editPayment(req: AuthenticatedRequest, res: Response) {
             return payment;
         });
 
-        res.status(200).json(successJson("Payment updated successfully", 1));
+        res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Payment updated successfully", 1));
     } catch (error) {
-        res.status(500).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
+        res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
     }
 }

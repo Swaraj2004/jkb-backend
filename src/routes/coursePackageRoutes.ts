@@ -1,8 +1,7 @@
 import express, { Request, Response } from 'express';
 import { createCoursePackage, deleteCoursePackage, getAllCoursePackages, getAllCoursePackagesIdName, getCoursePackageById, getProfessors, getStudentPackages, getSubjectPackageUsers, updateCoursePackage } from '../controllers/coursePackageController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
-import { AUTH_ROLES, GET_ALTERNATIVE, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
-import { errorJson } from '../utils/common_funcs';
+import { GET_ALTERNATIVE, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
 
 const router = express.Router();
 
@@ -102,19 +101,19 @@ router.get('/subject-package-users', authMiddleware, authorizeRoles(), async (re
  *         description: A list of course packages for the student
  */
 router.get('/student-packages/:student_id', authMiddleware, authorizeRoles([PROFESSOR_ROLE, STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response) => {
-    if (!req.user) {
-        res.status(401).json(errorJson("Please log in first", null));
-        return;
-    }
+    // if (!req.user) {
+    //     res.status(401).json(errorJson("Please log in first", null));
+    //     return;
+    // }
 
-    if (
-        !AUTH_ROLES.includes(req.user.role_name) &&
-        req.user.role_name !== PROFESSOR_ROLE &&
-        req.user.id != req.params.user_id
-    ) {
-        res.status(403).json(errorJson("Unauthorized", null));
-        return;
-    }
+    // if (
+    //     !AUTH_ROLES.includes(req.user.role_name) &&
+    //     req.user.role_name !== PROFESSOR_ROLE &&
+    //     req.user.id != req.params.user_id
+    // ) {
+    //     res.status(403).json(errorJson("Unauthorized", null));
+    //     return;
+    // }
     return getStudentPackages(req, res, req.params.student_id);
 });
 

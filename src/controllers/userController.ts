@@ -1,18 +1,11 @@
 import { hash } from "bcrypt";
 import { Request, Response } from "express";
 import { prismaClient } from "../utils/database";
-import { DEFAULT_QUERRY_SKIP, DEFAULT_QUERRY_TAKE, SALT, STUDENT_ROLE } from "../utils/consts";
+import { DEFAULT_QUERRY_SKIP, DEFAULT_QUERRY_TAKE, SALT, STATUS_CODES, STUDENT_ROLE } from "../utils/consts";
 import { User } from "@prisma/client";
 import { successJson, errorJson } from "../utils/common_funcs";
 
 export const createUser = async (req: Request, res: Response) => {
-  // user, usertoken and user roles
-  // const valuesToPass = {
-  //     role_name: roleName,
-  //     username: createRecord.username,
-  //     password: createRecord.password,
-  // };
-
   try {
     const user: User = req.body;
     user.password = await hash(user.password, SALT);      // Hash the password
@@ -22,7 +15,7 @@ export const createUser = async (req: Request, res: Response) => {
     }); // Find student role_id
 
     if (!studentRole) {
-      res.status(500).json(errorJson("Student role not found", null));
+      res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Student role not found", null));
       return;     // dont allow to create a new user
     }
 
@@ -42,9 +35,9 @@ export const createUser = async (req: Request, res: Response) => {
       return createdUser;
     });
 
-    res.status(201).json(successJson("Record inserted Successfully", newUser.id));
+    res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Record inserted Successfully", newUser.id));
   } catch (error) {
-    res.status(500).json(errorJson("Failed to create user", error instanceof Error ? error.message : "Unknown Error"));
+    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Failed to create user", error instanceof Error ? error.message : "Unknown Error"));
   }
 };
 
@@ -55,7 +48,7 @@ export const getUsers = async (req: Request, res: Response, id: string | null = 
         where: { id: id },
         select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true }
       });
-      res.status(200).json(successJson("Users fetched successfully", user));
+      res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Users fetched successfully", user));
       return;
     }
     const { skip = DEFAULT_QUERRY_SKIP, take = DEFAULT_QUERRY_TAKE } = req.query;
@@ -70,9 +63,9 @@ export const getUsers = async (req: Request, res: Response, id: string | null = 
       select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true }
     });
 
-    res.status(200).json(successJson("Users fetched successfully", users));
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Users fetched successfully", users));
   } catch (error) {
-    res.status(500).json(errorJson("Failed to fetch users", error instanceof Error ? error.message : "Unknown Error"));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch users", error instanceof Error ? error.message : "Unknown Error"));
   }
 };
 
@@ -84,9 +77,9 @@ export const deleteUser = async (req: Request, res: Response) => {
         id: userId
       }
     });
-    res.status(201).json(successJson("Record deleted Successfully", 1));
+    res.status(STATUS_CODES.DELETE_SUCCESS).json(successJson("Record deleted Successfully", 1));
   } catch (error) {
-    res.status(500).json(errorJson("Failed to create user", error instanceof Error ? error.message : "Unknown Error"));
+    res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Failed to create user", error instanceof Error ? error.message : "Unknown Error"));
   }
 };
 
@@ -95,7 +88,7 @@ export const updateUser = async (req: Request, res: Response) => {
   try {
     const user: User = req.body;
     if (!user.id && !user.email) {
-      res.status(400).json(errorJson("User identifier missing", "Provide either ID or Email"));
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("User identifier missing", "Provide either ID or Email"));
       return;
     }
 
@@ -110,8 +103,8 @@ export const updateUser = async (req: Request, res: Response) => {
       where: user.id ? { id: user.id } : { email: user.email },
       data: updateData
     })
-    res.status(201).json(successJson("Record Updated Successfully", 1));
+    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Record Updated Successfully", 1));
   } catch (error) {
-    res.status(500).json(errorJson("Failed to update user", error instanceof Error ? error.message : "Unknown Error"));
+    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Failed to update user", error instanceof Error ? error.message : "Unknown Error"));
   }
 }

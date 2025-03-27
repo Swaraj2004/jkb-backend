@@ -19,5 +19,22 @@ export const PROFESSOR_ROLE = 'professor';
 export const DEFAULT_QUERRY_SKIP = 0;
 export const DEFAULT_QUERRY_TAKE = 50;
 export const GET_ALTERNATIVE = 'alternative';
+export const STATUS_CODES = {
+    CREATE_SUCCESS: 201,
+    CREATE_FAILURE: 500,
+
+    SELECT_SUCCESS: 200,
+    SELECT_FAILURE: 404,
+
+    UPDATE_SUCCESS: 200,
+    UPDATE_FAILURE: 500,
+    
+    DELETE_SUCCESS: 200,
+    DELETE_FAILURE: 500,
+    
+    BAD_REQUEST: 400,
+    FORBIDDEN_REQUEST: 403,
+    UNAUTHORIZED: 401
+};
 // const LECTURE_COLLECTION_NAME = 'lectures'; // Define your lecture collection name
 // const ATTENDANCE_COLLECTION_NAME = 'attendance'; // Define your attendance collection name

@@ -1,8 +1,7 @@
 import express, { Request, Response } from 'express';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { getLectureAttendance, getStudentAttendance, markAttendance } from '../controllers/attendanceController';
-import { AUTH_ROLES, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
-import { errorJson } from '../utils/common_funcs';
+import { PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
 
 const router = express.Router();
 
@@ -105,19 +104,19 @@ router.post('/student/mark-attendance', authMiddleware, authorizeRoles([STUDENT_
  *         description: A list of attendance records for the student
  */
 router.get('/student/attendance', authMiddleware, authorizeRoles([STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response) => {
-    if (!req.user) {
-        res.status(401).json(errorJson("Please log in first", null));
-        return;
-    }
+    // if (!req.user) {
+    //     res.status(401).json(errorJson("Please log in first", null));
+    //     return;
+    // }
     
-    if (
-        !AUTH_ROLES.includes(req.user.role_name) &&
-        req.user.role_name !== PROFESSOR_ROLE &&
-        req.user.id != req.params.user_id
-    ) {
-        res.status(403).json(errorJson("Unauthorized", null));
-        return;
-    }
+    // if (
+    //     !AUTH_ROLES.includes(req.user.role_name) &&
+    //     req.user.role_name !== PROFESSOR_ROLE &&
+    //     req.user.id != req.params.user_id
+    // ) {
+    //     res.status(403).json(errorJson("Unauthorized", null));
+    //     return;
+    // }
     
     const studentId = req.query.student_id;
     return getStudentAttendance(req, res, studentId as string);

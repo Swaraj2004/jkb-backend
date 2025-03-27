@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prismaClient } from '../utils/database';
 import { errorJson, successJson } from '../utils/common_funcs';
+import { STATUS_CODES } from '../utils/consts';
 
 /**
  * GET /professor/subjects?professor_id=...
@@ -10,7 +11,7 @@ export async function getProfessorSubjects(req: Request, res: Response) {
     try {
         const professorId = req.query.professor_id as string;
         if (!professorId) {
-            res.status(400).json(errorJson('Professor ID is required', null));
+            res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('Professor ID is required', null));
             return;
         }
 
@@ -22,9 +23,9 @@ export async function getProfessorSubjects(req: Request, res: Response) {
             },
         });
 
-        res.status(200).json(successJson('Subjects fetched successfully', subjects));
+        res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson('Subjects fetched successfully', subjects));
     } catch (error) {
-        res.status(500).json(errorJson('Internal Server Error', error));
+        res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson('Internal Server Error', error));
     }
 }
 
@@ -36,7 +37,7 @@ export async function getProfessorLectures(req: Request, res: Response) {
     try {
         const professorId = req.query.professor_id as string;
         if (!professorId) {
-            res.status(400).json(errorJson('Professor ID is required', null));
+            res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('Professor ID is required', null));
             return;
         }
 
@@ -44,10 +45,10 @@ export async function getProfessorLectures(req: Request, res: Response) {
             where: { professor_id: professorId },
         });
 
-        res.status(200).json(successJson('Lectures fetched successfully', lectures));
+        res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson('Lectures fetched successfully', lectures));
     } catch (error) {
         console.error('Error fetching lectures:', error);
-        res.status(500).json(errorJson('Internal Server Error', error));
+        res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson('Internal Server Error', error));
     }
 }
 
@@ -70,9 +71,9 @@ export async function createProfessorLectures(req: Request, res: Response) {
             },
         });
 
-        res.status(201).json(successJson('Lecture created successfully', newLecture.id));
+        res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson('Lecture created successfully', newLecture.id));
     } catch (error) {
-        res.status(500).json(errorJson('Internal Server Error', error));
+        res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson('Internal Server Error', error));
     }
 }
 
@@ -84,7 +85,7 @@ export async function updateProfessorLectures(req: Request, res: Response) {
     try {
         const updatedLecture = req.body;
         if (!updatedLecture.id) {
-            res.status(400).json(errorJson('Lecture ID is required', null));
+            res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('Lecture ID is required', null));
             return;
         }
 
@@ -93,9 +94,9 @@ export async function updateProfessorLectures(req: Request, res: Response) {
             data: { attendance_toggle: updatedLecture.attendance_toggle, },
         });
 
-        res.status(200).json(successJson('Lecture updated successfully', 1));
+        res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson('Lecture updated successfully', 1));
     } catch (error) {
-        res.status(500).json(errorJson('Internal Server Error', error));
+        res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson('Internal Server Error', error));
     }
 }
 
@@ -107,14 +108,14 @@ export async function deleteProfessorLectures(req: Request, res: Response) {
     try {
         const lectureId = req.params.lecture_id;
         if (!lectureId) {
-            res.status(400).json(errorJson('Lecture ID is required', null));
+            res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('Lecture ID is required', null));
             return;
         }
 
         await prismaClient.lecture.delete({ where: { id: lectureId }, });
 
-        res.status(200).json(successJson('Lecture deleted successfully', 1));
+        res.status(STATUS_CODES.DELETE_SUCCESS).json(successJson('Lecture deleted successfully', 1));
     } catch (error) {
-        res.status(500).json(errorJson('Internal Server Error', error));
+        res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson('Internal Server Error', error));
     }
 }
