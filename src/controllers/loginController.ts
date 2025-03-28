@@ -50,21 +50,11 @@ export async function login(req: Request, res: Response) {
 
         const now = toZonedTime(new Date(), TZ_INDIA);   // Convert to Indian timezone
 
-        // // Update or create a login status record.
-        // const existingLoginStatus = await prismaClient.userLoginStatus.findUnique({
-        //     where: { user_id: userRecord.id }
-        // });
-
-        // if (existingLoginStatus) {
-        //     await prismaClient.userLoginStatus.update({
-        //         where: { user_id: userRecord.id },
-        //         data: { last_login: now }
-        //     });
-        // } else {
-        //     await prismaClient.userLoginStatus.create({
-        //         data: { user_id: userRecord.id, last_login: now }
-        //     });
-        // }
+        // Update login status record.
+        await prismaClient.user.update({
+            where: { id: userRecord.id },
+            data: { lastlogin: now }
+        });
 
         // Build the response payload.
         const result = {
