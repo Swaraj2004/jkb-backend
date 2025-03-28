@@ -120,7 +120,7 @@ export async function resetPassword(req: Request, res: Response) {
             return;
         }
 
-        const newPassword = await hash(userRecord.password, SALT);
+        const newPassword = await hash(password, SALT);
 
         // Update the user's password
         await prismaClient.user.update({
