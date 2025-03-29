@@ -124,7 +124,7 @@ export async function createPayment(req: AuthenticatedRequest, res: Response) {
                     mode: paymentBody.mode,
                     remark: paymentBody.remark,
                     is_gst: paymentBody.is_gst,
-                    pending: !newPendingFees.eq(0),
+                    pending: newPendingFees,
                     student_id: paymentBody.student_id,
                     created_by: paymentBody.staff_id == null ? req.user?.id : paymentBody.staff_id, // review this i am adding staff_id from body to created_by col
                 }
@@ -251,7 +251,7 @@ export async function editPayment(req: AuthenticatedRequest, res: Response) {
                     amount: newAmount,
                     is_gst: paymentData.is_gst,
                     status: paymentData.status,
-                    pending: !pendingFees.eq(0),
+                    pending: pendingFees,
                     remark: paymentData.remark,
                     // receipt_number should not be updated as it's generated
                     created_by: paymentData.staff_id == null ? req.user?.id : paymentData.staff_id
