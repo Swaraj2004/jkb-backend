@@ -137,14 +137,14 @@ model Payment {
   mode           String?
   status         String?
   is_gst         Boolean
-  student_id     String    @db.Uuid
+  user_id        String    @db.Uuid
   remark         String?
   pending        Decimal
   created_at     DateTime  @default(now()) @db.Timestamptz()
   updated_at     DateTime? @updatedAt @db.Timestamptz()
   created_by     String?   @db.Uuid
 
-  student   StudentDetail @relation(fields: [student_id], references: [id])
+  student   StudentDetail @relation(fields: [user_id], references: [id])
   createdBy User?         @relation("PaymentCreatedBy", fields: [created_by], references: [id])
 }
 

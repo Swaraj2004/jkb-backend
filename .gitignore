@@ -8,3 +8,4 @@ prisma/dev.db-journal
 prisma/migrations/
 prisma/.env
 prisma/generated/
+*.sql
