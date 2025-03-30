@@ -79,9 +79,9 @@ router.get('/admin/payments', authMiddleware, authorizeRoles(), async (req: Requ
  *       200:
  *         description: A list of payment objects for the student
  */
-router.get('/admin/student-payments/:student_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
-    const studentId = req.params.student_id;
-    return getStudentPayments(req, res, studentId);
+router.get('/admin/student-payments/:user_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+    const userId = req.params.user_id;
+    return getStudentPayments(req, res, userId);
 });
 
 /**

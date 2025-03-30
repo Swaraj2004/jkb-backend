@@ -5,7 +5,7 @@ export interface PaymentBody {
     pending: number;
     is_gst: boolean;
     status: string;
-    student_id: string;
+    user_id: string;
     staff_id: string;
     remark?: string;
     receipt_number?: string;

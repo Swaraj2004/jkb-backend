@@ -49,6 +49,7 @@ model User {
 
   // Payments created by the user (using the "PaymentCreatedBy" relation)
   paymentsCreated Payment[] @relation("PaymentCreatedBy")
+  payments        Payment[]
 
   SubjectProfessor SubjectProfessor[]
   Test             Test[]
@@ -124,7 +125,6 @@ model StudentDetail {
 
   user            User             @relation(fields: [user_id], references: [id])
   branch          Branch?          @relation(fields: [branch_id], references: [id])
-  payments        Payment[]
   studentSubjects StudentSubject[]
   studentPackages StudentPackage[]
   attendance      Attendance[]
@@ -144,8 +144,8 @@ model Payment {
   updated_at     DateTime? @updatedAt @db.Timestamptz()
   created_by     String?   @db.Uuid
 
-  student   StudentDetail @relation(fields: [user_id], references: [id])
-  createdBy User?         @relation("PaymentCreatedBy", fields: [created_by], references: [id])
+  student   User  @relation(fields: [user_id], references: [id])
+  createdBy User? @relation("PaymentCreatedBy", fields: [created_by], references: [id])
 }
 
 model Lecture {

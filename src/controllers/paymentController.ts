@@ -47,14 +47,14 @@ export async function getAllPayments(req: Request, res: Response, start_date: st
     }
 }
 
-export async function getStudentPayments(req: Request, res: Response, studentId: string) {
-    if (!studentId || studentId.trim().length === 0) {
+export async function getStudentPayments(req: Request, res: Response, userId: string) {
+    if (!userId || userId.trim().length === 0) {
         res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Student Id Required", null));
         return;
     }
     try {
         const payment = await prismaClient.payment.findFirst({
-            where: { student_id: studentId }
+            where: { user_id: userId }
         });
 
         res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Payment fetched successfully", payment));
@@ -69,7 +69,9 @@ export async function createPayment(req: AuthenticatedRequest, res: Response) {
 
         // 1. Find the student
         const student = await prismaClient.studentDetail.findUnique({
-            where: { id: paymentBody.student_id },
+            where: {
+                user_id: paymentBody.user_id
+            },
             select: { pending_fees: true }
         });
 
@@ -125,14 +127,14 @@ export async function createPayment(req: AuthenticatedRequest, res: Response) {
                     remark: paymentBody.remark,
                     is_gst: paymentBody.is_gst,
                     pending: newPendingFees,
-                    student_id: paymentBody.student_id,
+                    user_id: paymentBody.user_id,
                     created_by: paymentBody.staff_id == null ? req.user?.id : paymentBody.staff_id, // review this i am adding staff_id from body to created_by col
                 }
             });
 
             // Update student record
             await tx.studentDetail.update({
-                where: { id: paymentBody.student_id },
+                where: { user_id: paymentBody.user_id },
                 data: { pending_fees: newPendingFees, }
             });
 
@@ -160,7 +162,7 @@ export async function deletePayment(req: Request, res: Response, paymentId: stri
         // 1. Find the payment record
         const payment = await prismaClient.payment.findUnique({
             where: { id: paymentId },
-            select: { id: true, amount: true, student_id: true }
+            select: { id: true, amount: true, user_id: true }
         });
 
         if (!payment || !payment.amount) {
@@ -170,7 +172,7 @@ export async function deletePayment(req: Request, res: Response, paymentId: stri
 
         // 2. Find the associated student
         const student = await prismaClient.studentDetail.findUnique({
-            where: { id: payment.student_id },
+            where: { user_id: payment.user_id },
             select: { pending_fees: true }
         });
 
@@ -186,7 +188,7 @@ export async function deletePayment(req: Request, res: Response, paymentId: stri
         await prismaClient.$transaction(async (tx) => {
             // Update student details first
             await tx.studentDetail.update({
-                where: { id: payment.student_id },
+                where: { user_id: payment.user_id },
                 data: { pending_fees: updatedPendingFees, }
             });
 
@@ -209,7 +211,7 @@ export async function editPayment(req: AuthenticatedRequest, res: Response) {
         // 1. Get existing payment and student
         const existingPayment = await prismaClient.payment.findUnique({
             where: { id: record_id },
-            select: { amount: true, student_id: true }
+            select: { amount: true, user_id: true }
         });
 
         if (!existingPayment || !existingPayment.amount) {
@@ -218,7 +220,7 @@ export async function editPayment(req: AuthenticatedRequest, res: Response) {
         }
 
         const student = await prismaClient.studentDetail.findUnique({
-            where: { id: existingPayment.student_id },
+            where: { user_id: existingPayment.user_id },
             select: { pending_fees: true }
         });
 
@@ -260,7 +262,7 @@ export async function editPayment(req: AuthenticatedRequest, res: Response) {
 
             // Update student pending fees
             await tx.studentDetail.update({
-                where: { id: existingPayment.student_id },
+                where: { user_id: existingPayment.user_id },
                 data: { pending_fees: pendingFees }
             });
 
