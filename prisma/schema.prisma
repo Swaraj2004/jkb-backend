@@ -63,8 +63,8 @@ model UserRole {
   user_id String @db.Uuid
   role_id String @db.Uuid
 
-  user User @relation(fields: [user_id], references: [id])
-  role Role @relation(fields: [role_id], references: [id])
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [role_id], references: [id], onDelete: Cascade)
 }
 
 model Branch {
@@ -123,7 +123,7 @@ model StudentDetail {
   created_at      DateTime  @default(now()) @db.Timestamptz()
   updated_at      DateTime? @updatedAt @db.Timestamptz()
 
-  user            User             @relation(fields: [user_id], references: [id])
+  user            User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
   branch          Branch?          @relation(fields: [branch_id], references: [id])
   studentSubjects StudentSubject[]
   studentPackages StudentPackage[]
@@ -144,7 +144,7 @@ model Payment {
   updated_at     DateTime? @updatedAt @db.Timestamptz()
   created_by     String?   @db.Uuid
 
-  student   User  @relation(fields: [user_id], references: [id])
+  student   User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
   createdBy User? @relation("PaymentCreatedBy", fields: [created_by], references: [id])
 }
 
@@ -159,8 +159,8 @@ model Lecture {
   updated_at        DateTime? @updatedAt @db.Timestamptz()
   created_by        String?
 
-  subject    Subject      @relation(fields: [subject_id], references: [id])
-  professor  User         @relation(fields: [professor_id], references: [id])
+  subject    Subject      @relation(fields: [subject_id], references: [id], onDelete: Cascade)
+  professor  User         @relation(fields: [professor_id], references: [id], onDelete: Cascade)
   attendance Attendance[]
 }
 
@@ -170,8 +170,8 @@ model Attendance {
   student_id String   @db.Uuid
   created_at DateTime @default(now()) @db.Timestamptz()
 
-  lecture Lecture       @relation(fields: [lecture_id], references: [id])
-  student StudentDetail @relation(fields: [student_id], references: [id])
+  lecture Lecture       @relation(fields: [lecture_id], references: [id], onDelete: Cascade)
+  student StudentDetail @relation(fields: [student_id], references: [id], onDelete: Cascade)
 }
 
 model SubjectProfessor {
@@ -179,8 +179,8 @@ model SubjectProfessor {
   professor_id String   @db.Uuid
   created_at   DateTime @default(now()) @db.Timestamptz()
 
-  subject   Subject @relation(fields: [subject_id], references: [id])
-  professor User    @relation(fields: [professor_id], references: [id])
+  subject   Subject @relation(fields: [subject_id], references: [id], onDelete: Cascade)
+  professor User    @relation(fields: [professor_id], references: [id], onDelete: Cascade)
 
   @@id([subject_id, professor_id]) // composite key
 }
@@ -190,8 +190,8 @@ model PackageSubject {
   subject_id String   @db.Uuid
   created_at DateTime @default(now()) @db.Timestamptz()
 
-  package Package @relation(fields: [package_id], references: [id])
-  subject Subject @relation(fields: [subject_id], references: [id])
+  package Package @relation(fields: [package_id], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subject_id], references: [id], onDelete: Cascade)
 
   @@id([package_id, subject_id])
 }
@@ -201,8 +201,8 @@ model StudentSubject {
   subject_id String   @db.Uuid
   created_at DateTime @default(now()) @db.Timestamptz()
 
-  student StudentDetail @relation(fields: [student_id], references: [id])
-  subject Subject       @relation(fields: [subject_id], references: [id])
+  student StudentDetail @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  subject Subject       @relation(fields: [subject_id], references: [id], onDelete: Cascade)
 
   @@id([student_id, subject_id])
 }
@@ -212,8 +212,8 @@ model StudentPackage {
   package_id String   @db.Uuid
   created_at DateTime @default(now()) @db.Timestamptz()
 
-  student StudentDetail @relation(fields: [student_id], references: [id])
-  package Package       @relation(fields: [package_id], references: [id])
+  student StudentDetail @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  package Package       @relation(fields: [package_id], references: [id], onDelete: Cascade)
 
   @@id([student_id, package_id])
 }
@@ -230,8 +230,8 @@ model Test {
   created_at     DateTime  @default(now()) @db.Timestamptz()
   updated_at     DateTime? @updatedAt @db.Timestamptz()
 
-  professor       User             @relation(fields: [user_id], references: [id])
-  subject         Subject          @relation(fields: [subject_id], references: [id])
+  professor       User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  subject         Subject          @relation(fields: [subject_id], references: [id], onDelete: Cascade)
   testQuestions   TestQuestion[]
   testSubmissions TestSubmission[]
 }
@@ -244,7 +244,7 @@ model TestQuestion {
   marks             Int
   created_at        DateTime @default(now()) @db.Timestamptz()
 
-  test    Test             @relation(fields: [test_id], references: [id])
+  test    Test             @relation(fields: [test_id], references: [id], onDelete: Cascade)
   options QuestionOption[] @relation("QuestionOptions")
 
   // correct_option       QuestionOption         @relation("CorrectOption", fields: [correct_option_id], references: [id])
@@ -272,8 +272,8 @@ model TestSubmission {
   created_at DateTime  @default(now()) @db.Timestamptz()
   updated_at DateTime? @updatedAt @db.Timestamptz()
 
-  test    Test                   @relation(fields: [test_id], references: [id])
-  user    User                   @relation(fields: [user_id], references: [id])
+  test    Test                   @relation(fields: [test_id], references: [id], onDelete: Cascade)
+  user    User                   @relation(fields: [user_id], references: [id], onDelete: Cascade)
   answers TestSubmissionAnswer[]
 }
 
@@ -284,9 +284,9 @@ model TestSubmissionAnswer {
   selected_option_id String   @db.Uuid
   created_at         DateTime @default(now()) @db.Timestamptz()
 
-  testSubmission  TestSubmission @relation(fields: [test_submission_id], references: [id])
-  question        TestQuestion   @relation(fields: [question_id], references: [id])
-  selected_option QuestionOption @relation(fields: [selected_option_id], references: [id])
+  testSubmission  TestSubmission @relation(fields: [test_submission_id], references: [id], onDelete: Cascade)
+  question        TestQuestion   @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  selected_option QuestionOption @relation(fields: [selected_option_id], references: [id], onDelete: Cascade)
 }
 
 model MhAiCollege {
