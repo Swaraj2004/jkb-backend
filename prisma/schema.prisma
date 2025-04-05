@@ -259,7 +259,7 @@ model QuestionOption {
   created_at  DateTime @default(now()) @db.Timestamptz()
 
   // The question this option belongs to.
-  question TestQuestion @relation("QuestionOptions", fields: [question_id], references: [id])
+  question TestQuestion @relation("QuestionOptions", fields: [question_id], references: [id], onDelete: Cascade)
 
   // testQuestionAsCorrect TestQuestion?          @relation("CorrectOption")
   TestSubmissionAnswer  TestSubmissionAnswer[]
