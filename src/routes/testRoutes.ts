@@ -6,8 +6,8 @@ import { PROFESSOR_ROLE } from '../utils/consts';
 const router = express.Router();
 
 router.get('/professor/tests', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), (req: Request, res: Response) => {
-  const { proffessor_id } = req.query;
-  return getTests(req, res, proffessor_id as string);
+  const { professor_id } = req.query;
+  return getTests(req, res, professor_id as string);
 });
 
 router.post('/professor/tests', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), (req: AuthenticatedRequest, res: Response) => {
