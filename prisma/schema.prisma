@@ -220,17 +220,17 @@ model StudentPackage {
 
 model Test {
   id             String    @id @default(uuid()) @db.Uuid
-  professor_id   String    @db.Uuid
+  user_id        String    @db.Uuid     // professor_id
   subject_id     String    @db.Uuid
   title          String
   test_toggle    Boolean   @default(false)
   conducted      Boolean   @default(false)
   test_timestamp DateTime? @db.Timestamptz()
-  total_marks    Int?
+  // total_marks    Int?
   created_at     DateTime  @default(now()) @db.Timestamptz()
   updated_at     DateTime? @updatedAt @db.Timestamptz()
 
-  professor       User             @relation(fields: [professor_id], references: [id])
+  professor       User             @relation(fields: [user_id], references: [id])
   subject         Subject          @relation(fields: [subject_id], references: [id])
   testQuestions   TestQuestion[]
   testSubmissions TestSubmission[]
@@ -240,14 +240,14 @@ model TestQuestion {
   id                String   @id @default(uuid()) @db.Uuid
   test_id           String   @db.Uuid
   question_text     String
-  correct_option_id String   @unique @db.Uuid
+  // correct_option_id String   @unique @db.Uuid
   marks             Int
   created_at        DateTime @default(now()) @db.Timestamptz()
 
   test    Test             @relation(fields: [test_id], references: [id])
   options QuestionOption[] @relation("QuestionOptions")
 
-  correct_option       QuestionOption         @relation("CorrectOption", fields: [correct_option_id], references: [id])
+  // correct_option       QuestionOption         @relation("CorrectOption", fields: [correct_option_id], references: [id])
   TestSubmissionAnswer TestSubmissionAnswer[]
 }
 
@@ -255,13 +255,13 @@ model QuestionOption {
   id          String   @id @default(uuid()) @db.Uuid
   question_id String   @db.Uuid
   option_text String
-  is_correct  Boolean?
+  is_correct  Boolean
   created_at  DateTime @default(now()) @db.Timestamptz()
 
   // The question this option belongs to.
   question TestQuestion @relation("QuestionOptions", fields: [question_id], references: [id])
 
-  testQuestionAsCorrect TestQuestion?          @relation("CorrectOption")
+  // testQuestionAsCorrect TestQuestion?          @relation("CorrectOption")
   TestSubmissionAnswer  TestSubmissionAnswer[]
 }
 
