@@ -27,7 +27,19 @@ app.listen(PORT, () => {
 });
 
 // Middleware
-app.use(cors());
+
+const allowedOrigins = process.env.HOST_URLS?.split(",") || [];
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,       // to allow cookies
+  // methods: 'GET,PUT,POST,DELETE'   // if we uncoment this then only the given methods will be allowed
+}));
 app.use(express.json());
 app.use(cookieParser());
 
