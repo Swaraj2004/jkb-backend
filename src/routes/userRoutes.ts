@@ -1,5 +1,5 @@
 import express, { Response, Request } from 'express';
-import { createUser, deleteUser, getUsers, updateUser } from '../controllers/userController';
+import { createStudent, createUser, deleteUser, getUsers, updateUser } from '../controllers/userController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { AUTH_ROLES, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
 import { errorJson } from '../utils/common_funcs';
@@ -88,8 +88,12 @@ router.get('/', authMiddleware, authorizeRoles(), async (req: AuthenticatedReque
  *         description: The created user object
  */
 
-router.post('/', async (req: Request, res: Response) => {
+router.post('/',authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
     return createUser(req, res);
+});
+
+router.post('/student', async (req: Request, res: Response) => {
+    return createStudent(req, res);
 });
 
 /**

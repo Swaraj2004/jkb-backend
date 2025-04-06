@@ -2,10 +2,60 @@ import { hash } from "bcrypt";
 import { Request, Response } from "express";
 import { prismaClient } from "../utils/database";
 import { DEFAULT_QUERRY_SKIP, DEFAULT_QUERRY_TAKE, SALT, STATUS_CODES, STUDENT_ROLE } from "../utils/consts";
-import { User } from "@prisma/client";
+import { Roles, User } from "@prisma/client";
 import { successJson, errorJson } from "../utils/common_funcs";
 
+interface RequestBody extends User {
+  role_name: Roles
+}
+
 export const createUser = async (req: Request, res: Response) => {
+  try {
+    const user: RequestBody = req.body;
+    if(user.role_name === 'super_admin'){
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Cannot create a new Super Admin", null));
+      return;
+    }
+    user.password = await hash(user.password, SALT);      // Hash the password
+
+    const userRole = await prismaClient.role.findUnique({
+      where: { name: user.role_name }
+    }); // Find student role_id
+
+    if (!userRole) {
+      res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("User role not found", null));
+      return;     // dont allow to create a new user
+    }
+
+    // Using transaction to ensure both user and role assignment happen together
+    const newUser = await prismaClient.$transaction(async (prisma) => {
+      const createdUser = await prisma.user.create({
+        data: {
+          email: user.email,
+          password: user.password,
+          full_name: user.full_name,
+          location: user.location,
+          phone: user.phone,
+        }
+      });
+
+      await prisma.userRole.create({
+        data: {
+          role_id: userRole.id,
+          user_id: createdUser.id
+        }
+      });
+
+      return createdUser;
+    });
+
+    res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Record inserted Successfully", newUser.id));
+  } catch (error) {
+    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Failed to create user", error instanceof Error ? error.message : "Unknown Error"));
+  }
+};
+
+export const createStudent = async (req: Request, res: Response) => {
   try {
     const user: User = req.body;
     user.password = await hash(user.password, SALT);      // Hash the password
