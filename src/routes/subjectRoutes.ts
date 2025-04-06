@@ -10,6 +10,7 @@ import {
     getStudentSubjects,
 } from '../controllers/subjectController';
 import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
+import { STUDENT_ROLE } from '../utils/consts';
 
 
 const router = express.Router();
@@ -79,7 +80,7 @@ router.get('/subjects', async (req: Request, res: Response) => {
  *       200:
  *         description: A list of users enrolled in the subject
  */
-router.get('/subject-users', async (req: Request, res: Response) => {
+router.get('/subject-users', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
     return getSubjectUsers(req, res);
 });
 
@@ -100,7 +101,7 @@ router.get('/subject-users', async (req: Request, res: Response) => {
  *       200:
  *         description: Attendance records for the subject
  */
-router.get('/subject-attendance', async (req: Request, res: Response) => {
+router.get('/subject-attendance', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
     return getSubjectAttendance(req, res);
 });
 
@@ -121,7 +122,7 @@ router.get('/subject-attendance', async (req: Request, res: Response) => {
  *       200:
  *         description: A list of subjects for the student
  */
-router.get('/student-subjects/:student_id', async (req: Request, res: Response) => {
+router.get('/student-subjects/:student_id', authMiddleware, authorizeRoles([STUDENT_ROLE]), async (req: Request, res: Response) => {
     return getStudentSubjects(req, res);
 });
 
