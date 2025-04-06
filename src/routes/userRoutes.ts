@@ -92,6 +92,23 @@ router.post('/',authMiddleware, authorizeRoles(), async (req: Request, res: Resp
     return createUser(req, res);
 });
 
+/**
+ * @swagger
+ * /users/student:
+ *   post:
+ *     tags: [User Management]
+ *     summary: Create a new Student
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/User'
+ *     responses:
+ *       201:
+ *         description: The created user object
+ */
+
 router.post('/student', async (req: Request, res: Response) => {
     return createStudent(req, res);
 });

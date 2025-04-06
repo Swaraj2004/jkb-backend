@@ -33,9 +33,8 @@ export async function getProfessorSubjects(req: Request, res: Response) {
  * GET /professor/lectures?professor_id=...
  * Retrieves all lectures for a professor including the associated subject info.
  */
-export async function getProfessorLectures(req: Request, res: Response) {
+export async function getProfessorLectures(req: Request, res: Response, professorId:string) {
     try {
-        const professorId = req.query.professor_id as string;
         if (!professorId) {
             res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('Professor ID is required', null));
             return;

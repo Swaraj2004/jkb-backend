@@ -81,7 +81,7 @@ router.put('/lectures/:lecture_id/toggle-attendance', async (req: Request, res: 
  *       201:
  *         description: Attendance marked successfully
  */
-router.post('/student/mark-attendance', authMiddleware, authorizeRoles([STUDENT_ROLE]), async (req, res) => {
+router.post('/student/mark-attendance', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), async (req, res) => {
     const { lecture_id, student_id } = req.body;
     return markAttendance(req, res, lecture_id, student_id);
 });
@@ -103,7 +103,7 @@ router.post('/student/mark-attendance', authMiddleware, authorizeRoles([STUDENT_
  *       200:
  *         description: A list of attendance records for the student
  */
-router.get('/student/attendance', authMiddleware, authorizeRoles([STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response) => {
+router.get('/student/attendance', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), async (req: AuthenticatedRequest, res: Response) => {
     // if (!req.user) {
     //     res.status(401).json(errorJson("Please log in first", null));
     //     return;

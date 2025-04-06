@@ -1,6 +1,7 @@
 import express from 'express';
 import { createProfessorLectures, deleteProfessorLectures, getProfessorLectures, getProfessorSubjects, updateProfessorLectures } from '../controllers/professorController';
 import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
+import { PROFESSOR_ROLE } from '../utils/consts';
 
 const router = express.Router();
 
@@ -27,7 +28,7 @@ const router = express.Router();
  *       200:
  *         description: A list of subjects for the professor
  */
-router.get('/subjects', authMiddleware, authorizeRoles(), async (req, res) => {
+router.get('/subjects', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async (req, res) => {
   return getProfessorSubjects(req, res);
 });
 
@@ -42,8 +43,9 @@ router.get('/subjects', authMiddleware, authorizeRoles(), async (req, res) => {
  *       200:
  *         description: A list of lecture objects
  */
-router.get('/lectures', async (req, res) => {
-  return getProfessorLectures(req, res);
+router.get('/lectures', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async (req, res) => {
+  const professorId = req.query.professor_id as string;
+  return getProfessorLectures(req, res, professorId);
 });
 
 /**
@@ -63,7 +65,7 @@ router.get('/lectures', async (req, res) => {
 *       200:
 *         description: A list of lectures for the professor
 */
-router.put('/lectures', async (req, res) => {
+router.put('/lectures', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async (req, res) => {
   return updateProfessorLectures(req, res);
 });
 
@@ -83,7 +85,7 @@ router.put('/lectures', async (req, res) => {
 *       201:
 *         description: The created lecture object
 */
-router.post('/lectures', async (req, res) => {
+router.post('/lectures', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async (req, res) => {
   return createProfessorLectures(req, res);
 });
 
@@ -104,7 +106,7 @@ router.post('/lectures', async (req, res) => {
 *       204:
 *         description: Lecture deleted successfully
 */
-router.delete('/lectures/:lecture_id', async (req, res) => {
+router.delete('/lectures/:lecture_id', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async (req, res) => {
   return deleteProfessorLectures(req, res);
 });
 
