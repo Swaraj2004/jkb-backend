@@ -3,8 +3,10 @@ import { createStudent, createUser, deleteUser, getUsers, updateUser } from '../
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { AUTH_ROLES, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
 import { errorJson } from '../utils/common_funcs';
+import { BASE_URLS } from '../swagger/swaggerConfig';
 
 const router = express.Router();
+const BASE_URL = BASE_URLS.USER;
 
 /**
  * @swagger
@@ -15,7 +17,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /users/{user_id}:
+ * ${BASE_URL}/users/{user_id}:
  *   get:
  *     tags: [User Management]
  *     summary: Get a specific user by ID
@@ -51,7 +53,7 @@ router.get('/:user_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_
 
 /**
  * @swagger
- * /users:
+ * ${BASE_URL}/users:
  *   get:
  *     tags: [User Management]
  *     summary: Get all users with optional year filter
@@ -73,7 +75,7 @@ router.get('/', authMiddleware, authorizeRoles(), async (req: AuthenticatedReque
 
 /**
  * @swagger
- * /users:
+ * ${BASE_URL}/users:
  *   post:
  *     tags: [User Management]
  *     summary: Create a new user
@@ -94,7 +96,7 @@ router.post('/',authMiddleware, authorizeRoles(), async (req: Request, res: Resp
 
 /**
  * @swagger
- * /users/student:
+ * ${BASE_URL}/users/student:
  *   post:
  *     tags: [User Management]
  *     summary: Create a new Student
@@ -115,7 +117,28 @@ router.post('/student', async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * /users/{user_id}:
+ * ${BASE_URL}/users/student:
+ *   post:
+ *     tags: [User Management]
+ *     summary: Create a new Student
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/User'
+ *     responses:
+ *       201:
+ *         description: The created user object
+ */
+
+router.post('/student', async (req: Request, res: Response) => {
+    return createStudent(req, res);
+});
+
+/**
+ * @swagger
+ * ${BASE_URL}/users/{user_id}:
  *   delete:
  *     tags: [User Management]
  *     summary: Delete a user by ID
@@ -137,7 +160,7 @@ router.delete('/:user_id',authMiddleware, authorizeRoles(), async (req: Authenti
 
 /**
  * @swagger
- * /users:
+ * ${BASE_URL}/users:
  *   put:
  *     tags: [User Management]
  *     summary: Update a user

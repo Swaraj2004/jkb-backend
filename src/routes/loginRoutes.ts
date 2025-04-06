@@ -1,8 +1,11 @@
 import express, { Request, Response } from 'express';
 import { checkLoginStatus, login } from '../controllers/loginController';
 import { resetPassword, sendOTPOverEmail, verifyOTP } from '../utils/send_email';
+import { BASE_URLS } from '../swagger/swaggerConfig';
 
 const router = express.Router();
+const BASE_URL = BASE_URLS.AUTH;
+
 
 /**
  * @swagger
@@ -13,7 +16,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /login-user:
+ * ${BASE_URL}/login-user:
  *   post:
  *     tags: [Authentication Management]
  *     summary: Log in a user
@@ -35,7 +38,7 @@ router.post('/login-user', async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * /login-status/{user_id}:
+ * ${BASE_URL}/login-status/{user_id}:
  *   post:
  *     tags: [Authentication Management]
  *     summary: Check login status of a user
@@ -57,7 +60,7 @@ router.post('/login-status/:user_id', async (req, res) => {
 
 /**
  * @swagger
- * /send-otp/{user_email}:
+ * ${BASE_URL}/send-otp/{user_email}:
  *   post:
  *     tags: [Authentication Management]
  *     summary: Send OTP over email
@@ -78,7 +81,7 @@ router.post('/send-otp/:user_email', async (req, res) => {
 
 /**
  * @swagger
- * /verify-otp/{user_email}/{otp_code}:
+ * ${BASE_URL}/verify-otp/{user_email}/{otp_code}:
  *   post:
  *     tags: [Authentication Management]
  *     summary: Verify OTP code
@@ -107,7 +110,7 @@ router.post('/verify-otp/:user_email/:otp_code', async (req, res) => {
 
 /**
  * @swagger
- * /reset-password:
+ * ${BASE_URL}/reset-password:
  *   post:
  *     tags: [Authentication Management]
  *     summary: Reset user password

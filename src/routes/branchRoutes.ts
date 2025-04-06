@@ -1,8 +1,10 @@
 import express, { Request, Response } from 'express';
 import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { createBranch, deleteBranch, editBranch, getAllBranchesIdName, getBranchById } from '../controllers/branchController';
+import { BASE_URLS } from '../swagger/swaggerConfig';
 
 const router = express.Router();
+const BASE_URL = BASE_URLS.BRANCHES;
 /**
  * @swagger
  * tags:
@@ -12,7 +14,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /branches/{branch_id}:
+ * ${BASE_URL}/{branch_id}:
  *   get:
  *     tags: [Branch Management]
  *     summary: Get a specific branch by ID
@@ -36,7 +38,7 @@ router.get('/:branch_id', async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * /branches:
+ * ${BASE_URL}:
  *   get:
  *     tags: [Branch Management]
  *     summary: Get all branches
@@ -51,7 +53,7 @@ router.get('/', async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * /branches:
+ * ${BASE_URL}:
  *   post:
  *     tags: [Branch Management]
  *     summary: Create a new branch
@@ -72,7 +74,7 @@ router.post('/', authMiddleware, authorizeRoles(), async (req: Request, res: Res
 
 /**
  * @swagger
- * /branches/{branch_id}:
+ * ${BASE_URL}/{branch_id}:
  *   delete:
  *     tags: [Branch Management]
  *     summary: Delete a branch by ID
@@ -92,7 +94,7 @@ router.delete('/:branch_id', authMiddleware, authorizeRoles(), async (req: Reque
 });
 /**
  * @swagger
- * /branches:
+ * ${BASE_URL}:
  *   put:
  *     tags: [Branch Management]
  *     summary: Update a branch

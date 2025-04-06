@@ -11,9 +11,11 @@ import {
 } from '../controllers/subjectController';
 import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { STUDENT_ROLE } from '../utils/consts';
+import { BASE_URLS } from '../swagger/swaggerConfig';
 
 
 const router = express.Router();
+const BASE_URL = BASE_URLS.ADMIN;
 
 /**
  * @swagger
@@ -24,7 +26,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /subjects/{subject_id}:
+ * ${BASE_URL}/subjects/{subject_id}:
  *   get:
  *     tags: [Subject Management]
  *     summary: Get a specific subject by ID
@@ -45,7 +47,7 @@ router.get('/subjects/:subject_id', async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * /subjects:
+ * ${BASE_URL}/subjects:
  *   get:
  *     tags: [Subject Management]
  *     summary: Get all subjects
@@ -59,7 +61,7 @@ router.get('/subjects', async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * /subject-users:
+ * ${BASE_URL}/subject-users:
  *   get:
  *     tags: [Subject Management]
  *     summary: Get users enrolled in a subject
@@ -86,7 +88,7 @@ router.get('/subject-users', authMiddleware, authorizeRoles(), async (req: Reque
 
 /**
  * @swagger
- * /subject-attendance:
+ * ${BASE_URL}/subject-attendance:
  *   get:
  *     tags: [Subject Management]
  *     summary: Get attendance records for a subject
@@ -107,7 +109,7 @@ router.get('/subject-attendance', authMiddleware, authorizeRoles(), async (req: 
 
 /**
  * @swagger
- * /student-subjects/{student_id}:
+ * ${BASE_URL}/student-subjects/{student_id}:
  *   get:
  *     tags: [Subject Management]
  *     summary: Get subjects for a specific student
@@ -128,7 +130,7 @@ router.get('/student-subjects/:student_id', authMiddleware, authorizeRoles([STUD
 
 /**
  * @swagger
- * /subjects:
+ * ${BASE_URL}/subjects:
  *   post:
  *     tags: [Subject Management]
  *     summary: Create a new subject
@@ -148,7 +150,7 @@ router.post('/subjects', authMiddleware, authorizeRoles(), async (req: Request, 
 
 /**
  * @swagger
- * /subjects/{subject_id}:
+ * ${BASE_URL}/subjects/{subject_id}:
  *   delete:
  *     tags: [Subject Management]
  *     summary: Delete a subject by ID
@@ -169,7 +171,7 @@ router.delete('/subjects/:subject_id', authMiddleware, authorizeRoles(), async (
 
 /**
  * @swagger
- * /subjects:
+ * ${BASE_URL}/subjects:
  *   put:
  *     tags: [Subject Management]
  *     summary: Update a subject

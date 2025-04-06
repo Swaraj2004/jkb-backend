@@ -2,8 +2,10 @@ import express, { Request, Response } from 'express';
 import { createCoursePackage, deleteCoursePackage, getAllCoursePackages, getAllCoursePackagesIdName, getCoursePackageById, getProfessors, getStudentPackages, getSubjectPackageUsers, updateCoursePackage } from '../controllers/coursePackageController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { GET_ALTERNATIVE, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
+import { BASE_URLS } from '../swagger/swaggerConfig';
 
 const router = express.Router();
+const BASE_URL = BASE_URLS.ADMIN;
 
 /**
  * @swagger
@@ -14,7 +16,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /course-packages/{course_package_id}:
+ * ${BASE_URL}/course-packages/{course_package_id}:
  *   get:
  *     tags: [Course Package Management]
  *     summary: Get a specific course package by ID
@@ -35,7 +37,7 @@ router.get('/course-packages/:course_package_id', async (req: Request, res: Resp
 
 /**
  * @swagger
- * /course-packages:
+ * ${BASE_URL}/course-packages:
  *   get:
  *     tags: [Course Package Management]
  *     summary: Get all course packages
@@ -56,7 +58,7 @@ router.get('/course-packages', async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * /subject-package-users:
+ * ${BASE_URL}/subject-package-users:
  *   get:
  *     tags: [Course Package Management]
  *     summary: Get users enrolled in a specific subject package
@@ -85,7 +87,7 @@ router.get('/subject-package-users', authMiddleware, authorizeRoles(), async (re
 
 /**
  * @swagger
- * /student-packages/{student_id}:
+ * ${BASE_URL}/student-packages/{student_id}:
  *   get:
  *     tags: [Course Package Management]
  *     summary: Get course packages for a specific student
@@ -119,7 +121,7 @@ router.get('/student-packages/:student_id', authMiddleware, authorizeRoles([PROF
 
 /**
  * @swagger
- * /course-packages:
+ * ${BASE_URL}/course-packages:
  *   post:
  *     tags: [Course Package Management]
  *     summary: Create a new course package
@@ -139,7 +141,7 @@ router.post('/course-packages', authMiddleware, authorizeRoles(), async (req: Re
 
 /**
  * @swagger
- * /course-packages/{course_package_id}:
+ * ${BASE_URL}/course-packages/{course_package_id}:
  *   delete:
  *     tags: [Course Package Management]
  *     summary: Delete a course package by ID
@@ -160,7 +162,7 @@ router.delete('/course-packages/:course_package_id', authMiddleware, authorizeRo
 
 /**
  * @swagger
- * /course-packages:
+ * ${BASE_URL}/course-packages:
  *   put:
  *     tags: [Course Package Management]
  *     summary: Update a course package
@@ -180,7 +182,7 @@ router.put('/course-packages', authMiddleware, authorizeRoles(), async (req: Req
 
 /**
  * @swagger
- * /professors:
+ * ${BASE_URL}/professors:
  *   get:
  *     tags: [Professor Management]
  *     summary: Get all professors and super-admins

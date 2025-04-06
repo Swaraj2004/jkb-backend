@@ -2,8 +2,10 @@ import express from 'express';
 import { createProfessorLectures, deleteProfessorLectures, getProfessorLectures, getProfessorSubjects, updateProfessorLectures } from '../controllers/professorController';
 import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { PROFESSOR_ROLE } from '../utils/consts';
+import { BASE_URLS } from '../swagger/swaggerConfig';
 
 const router = express.Router();
+const BASE_URL = BASE_URLS.PROFESSOR;
 
 /**
  * @swagger
@@ -13,7 +15,7 @@ const router = express.Router();
  */
 /**
  * @swagger
- * /professor/subjects:
+ * ${BASE_URL}/professor/subjects:
  *   get:
  *     tags: [Professor Management]
  *     summary: Get subjects for a specific professor
@@ -34,7 +36,7 @@ router.get('/subjects', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async 
 
 /**
  * @swagger
- * /lectures:
+ * ${BASE_URL}/lectures:
  *   get:
  *     tags: [Lecture Management]
  *     summary: Get all lectures
@@ -50,7 +52,7 @@ router.get('/lectures', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async 
 
 /**
 * @swagger
-* /professor/lectures:
+* ${BASE_URL}/professor/lectures:
 *   get:
 *     tags: [Professor Management]
 *     summary: Fetch lectures for a specific professor
@@ -71,7 +73,7 @@ router.put('/lectures', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async 
 
 /**
 * @swagger
-* /professor/lectures:
+* ${BASE_URL}/professor/lectures:
 *   post:
 *     tags: [Professor Management]
 *     summary: Add a new lecture
@@ -91,7 +93,7 @@ router.post('/lectures', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async
 
 /**
 * @swagger
-* /professor/lectures/{lecture_id}:
+* ${BASE_URL}/professor/lectures/{lecture_id}:
 *   delete:
 *     tags: [Professor Management]
 *     summary: Remove a lecture by ID

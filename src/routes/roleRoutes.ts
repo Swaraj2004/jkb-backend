@@ -1,8 +1,10 @@
 import express, { Request, Response } from 'express';
 import { createRole, deleteRole, getAllRoles, getRolesById, updateRole } from '../controllers/roleController';
 import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
+import { BASE_URLS } from '../swagger/swaggerConfig';
 
 const router = express.Router();
+const BASE_URL = BASE_URLS.AUTH;
 
 /**
  * @swagger
@@ -13,7 +15,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /roles/{role_id}:
+ * ${BASE_URL}/roles/{role_id}:
  *   get:
  *     tags: [Role Management]
  *     summary: Get a specific role by ID
@@ -34,7 +36,7 @@ router.get('/roles/:role_id', async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * /roles:
+ * ${BASE_URL}/roles:
  *   get:
  *     tags: [Role Management]
  *     summary: Get all roles
@@ -48,7 +50,7 @@ router.get('/roles', async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * /roles:
+ * ${BASE_URL}/roles:
  *   post:
  *     tags: [Role Management]
  *     summary: Create a new role
@@ -68,7 +70,7 @@ router.post('/roles', authMiddleware, authorizeRoles(), async (req: Request, res
 
 /**
  * @swagger
- * /roles/{role_id}:
+ * ${BASE_URL}/roles/{role_id}:
  *   delete:
  *     tags: [Role Management]
  *     summary: Delete a role by ID
@@ -89,7 +91,7 @@ router.delete('/roles/:role_id', authMiddleware, authorizeRoles(), async (req: R
 
 /**
  * @swagger
- * /roles:
+ * ${BASE_URL}/roles:
  *   put:
  *     tags: [Role Management]
  *     summary: Update a role

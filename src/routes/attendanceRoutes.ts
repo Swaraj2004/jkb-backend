@@ -2,8 +2,10 @@ import express, { Request, Response } from 'express';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { getLectureAttendance, getStudentAttendance, markAttendance } from '../controllers/attendanceController';
 import { PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
+import { BASE_URLS } from '../swagger/swaggerConfig';
 
 const router = express.Router();
+const BASE_URL = BASE_URLS.ATTENDANCE;
 
 /**
  * @swagger
@@ -14,7 +16,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /lectures/{lecture_id}/attendance:
+ * ${BASE_URL}/lectures/{lecture_id}/attendance:
  *   get:
  *     tags: [Attendance Management]
  *     summary: Get attendance for a specific lecture
@@ -36,7 +38,7 @@ router.get('/lectures/:lecture_id/attendance', authMiddleware, authorizeRoles([P
 
 /**
  * @swagger
- * /lectures/{lecture_id}/toggle-attendance:
+ * ${BASE_URL}/lectures/{lecture_id}/toggle-attendance:
  *   put:
  *     tags: [Attendance Management]
  *     summary: Toggle attendance for a specific lecture
@@ -67,7 +69,7 @@ router.put('/lectures/:lecture_id/toggle-attendance', async (req: Request, res: 
 
 /**
  * @swagger
- * /student/mark-attendance:
+ * ${BASE_URL}/student/mark-attendance:
  *   post:
  *     tags: [Attendance Management]
  *     summary: Mark attendance for a student
@@ -88,7 +90,7 @@ router.post('/student/mark-attendance', authMiddleware, authorizeRoles([STUDENT_
 
 /**
  * @swagger
- * /student/attendance:
+ * ${BASE_URL}/student/attendance:
  *   get:
  *     tags: [Attendance Management]
  *     summary: Get attendance records for a specific student

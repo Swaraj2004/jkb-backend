@@ -2,8 +2,10 @@ import express, { Request, Response } from 'express';
 import { createQuestion, createTest, deleteTest, getQuestions, getTests, updateQuestion, updateTest, deleteQuestion, getSubmissions } from '../controllers/testController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { PROFESSOR_ROLE } from '../utils/consts';
+import { BASE_URLS } from '../swagger/swaggerConfig';
 
 const router = express.Router();
+const BASE_URL = BASE_URLS.ATTENDANCE;
 
 router.get('/professor/tests', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), (req: Request, res: Response) => {
   const { professor_id } = req.query;
