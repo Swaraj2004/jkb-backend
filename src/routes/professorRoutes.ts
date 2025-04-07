@@ -15,7 +15,7 @@ const BASE_URL = BASE_URLS.PROFESSOR;
  */
 /**
  * @swagger
- * ${BASE_URL}/professor/subjects:
+ * /api/v3/professor/subjects:
  *   get:
  *     tags: [Professor Management]
  *     summary: Get subjects for a specific professor
@@ -36,7 +36,7 @@ router.get('/subjects', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async 
 
 /**
  * @swagger
- * ${BASE_URL}/lectures:
+ * /api/v3/professor/lectures:
  *   get:
  *     tags: [Lecture Management]
  *     summary: Get all lectures
@@ -52,7 +52,7 @@ router.get('/lectures', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async 
 
 /**
 * @swagger
-* ${BASE_URL}/professor/lectures:
+* /api/v3/professor/lectures:
 *   get:
 *     tags: [Professor Management]
 *     summary: Fetch lectures for a specific professor
@@ -73,7 +73,7 @@ router.put('/lectures', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async 
 
 /**
 * @swagger
-* ${BASE_URL}/professor/lectures:
+* /api/v3/professor/lectures:
 *   post:
 *     tags: [Professor Management]
 *     summary: Add a new lecture
@@ -93,7 +93,7 @@ router.post('/lectures', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async
 
 /**
 * @swagger
-* ${BASE_URL}/professor/lectures/{lecture_id}:
+* /api/v3/professor/lectures/{lecture_id}:
 *   delete:
 *     tags: [Professor Management]
 *     summary: Remove a lecture by ID

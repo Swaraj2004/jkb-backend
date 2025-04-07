@@ -16,7 +16,7 @@ const BASE_URL = BASE_URLS.ADMIN;
 
 /**
  * @swagger
- * ${BASE_URL}/course-packages/{course_package_id}:
+ * /api/v3/admin/course-packages/{course_package_id}:
  *   get:
  *     tags: [Course Package Management]
  *     summary: Get a specific course package by ID
@@ -37,7 +37,7 @@ router.get('/course-packages/:course_package_id', async (req: Request, res: Resp
 
 /**
  * @swagger
- * ${BASE_URL}/course-packages:
+ * /api/v3/admin/course-packages:
  *   get:
  *     tags: [Course Package Management]
  *     summary: Get all course packages
@@ -58,7 +58,7 @@ router.get('/course-packages', async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * ${BASE_URL}/subject-package-users:
+ * /api/v3/admin/subject-package-users:
  *   get:
  *     tags: [Course Package Management]
  *     summary: Get users enrolled in a specific subject package
@@ -87,7 +87,7 @@ router.get('/subject-package-users', authMiddleware, authorizeRoles(), async (re
 
 /**
  * @swagger
- * ${BASE_URL}/student-packages/{student_id}:
+ * /api/v3/admin/student-packages/{student_id}:
  *   get:
  *     tags: [Course Package Management]
  *     summary: Get course packages for a specific student
@@ -121,7 +121,7 @@ router.get('/student-packages/:student_id', authMiddleware, authorizeRoles([PROF
 
 /**
  * @swagger
- * ${BASE_URL}/course-packages:
+ * /api/v3/admin/course-packages:
  *   post:
  *     tags: [Course Package Management]
  *     summary: Create a new course package
@@ -141,7 +141,7 @@ router.post('/course-packages', authMiddleware, authorizeRoles(), async (req: Re
 
 /**
  * @swagger
- * ${BASE_URL}/course-packages/{course_package_id}:
+ * /api/v3/admin/course-packages/{course_package_id}:
  *   delete:
  *     tags: [Course Package Management]
  *     summary: Delete a course package by ID
@@ -162,7 +162,7 @@ router.delete('/course-packages/:course_package_id', authMiddleware, authorizeRo
 
 /**
  * @swagger
- * ${BASE_URL}/course-packages:
+ * /api/v3/admin/course-packages:
  *   put:
  *     tags: [Course Package Management]
  *     summary: Update a course package
@@ -182,7 +182,7 @@ router.put('/course-packages', authMiddleware, authorizeRoles(), async (req: Req
 
 /**
  * @swagger
- * ${BASE_URL}/professors:
+ * /api/v3/admin/professors:
  *   get:
  *     tags: [Professor Management]
  *     summary: Get all professors and super-admins

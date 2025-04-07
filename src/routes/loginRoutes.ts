@@ -16,7 +16,7 @@ const BASE_URL = BASE_URLS.AUTH;
 
 /**
  * @swagger
- * ${BASE_URL}/login-user:
+ * /api/v3/auth/login-user:
  *   post:
  *     tags: [Authentication Management]
  *     summary: Log in a user
@@ -38,7 +38,7 @@ router.post('/login-user', async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * ${BASE_URL}/login-status/{user_id}:
+ * /api/v3/auth/login-status/{user_id}:
  *   post:
  *     tags: [Authentication Management]
  *     summary: Check login status of a user
@@ -60,7 +60,7 @@ router.post('/login-status/:user_id', async (req, res) => {
 
 /**
  * @swagger
- * ${BASE_URL}/send-otp/{user_email}:
+ * /api/v3/auth/send-otp/{user_email}:
  *   post:
  *     tags: [Authentication Management]
  *     summary: Send OTP over email
@@ -81,7 +81,7 @@ router.post('/send-otp/:user_email', async (req, res) => {
 
 /**
  * @swagger
- * ${BASE_URL}/verify-otp/{user_email}/{otp_code}:
+ * /api/v3/auth/verify-otp/{user_email}/{otp_code}:
  *   post:
  *     tags: [Authentication Management]
  *     summary: Verify OTP code
@@ -110,7 +110,7 @@ router.post('/verify-otp/:user_email/:otp_code', async (req, res) => {
 
 /**
  * @swagger
- * ${BASE_URL}/reset-password:
+ * /api/v3/auth/reset-password:
  *   post:
  *     tags: [Authentication Management]
  *     summary: Reset user password

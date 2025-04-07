@@ -2,10 +2,8 @@ import express, { Request, Response } from 'express';
 import { createStudentDetails, deleteStudentDetails, editStudentDetails, getAllStudentDetails, getStudentDetailById } from '../controllers/studentDetailsController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
-import { BASE_URLS } from '../swagger/swaggerConfig';
 
 const router = express.Router();
-const BASE_URL = BASE_URLS.STUDENT_DETAILS;
 
 /**
  * @swagger
@@ -16,7 +14,7 @@ const BASE_URL = BASE_URLS.STUDENT_DETAILS;
 
 /**
  * @swagger
- * ${BASE_URL}/student-details/{student_id}:
+ * /api/v3/student-details/{student_id}:
  *   get:
  *     tags: [Student Management]
  *     summary: Get a specific student record by ID
@@ -37,7 +35,7 @@ router.get('/:student_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESS
 
 /**
  * @swagger
- * ${BASE_URL}/student-details:
+ * /api/v3/student-details:
  *   get:
  *     tags: [Student Management]
  *     summary: Get all student records with optional year filter
@@ -58,7 +56,7 @@ router.get('/',authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async (req, res
 
 /**
  * @swagger
- * ${BASE_URL}/student-details:
+ * /api/v3/student-details:
  *   post:
  *     tags: [Student Management]
  *     summary: Create a new student record
@@ -78,7 +76,7 @@ router.post('/', async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * ${BASE_URL}/student-details/{student_detail_id}:
+ * /api/v3/student-details/{student_detail_id}:
  *   delete:
  *     tags: [Student Management]
  *     summary: Delete a student record by ID
@@ -99,7 +97,7 @@ router.delete('/:student_id', authMiddleware, authorizeRoles(), async (req, res)
 
 /**
  * @swagger
- * ${BASE_URL}/student-details:
+ * /api/v3/student-details:
  *   put:
  *     tags: [Student Management]
  *     summary: Update a student record

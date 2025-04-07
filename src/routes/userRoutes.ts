@@ -3,10 +3,8 @@ import { createStudent, createUser, deleteUser, getUsers, updateUser } from '../
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { AUTH_ROLES, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
 import { errorJson } from '../utils/common_funcs';
-import { BASE_URLS } from '../swagger/swaggerConfig';
 
 const router = express.Router();
-const BASE_URL = BASE_URLS.USER;
 
 /**
  * @swagger
@@ -17,7 +15,7 @@ const BASE_URL = BASE_URLS.USER;
 
 /**
  * @swagger
- * ${BASE_URL}/users/{user_id}:
+ * api/v3/auth/users/{user_id}:
  *   get:
  *     tags: [User Management]
  *     summary: Get a specific user by ID
@@ -53,7 +51,7 @@ router.get('/:user_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_
 
 /**
  * @swagger
- * ${BASE_URL}/users:
+ * api/v3/auth/users:
  *   get:
  *     tags: [User Management]
  *     summary: Get all users with optional year filter
@@ -75,7 +73,7 @@ router.get('/', authMiddleware, authorizeRoles(), async (req: AuthenticatedReque
 
 /**
  * @swagger
- * ${BASE_URL}/users:
+ * api/v3/auth/users:
  *   post:
  *     tags: [User Management]
  *     summary: Create a new user
@@ -96,7 +94,7 @@ router.post('/',authMiddleware, authorizeRoles(), async (req: Request, res: Resp
 
 /**
  * @swagger
- * ${BASE_URL}/users/student:
+ * api/v3/auth/users/student:
  *   post:
  *     tags: [User Management]
  *     summary: Create a new Student
@@ -117,7 +115,7 @@ router.post('/student', async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * ${BASE_URL}/users/student:
+ * api/v3/auth/users/student:
  *   post:
  *     tags: [User Management]
  *     summary: Create a new Student
@@ -138,7 +136,7 @@ router.post('/student', async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * ${BASE_URL}/users/{user_id}:
+ * api/v3/auth/users/{user_id}:
  *   delete:
  *     tags: [User Management]
  *     summary: Delete a user by ID
@@ -160,7 +158,7 @@ router.delete('/:user_id',authMiddleware, authorizeRoles(), async (req: Authenti
 
 /**
  * @swagger
- * ${BASE_URL}/users:
+ * api/v3/auth/users:
  *   put:
  *     tags: [User Management]
  *     summary: Update a user

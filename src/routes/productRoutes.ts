@@ -9,7 +9,7 @@ const BASE_URL = BASE_URLS.PRODUCTS;
 
 /**
  * @swagger
- * ${BASE_URL}/example:
+ * /api/v3/api/products/example:
  *   get:
  *     summary: Retrieve an example
  *     responses:

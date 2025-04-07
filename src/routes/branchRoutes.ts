@@ -14,7 +14,7 @@ const BASE_URL = BASE_URLS.BRANCHES;
 
 /**
  * @swagger
- * ${BASE_URL}/{branch_id}:
+ * /api/v3/admin/branches/{branch_id}:
  *   get:
  *     tags: [Branch Management]
  *     summary: Get a specific branch by ID
@@ -38,7 +38,7 @@ router.get('/:branch_id', async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * ${BASE_URL}:
+ * /api/v3/admin/branches:
  *   get:
  *     tags: [Branch Management]
  *     summary: Get all branches
@@ -53,7 +53,7 @@ router.get('/', async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * ${BASE_URL}:
+ * /api/v3/admin/branches:
  *   post:
  *     tags: [Branch Management]
  *     summary: Create a new branch
@@ -74,7 +74,7 @@ router.post('/', authMiddleware, authorizeRoles(), async (req: Request, res: Res
 
 /**
  * @swagger
- * ${BASE_URL}/{branch_id}:
+ * /api/v3/admin/branches/{branch_id}:
  *   delete:
  *     tags: [Branch Management]
  *     summary: Delete a branch by ID
@@ -94,7 +94,7 @@ router.delete('/:branch_id', authMiddleware, authorizeRoles(), async (req: Reque
 });
 /**
  * @swagger
- * ${BASE_URL}:
+ * /api/v3/admin/branches:
  *   put:
  *     tags: [Branch Management]
  *     summary: Update a branch

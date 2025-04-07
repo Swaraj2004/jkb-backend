@@ -16,7 +16,7 @@ const BASE_URL = BASE_URLS.ATTENDANCE;
 
 /**
  * @swagger
- * ${BASE_URL}/lectures/{lecture_id}/attendance:
+ * /api/v3/lectures/{lecture_id}/attendance:
  *   get:
  *     tags: [Attendance Management]
  *     summary: Get attendance for a specific lecture
@@ -38,7 +38,7 @@ router.get('/lectures/:lecture_id/attendance', authMiddleware, authorizeRoles([P
 
 /**
  * @swagger
- * ${BASE_URL}/lectures/{lecture_id}/toggle-attendance:
+ * /api/v3/lectures/{lecture_id}/toggle-attendance:
  *   put:
  *     tags: [Attendance Management]
  *     summary: Toggle attendance for a specific lecture
@@ -69,7 +69,7 @@ router.put('/lectures/:lecture_id/toggle-attendance', async (req: Request, res: 
 
 /**
  * @swagger
- * ${BASE_URL}/student/mark-attendance:
+ * /api/v3/student/mark-attendance:
  *   post:
  *     tags: [Attendance Management]
  *     summary: Mark attendance for a student
@@ -90,7 +90,7 @@ router.post('/student/mark-attendance', authMiddleware, authorizeRoles([STUDENT_
 
 /**
  * @swagger
- * ${BASE_URL}/student/attendance:
+ * /api/v3/student/attendance:
  *   get:
  *     tags: [Attendance Management]
  *     summary: Get attendance records for a specific student

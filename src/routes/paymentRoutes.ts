@@ -17,7 +17,7 @@ const BASE_URL = BASE_URLS.PAYMENT;
 
 /**
  * @swagger
- * ${BASE_URL}/payments/{payment_id}:
+ * /api/v3/payments/{payment_id}:
  *   get:
  *     tags: [Payment Management]
  *     summary: Get a specific payment by ID
@@ -39,7 +39,7 @@ router.get('/admin/payments/:payment_id', authMiddleware, authorizeRoles(), asyn
 
 /**
  * @swagger
- * ${BASE_URL}/payments:
+ * /api/v3/payments:
  *   get:
  *     tags: [Payment Management]
  *     summary: Get all payments with optional date filtering
@@ -67,7 +67,7 @@ router.get('/admin/payments', authMiddleware, authorizeRoles(), async (req: Requ
 
 /**
  * @swagger
- * ${BASE_URL}/student-payments/{student_id}:
+ * /api/v3/student-payments/{student_id}:
  *   get:
  *     tags: [Payment Management]
  *     summary: Get payments for a specific student
@@ -89,7 +89,7 @@ router.get('/admin/student-payments/:user_id', authMiddleware, authorizeRoles(),
 
 /**
  * @swagger
- * ${BASE_URL}/payments:
+ * /api/v3/payments:
  *   post:
  *     tags: [Payment Management]
  *     summary: Create a new payment
@@ -109,7 +109,7 @@ router.post('/admin/payments', authMiddleware, authorizeRoles(), async (req: Aut
 
 /**
  * @swagger
- * ${BASE_URL}/payments/{payment_id}:
+ * /api/v3/payments/{payment_id}:
  *   delete:
  *     tags: [Payment Management]
  *     summary: Delete a payment by ID
@@ -131,7 +131,7 @@ router.delete('/admin/payments/:payment_id', authMiddleware, authorizeRoles(), a
 
 /**
  * @swagger
- * ${BASE_URL}/payments:
+ * /api/v3/payments:
  *   put:
  *     tags: [Payment Management]
  *     summary: Update a payment
@@ -151,7 +151,7 @@ router.put('/admin/payments', authMiddleware, authorizeRoles(), async (req: Auth
 
 /**
  * @swagger
- * ${BASE_URL}/student/payments:
+ * /api/v3/student/payments:
  *   get:
  *     tags: [Payment Management]
  *     summary: Get payments for a specific student
