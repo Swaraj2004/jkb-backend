@@ -1,10 +1,8 @@
 import express, { Request, Response } from 'express';
 import { checkLoginStatus, login } from '../controllers/loginController';
 import { resetPassword, sendOTPOverEmail, verifyOTP } from '../utils/send_email';
-import { BASE_URLS } from '../swagger/swaggerConfig';
 
 const router = express.Router();
-const BASE_URL = BASE_URLS.AUTH;
 
 
 /**

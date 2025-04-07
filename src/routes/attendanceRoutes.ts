@@ -2,10 +2,8 @@ import express, { Request, Response } from 'express';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { getLectureAttendance, getStudentAttendance, markAttendance } from '../controllers/attendanceController';
 import { PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
-import { BASE_URLS } from '../swagger/swaggerConfig';
 
 const router = express.Router();
-const BASE_URL = BASE_URLS.ATTENDANCE;
 
 /**
  * @swagger

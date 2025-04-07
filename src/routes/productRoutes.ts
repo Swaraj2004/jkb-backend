@@ -1,10 +1,8 @@
 import express from "express";
 import { getProducts } from "../controllers/productController";
-import { BASE_URLS } from '../swagger/swaggerConfig';
 
 
 const router = express.Router();
-const BASE_URL = BASE_URLS.PRODUCTS;
 
 
 /**

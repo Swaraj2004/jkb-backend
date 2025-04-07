@@ -2,10 +2,8 @@ import express, { Request, Response } from 'express';
 import { createCoursePackage, deleteCoursePackage, getAllCoursePackages, getAllCoursePackagesIdName, getCoursePackageById, getProfessors, getStudentPackages, getSubjectPackageUsers, updateCoursePackage } from '../controllers/coursePackageController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { GET_ALTERNATIVE, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
-import { BASE_URLS } from '../swagger/swaggerConfig';
 
 const router = express.Router();
-const BASE_URL = BASE_URLS.ADMIN;
 
 /**
  * @swagger

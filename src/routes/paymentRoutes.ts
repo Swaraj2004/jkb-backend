@@ -2,10 +2,8 @@ import express, { Request, Response } from 'express';
 import { createPayment, deletePayment, editPayment, getAllPayments, getPaymentById, getStudentPayments } from '../controllers/paymentController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { STUDENT_ROLE } from '../utils/consts';
-import { BASE_URLS } from '../swagger/swaggerConfig';
 
 const router = express.Router();
-const BASE_URL = BASE_URLS.PAYMENT;
 
 
 /**

@@ -1,10 +1,8 @@
 import express, { Request, Response } from 'express';
 import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { createBranch, deleteBranch, editBranch, getAllBranchesIdName, getBranchById } from '../controllers/branchController';
-import { BASE_URLS } from '../swagger/swaggerConfig';
 
 const router = express.Router();
-const BASE_URL = BASE_URLS.BRANCHES;
 /**
  * @swagger
  * tags:
