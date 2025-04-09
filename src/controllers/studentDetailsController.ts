@@ -46,6 +46,8 @@ export async function createStudentDetails(req: Request, res: Response) {
             jee_score: body.jee_score || null,
             college_name: body.college_name || null,
             referred_by: body.referred_by || null,
+            // TODO : there will be also packages and subjects array fix when update
+            // student_fees initially keep it equal to total_fees
             total_fees: new Decimal(0),
             pending_fees: new Decimal(0),
             jkb_centre: body.jkb_centre || null,
@@ -65,6 +67,23 @@ export async function createStudentDetails(req: Request, res: Response) {
         const newStudentDetail: StudentDetail = await prismaClient.studentDetail.create({
             data: createRecord
         });
+
+        body.subjects.forEach(async (subjectId) => {
+            await prismaClient.studentSubject.create({
+                data: {
+                    student_id: newStudentDetail.id,
+                    subject_id: subjectId
+                }
+            });
+        });
+        body.packages.forEach(async (packageId) => {
+            await prismaClient.studentPackage.create({
+                data: {
+                    student_id: newStudentDetail.id,
+                    package_id: packageId
+                }
+            });
+        });
         res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Record Inserted Successfully", newStudentDetail.id));
     } catch (error) {
         res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson('Error creating student record', error));
@@ -76,6 +95,7 @@ export async function editStudentDetails(req: Request, res: Response) {
     const studentId = body.student_id;
 
     try {
+        // TODO : there will be also packages and subjects array fix when update
         const updatedStudent: StudentDetail = await prismaClient.studentDetail.update({
             where: { user_id: studentId },
             data: {

@@ -108,6 +108,10 @@ export const getUserById = async (req: Request, res: Response, id: string) => {
             }
           }
         },
+        // send role here id,name in future see the response propely before you uncommnet this
+        // userRole: {
+        //   select: { role: { select: { id: true, name: true } } }
+        // }
       }
     });
 

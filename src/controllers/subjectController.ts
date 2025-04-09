@@ -2,11 +2,22 @@ import { Request, Response } from 'express';
 import { errorJson, successJson } from '../utils/common_funcs';
 import { prismaClient } from '../utils/database';
 import { STATUS_CODES } from '../utils/consts';
+import { SubjectRequestBody } from '../models/subject_req_body';
 
 // Get all subjects
 export async function getSubjects(req: Request, res: Response) {
     try {
-        const subjects = await prismaClient.subject.findMany();
+        const subjects = await prismaClient.subject.findMany({
+            include: {
+                subjectProfessors: {
+                    select: {
+                        professor: {
+                            select: { id: true, full_name: true }
+                        }
+                    }
+                }
+            }
+        });
         res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Subjects fetched successfully", subjects));
     } catch (error) {
         res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch subjects", error));
@@ -20,7 +31,16 @@ export async function getSubjectById(req: Request, res: Response) {
         const { subject_id } = req.params;
 
         const subject = await prismaClient.subject.findUnique({
-            where: { id: subject_id }
+            where: { id: subject_id },
+            include: {
+                subjectProfessors: {
+                    select: {
+                        professor: {
+                            select: { id: true, full_name: true }
+                        }
+                    }
+                }
+            }
         });
 
         if (!subject) {
@@ -38,18 +58,37 @@ export async function getSubjectById(req: Request, res: Response) {
 // Create a new subject
 export async function createSubject(req: Request, res: Response) {
     try {
-        const { name, subject_fees } = req.body;
+        const reqBody: SubjectRequestBody = req.body;    // professor_id
 
-        if (!name || !subject_fees) {
+        if (!reqBody.name || !reqBody.subject_fees) {
             res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Name and Subject Fees are required", null));
             return;
         }
 
-        const subject = await prismaClient.subject.create({
-            data: { name, subject_fees }
+        const subjectId = await prismaClient.$transaction(async (tx) => {
+            const subject = await tx.subject.create({
+                data: {
+                    name: reqBody.name,
+                    subject_fees: reqBody.subject_fees
+                }
+            });
+
+            // for now there are no checks here but in future there can be bugs like there is an entry in subject but not in SubjectProfessor
+            await Promise.all(
+                reqBody.professor_user_ids.map((professor_id: string) => {
+                    return tx.subjectProfessor.create({
+                        data: {
+                            professor_id: professor_id,
+                            subject_id: subject.id
+                        }
+                    });
+                })
+            );
+
+            return subject.id;
         });
 
-        res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Subject created successfully", subject.id));
+        res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Subject created successfully", subjectId));
     } catch (error) {
         res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Failed to create subject", error));
     }

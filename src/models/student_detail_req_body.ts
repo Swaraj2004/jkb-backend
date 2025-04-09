@@ -15,7 +15,6 @@ export interface StudentDetailReqBodyModel {
     student_id: string;
     subjects: string[]; // Array of UUIDs
     total_fees: number;
-    transactions: any[];
     university_name: string;
     xii_score: number;
     enrolled: boolean;
