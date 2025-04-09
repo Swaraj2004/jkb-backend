@@ -1,5 +1,5 @@
 import express, { Response, Request } from 'express';
-import { createStudent, createUser, deleteUser, getUsers, updateUser } from '../controllers/userController';
+import { createStudent, createUser, deleteUser, getUserById, getUsers, updateUser } from '../controllers/userController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { AUTH_ROLES, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
 import { errorJson } from '../utils/common_funcs';
@@ -46,7 +46,7 @@ router.get('/:user_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_
         res.status(403).json(errorJson("Unauthorized", null));
         return;
     }
-    return getUsers(req, res, req.params.user_id);
+    return getUserById(req, res, req.params.user_id);
 });
 
 /**
@@ -68,7 +68,8 @@ router.get('/:user_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_
  */
 
 router.get('/', authMiddleware, authorizeRoles(), async (req: AuthenticatedRequest, res: Response) => {
-    return getUsers(req, res);
+    const { year } = req.query;
+    return getUsers(req, res, year as string);
 });
 
 /**

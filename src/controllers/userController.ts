@@ -12,7 +12,7 @@ interface RequestBody extends User {
 export const createUser = async (req: Request, res: Response) => {
   try {
     const user: RequestBody = req.body;
-    if(user.role_name === 'super_admin'){
+    if (user.role_name === 'super_admin') {
       res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Cannot create a new Super Admin", null));
       return;
     }
@@ -91,26 +91,47 @@ export const createStudent = async (req: Request, res: Response) => {
   }
 };
 
-export const getUsers = async (req: Request, res: Response, id: string | null = null) => {
+export const getUserById = async (req: Request, res: Response, id: string) => {
   try {
-    if (id) {
-      const user = await prismaClient.user.findUnique({
-        where: { id: id },
-        select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true }
-      });
-      res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Users fetched successfully", user));
+    const user = await prismaClient.user.findUnique({
+      where: { id: id },
+      select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true },
+    });
+
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Users fetched successfully", user));
+  } catch (error) {
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch users", error instanceof Error ? error.message : "Unknown Error"));
+  }
+};
+
+export const getUsers = async (req: Request, res: Response, year: string) => {
+  try {
+    if (!year || typeof year !== 'string' || isNaN(parseInt(year))) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("A valid year query parameter is required, e.g., ?year=2025", null));
       return;
     }
-    const { skip = DEFAULT_QUERRY_SKIP, take = DEFAULT_QUERRY_TAKE } = req.query;
+
+    // Create the beginning and end date for the given year
+    const startDate = new Date(`${year}-01-01T00:00:00.000Z`);
+    // Use the next year as the upper bound (non-inclusive)
+    const endDate = new Date(`${parseInt(year) + 1}-01-01T00:00:00.000Z`);
+
+    // const { skip = DEFAULT_QUERRY_SKIP, take = DEFAULT_QUERRY_TAKE } = req.query;
 
     // Ensure skip and take are numbers
-    const skipValue = parseInt(skip as string, 10);
-    const takeValue = parseInt(take as string, 10);
+    // const skipValue = parseInt(skip as string, 10);
+    // const takeValue = parseInt(take as string, 10);
 
     const users = await prismaClient.user.findMany({
-      skip: isNaN(skipValue) ? 0 : skipValue,
-      take: isNaN(takeValue) ? 20 : takeValue,
-      select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true }
+      // skip: isNaN(skipValue) ? 0 : skipValue,
+      // take: isNaN(takeValue) ? 20 : takeValue,
+      where: {
+        created_at: {
+          gte: startDate,
+          lt: endDate
+        }
+      },
+      select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true }
     });
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Users fetched successfully", users));
