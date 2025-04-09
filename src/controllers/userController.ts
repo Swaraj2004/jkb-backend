@@ -95,7 +95,20 @@ export const getUserById = async (req: Request, res: Response, id: string) => {
   try {
     const user = await prismaClient.user.findUnique({
       where: { id: id },
-      select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true },
+      select: {
+        email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true,
+        studentDetail: {
+          include: {
+            branch: true,
+            studentPackages: {
+              select: { package: true }
+            },
+            studentSubjects: {
+              select: { subject: true }
+            }
+          }
+        },
+      }
     });
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Users fetched successfully", user));
@@ -131,7 +144,21 @@ export const getUsers = async (req: Request, res: Response, year: string) => {
           lt: endDate
         }
       },
-      select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true }
+      // packages, subject, branch
+      select: {
+        email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true,
+        studentDetail: {
+          include: {
+            branch: true,
+            studentPackages: {
+              select: { package: true }
+            },
+            studentSubjects: {
+              select: { subject: true }
+            }
+          }
+        },
+      }
     });
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Users fetched successfully", users));

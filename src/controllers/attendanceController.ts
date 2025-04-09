@@ -62,6 +62,10 @@ export async function getLectureAttendance(req: Request, res: Response, lectureI
 }
 export async function getStudentAttendance(req: Request, res: Response, studentId: string) {
     try {
+        if(!studentId){
+            res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("StudentId not found", null));
+            return;
+        }
         // 1. Validate student existence using user_id
         const student = await prismaClient.studentDetail.findUnique({
             where: { user_id: studentId },
