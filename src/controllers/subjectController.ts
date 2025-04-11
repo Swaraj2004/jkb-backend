@@ -5,7 +5,7 @@ import { STATUS_CODES } from '../utils/consts';
 import { SubjectRequestBody } from '../models/subject_req_body';
 
 // Get all subjects
-export async function getSubjects(req: Request, res: Response) {
+export async function getSubjects(req: Request, res: Response): Promise<void> {
   try {
     const subjects = await prismaClient.subject.findMany({
       include: {
@@ -26,7 +26,7 @@ export async function getSubjects(req: Request, res: Response) {
 
 
 // Get subject by ID
-export async function getSubjectById(req: Request, res: Response) {
+export async function getSubjectById(req: Request, res: Response): Promise<void> {
   try {
     const { subject_id } = req.params;
 
@@ -56,7 +56,7 @@ export async function getSubjectById(req: Request, res: Response) {
 
 
 // Create a new subject
-export async function createSubject(req: Request, res: Response) {
+export async function createSubject(req: Request, res: Response): Promise<void> {
   try {
     const reqBody: SubjectRequestBody = req.body;    // professor_id
 
@@ -65,7 +65,7 @@ export async function createSubject(req: Request, res: Response) {
       return;
     }
 
-    const subjectId = await prismaClient.$transaction(async (tx) => {
+    const subjectId = await prismaClient.$transaction(async (tx): Promise<string> => {
       const subject = await tx.subject.create({
         data: {
           name: reqBody.name,
@@ -95,7 +95,7 @@ export async function createSubject(req: Request, res: Response) {
 }
 
 // Update a subject
-export async function updateSubject(req: Request, res: Response) {
+export async function updateSubject(req: Request, res: Response): Promise<void> {
   try {
     const { id, name, subject_fees } = req.body;
 
@@ -115,7 +115,7 @@ export async function updateSubject(req: Request, res: Response) {
   }
 }
 
-export async function deleteSubject(req: Request, res: Response) {
+export async function deleteSubject(req: Request, res: Response): Promise<void> {
   try {
     const { subject_id } = req.params;
 
@@ -128,16 +128,33 @@ export async function deleteSubject(req: Request, res: Response) {
 }
 
 // Get users enrolled in subjects
-export async function getSubjectUsers(req: Request, res: Response) {
+export async function getSubjectUsers(req: Request, res: Response): Promise<void> {
   try {
     const { subject_id, year } = req.query;
-    // TODO: send default if no year given
-    if (!subject_id || !year) {
+    // WARN: here I am not sending the studendtDetail information ask Bhaiya
+    if (!subject_id) {
       res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('Subject Id or year absent', null));
       return;
     }
-    const numericYear = parseInt(year as string, 10);
+    if (!year) {
+      const subjectUsers = await prismaClient.user.findMany({
+        where: {
+          studentDetail: {
+            studentSubjects: {
+              some: {
+                subject_id: subject_id as string,
+              },
+            },
+          },
+        },
+        select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true }
+      });
 
+      res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Subject users fetched successfully", subjectUsers));
+      return;
+    }
+
+    const numericYear = parseInt(year as string, 10);
     const subjectUsers = await prismaClient.user.findMany({
       where: {
         studentDetail: {
@@ -162,7 +179,7 @@ export async function getSubjectUsers(req: Request, res: Response) {
 }
 
 
-export async function getSubjectAttendance(req: Request, res: Response) {
+export async function getSubjectAttendance(req: Request, res: Response): Promise<void> {
   try {
     const { subject_id } = req.query;
     if (!subject_id) {
@@ -191,7 +208,7 @@ export async function getSubjectAttendance(req: Request, res: Response) {
 
 
 // Get subjects for student_id
-export async function getStudentSubjects(req: Request, res: Response) {
+export async function getStudentSubjects(req: Request, res: Response): Promise<void> {
   try {
     const { student_id } = req.params;
 

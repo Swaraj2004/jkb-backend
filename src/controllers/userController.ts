@@ -9,7 +9,7 @@ interface RequestBody extends User {
   role_name: Roles
 }
 
-export const createUser = async (req: Request, res: Response) => {
+export const createUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const user: RequestBody = req.body;
     if (user.role_name === 'super_admin') {
@@ -55,7 +55,7 @@ export const createUser = async (req: Request, res: Response) => {
   }
 };
 
-export const createStudent = async (req: Request, res: Response) => {
+export const createStudent = async (req: Request, res: Response): Promise<void> => {
   try {
     const user: User = req.body;
     user.password = await hash(user.password, SALT);      // Hash the password
@@ -91,7 +91,7 @@ export const createStudent = async (req: Request, res: Response) => {
   }
 };
 
-export const getUserById = async (req: Request, res: Response, id: string) => {
+export const getUserById = async (req: Request, res: Response, id: string): Promise<void> => {
   try {
     const user = await prismaClient.user.findUnique({
       where: { id: id },
@@ -121,13 +121,34 @@ export const getUserById = async (req: Request, res: Response, id: string) => {
   }
 };
 
-export const getUsers = async (req: Request, res: Response, year: string) => {
+export const getUsers = async (req: Request, res: Response, year: string): Promise<void> => {
   try {
-    if (!year || typeof year !== 'string' || isNaN(parseInt(year))) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("A valid year query parameter is required, e.g., ?year=2025", null));
+    if (!year) {
+      const users = await prismaClient.user.findMany({
+        select: {
+          email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true,
+          studentDetail: {
+            include: {
+              branch: true,
+              studentPackages: {
+                select: { package: true }
+              },
+              studentSubjects: {
+                select: { subject: true }
+              }
+            }
+          },
+        }
+      });
+
+      res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Users Fetched Successfully!", users));
       return;
     }
 
+    if (isNaN(parseInt(year))) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("A valid year query parameter is required, e.g., ?year=2025", null));
+      return;
+    }
     // Create the beginning and end date for the given year
     const startDate = new Date(`${year}-01-01T00:00:00.000Z`);
     // Use the next year as the upper bound (non-inclusive)
@@ -171,7 +192,7 @@ export const getUsers = async (req: Request, res: Response, year: string) => {
   }
 };
 
-export const deleteUser = async (req: Request, res: Response) => {
+export const deleteUser = async (req: Request, res: Response): Promise<void> => {
   const userId = req.params.user_id;
   try {
     const deletedUser = await prismaClient.user.delete({
@@ -186,7 +207,7 @@ export const deleteUser = async (req: Request, res: Response) => {
 };
 
 // for now its a hard update that is all the fields will be updated even if 1 field is updated in reality
-export const updateUser = async (req: Request, res: Response) => {
+export const updateUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const user: User = req.body;
     if (!user.id && !user.email) {
