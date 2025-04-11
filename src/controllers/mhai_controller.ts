@@ -1,0 +1,87 @@
+import { Request, Response, NextFunction } from 'express';
+import { PrismaClient } from '@prisma/client';
+import { STATUS_CODES } from '../utils/consts';
+import { successJson } from '../utils/common_funcs';
+import { PredictByScoreRequest } from '../models/mhai_req_body';
+
+const prisma = new PrismaClient();
+
+// WARN: ask bhaiya about this whether to throw error or not
+// function checkScore(score: number): void {
+//   if (score < 0 || score > 100) {
+//     throw new Error('Invalid score');
+//   }
+// }
+
+export async function predictCollegesByScore(req: Request, res: Response): Promise<void> {
+  try {
+    const reqBody: PredictByScoreRequest = req.body;
+
+    // Validate score
+    // checkScore(reqBody.score);
+
+    // Build where clause
+    const whereClause: any = {
+      year: reqBody.year,
+      university_name: reqBody.university,
+      branch_name: reqBody.branch,
+    };
+
+    let sortingKey: string;
+
+    if (reqBody.exam_type === 'JEE') {
+      sortingKey = 'open';
+    //   whereClause[sortingKey] = { lte: reqBody.score };
+    } else if (reqBody.exam_type === 'MHT-CET') {
+      sortingKey = reqBody.caste;
+      whereClause[sortingKey] = { lte: reqBody.score };
+    } else {
+      throw new Error('Invalid exam type');
+    }
+    console.log(whereClause, '\n', sortingKey);
+    // Query database
+    const colleges = await prisma.mhAiCollege.findMany({
+      where: whereClause,
+    //   orderBy: {
+    //     [sortingKey]: 'desc',
+    //   },
+    });
+
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Colleges Fetched Successfully", colleges));
+  } catch (error) {
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Error occured in fetching the colleges", error instanceof Error ? error.message : error));
+  }
+}
+
+export async function predictCollegesByLocation(req: Request, res: Response): Promise<void> {
+  try {
+    const { district, year } = req.body;
+
+    // Get distinct college codes
+    const distinctCodes = await prisma.mhAiCollege.groupBy({
+      by: ['college_code'],
+      where: {
+        location: district,
+        year: year,
+      },
+    });
+
+    // Get first record for each college code
+    const colleges = [];
+    for (const { college_code } of distinctCodes) {
+      const college = await prisma.mhAiCollege.findFirst({
+        where: {
+          college_code,
+          location: district,
+          year: year,
+        },
+      });
+      if (college) colleges.push(college);
+    }
+    console.log(distinctCodes);
+
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Colleges Fetched Successfully", colleges));
+  } catch (error) {
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Error occured in fetching the colleges", error instanceof Error ? error.message : error));
+  }
+}
