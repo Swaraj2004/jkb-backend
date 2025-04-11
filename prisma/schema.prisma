@@ -112,6 +112,7 @@ model StudentDetail {
   jee_score       Float?
   college_name    String?
   referred_by     String?
+  student_fees    Decimal?
   total_fees      Decimal?
   pending_fees    Decimal?
   university_name String?

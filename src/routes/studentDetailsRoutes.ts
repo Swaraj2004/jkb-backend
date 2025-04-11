@@ -127,3 +127,13 @@ router.put('/', authMiddleware, authorizeRoles([STUDENT_ROLE]), async (req: Auth
 });
 
 export default router;
+
+// TODO :
+// student fees 
+// roles related api, delete student
+// get subjects mein professor ane chahiye - send res body to bhaiya
+// delete subject professor fix also delete SubjectProfessor
+// get Packages uske subjects aane chahiye - send res body to bhaiya
+// update subject mein array of professorId will be given same as student-detail
+// year one 
+// full stop in message
