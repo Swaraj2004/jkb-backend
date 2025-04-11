@@ -2,6 +2,8 @@ import express, { Request, Response } from 'express';
 import { createStudentDetails, deleteStudentDetails, editStudentDetails, getAllStudentDetails, getStudentDetailById } from '../controllers/studentDetailsController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
+import { STATUS_CODES } from '../utils/consts';
+import { errorJson } from '../utils/common_funcs';
 
 const router = express.Router();
 
@@ -29,8 +31,13 @@ const router = express.Router();
  *       200:
  *         description: A single student record object
  */
-router.get('/:student_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), async (req:AuthenticatedRequest, res:Response) => {
-    return getStudentDetailById(req, res);
+router.get('/:student_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const studentId = req.params.student_id;
+  if (studentId !== req.user!.id) {
+    res.status(STATUS_CODES.UNAUTHORIZED).json(errorJson("Cannot see Other student Student Detail", null));
+    return;
+  }
+  return getStudentDetailById(req, res, studentId);
 });
 
 /**
@@ -50,8 +57,8 @@ router.get('/:student_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESS
  *       200:
  *         description: A list of student record objects
  */
-router.get('/',authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async (req, res) => {
-    return getAllStudentDetails(req, res);
+router.get('/', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async (req: Request, res: Response): Promise<void> => {
+  return getAllStudentDetails(req, res);
 });
 
 /**
@@ -70,8 +77,8 @@ router.get('/',authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async (req, res
  *       201:
  *         description: The created student record object
  */
-router.post('/', async (req: Request, res: Response) => {
-    return createStudentDetails(req, res);
+router.post('/', async (req: Request, res: Response): Promise<void> => {
+  return createStudentDetails(req, res);
 });
 
 /**
@@ -91,8 +98,8 @@ router.post('/', async (req: Request, res: Response) => {
  *       204:
  *         description: Student record deleted successfully
  */
-router.delete('/:student_id', authMiddleware, authorizeRoles(), async (req, res) => {
-    return deleteStudentDetails(req, res);
+router.delete('/:student_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response): Promise<void> => {
+  return deleteStudentDetails(req, res);
 });
 
 /**
@@ -111,8 +118,12 @@ router.delete('/:student_id', authMiddleware, authorizeRoles(), async (req, res)
  *       202:
  *         description: The updated student record object
  */
-router.put('/', authMiddleware, authorizeRoles(), async (req:Request, res:Response) => {
-    return editStudentDetails(req, res);
+router.put('/', authMiddleware, authorizeRoles([STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  if (req.user!.id !== req.body.student_id) {
+    res.status(STATUS_CODES.UNAUTHORIZED).json(errorJson("Current User cannot edit other users Student-Detail", null));
+    return;
+  }
+  return editStudentDetails(req, res);
 });
 
 export default router;
