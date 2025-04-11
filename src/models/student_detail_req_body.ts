@@ -7,6 +7,7 @@ export interface StudentDetailReqBodyModel {
     packages: string[]; // Array of UUIDs
     parent_contact: string;
     pending_fees: number;
+    student_fees: number;
     referred_by: string;
     remark: string;
     jkb_centre: string;

@@ -130,10 +130,12 @@ export default router;
 
 // TODO :
 // student fees 
-// roles related api, delete student
+// year one filter
+// MHai routes
 // get subjects mein professor ane chahiye - send res body to bhaiya
-// delete subject professor fix also delete SubjectProfessor
-// get Packages uske subjects aane chahiye - send res body to bhaiya
 // update subject mein array of professorId will be given same as student-detail
-// year one 
+// delete subject professor fix also delete SubjectProfessor - this should work
+// get Packages uske subjects aane chahiye - send res body to bhaiya
+
+// roles related api, delete student  - Keep for later
 // full stop in message

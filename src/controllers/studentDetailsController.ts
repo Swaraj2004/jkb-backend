@@ -1,4 +1,4 @@
-import { StudentDetail } from "@prisma/client";
+import { PrismaClient, StudentDetail } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 import { StudentDetailReqBodyModel } from "../models/student_detail_req_body";
 import { successJson, errorJson } from "../utils/common_funcs";
@@ -6,33 +6,52 @@ import { prismaClient } from "../utils/database";
 import { Request, Response } from 'express';
 import { STATUS_CODES } from "../utils/consts";
 
-export async function createStudentDetails(req: Request, res: Response): Promise<void> {
-  const body: StudentDetailReqBodyModel = req.body;
+async function getTotalAmout(packageIds: string[], subjectIds: string[], prisma: PrismaClient): Promise<Decimal> {
   let totalAmount = new Decimal(0);
-  // if do if subject fees is there
-  // // Calculate total fees based on subjects
-  // if (createRecord.subjects && Array.isArray(createRecord.subjects)) {
-  //     for (const subjectId of createRecord.subjects) {
-  //         const subjectDoc = await dbInstance[SUBJECT_COLLECTION_NAME].findOne({ _id: convertToBsonId(subjectId) });
-  //         if (subjectDoc && subjectDoc.subject_fees) {
-  //             totalAmount += subjectDoc.subject_fees;
-  //         }
-  //     }
-  // }
-
-  try {
-    await prismaClient.$transaction(async (prisma): Promise<void> => {
-      for (const packageId in body.packages) {
-        const packageDetails = await prisma.studentPackage.findFirst({
-          where: { package_id: packageId },
-          include: { package: true }
-        });
-        if (!packageDetails) {
-          throw new Error(`No such package found: ${packageId}`);
+  if (packageIds.length > 0) {
+    const packages = await prisma.package.findMany({
+      where: {
+        id: {
+          in: packageIds
         }
-        totalAmount = totalAmount.plus(packageDetails.package.package_fees);
+      },
+      select: {
+        package_fees: true
       }
     });
+
+    packages.forEach(pkg => {
+      totalAmount.plus(pkg.package_fees);
+    });
+  }
+
+  if (subjectIds.length > 0) {
+    const subjects = await prisma.subject.findMany({
+      where: {
+        id: {
+          in: subjectIds
+        },
+      },
+      select: {
+        subject_fees: true
+      },
+    });
+
+    subjects.forEach(subject => {
+      totalAmount.plus(subject.subject_fees);
+    });
+  }
+  return totalAmount;
+}
+
+export async function createStudentDetails(req: Request, res: Response): Promise<void> {
+  const body: StudentDetailReqBodyModel = req.body;
+
+  try {
+    const packageIds = body.packages ? Object.keys(body.packages) : [];
+    const subjectIds = body.subjects ? Object.keys(body.subjects) : [];
+
+    let totalAmount = await getTotalAmout(packageIds, subjectIds, prismaClient);
 
     const createRecord = {
       user_id: body.student_id, // Assign from request body
@@ -46,10 +65,9 @@ export async function createStudentDetails(req: Request, res: Response): Promise
       jee_score: body.jee_score || null,
       college_name: body.college_name || null,
       referred_by: body.referred_by || null,
-      // TODO : there will be also packages and subjects array fix when update
-      // student_fees initially keep it equal to total_fees
-      total_fees: new Decimal(0),
-      pending_fees: new Decimal(0),
+      student_fees: new Decimal(totalAmount),
+      total_fees: new Decimal(totalAmount),
+      pending_fees: new Decimal(totalAmount),
       jkb_centre: body.jkb_centre || null,
       semester: body.semester || null,
       university_name: body.university_name || null,
@@ -58,32 +76,32 @@ export async function createStudentDetails(req: Request, res: Response): Promise
       enrolled: body.enrolled || false,
     };
 
-    if (totalAmount.gt(0)) {
-      // createRecord.num_installments = 1;
-      createRecord.total_fees = totalAmount;
-      createRecord.pending_fees = totalAmount;
-    }
-
     const newStudentDetail: StudentDetail = await prismaClient.studentDetail.create({
       data: createRecord
     });
 
-    body.subjects.forEach(async (subjectId) => {
-      await prismaClient.studentSubject.create({
-        data: {
-          student_id: newStudentDetail.id,
-          subject_id: subjectId
-        }
+    if (subjectIds.length > 0) {
+      const subjectData = subjectIds.map((subjectId: string) => ({
+        student_id: newStudentDetail.id,
+        subject_id: subjectId,
+      }));
+
+      await prismaClient.studentSubject.createMany({
+        data: subjectData,
       });
-    });
-    body.packages.forEach(async (packageId) => {
-      await prismaClient.studentPackage.create({
-        data: {
-          student_id: newStudentDetail.id,
-          package_id: packageId
-        }
+    }
+
+    if (packageIds.length > 0) {
+      const packageData = packageIds.map((packageId: string) => ({
+        student_id: newStudentDetail.id,
+        package_id: packageId,
+      }));
+
+      await prismaClient.studentPackage.createMany({
+        data: packageData,
       });
-    });
+    }
+
     res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Record Inserted Successfully", newStudentDetail.id));
   } catch (error) {
     res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson('Error creating student record', error));
@@ -95,25 +113,68 @@ export async function editStudentDetails(req: Request, res: Response): Promise<v
   const studentId = body.student_id;
 
   try {
-    // TODO : there will be also packages and subjects array fix when update
-    const updatedStudent: StudentDetail = await prismaClient.studentDetail.update({
-      where: { user_id: studentId },
-      data: {
-        parent_contact: body.parent_contact || null,
-        branch_id: body.branch_id || null,
-        diploma_score: body.diploma_score || null,
-        xii_score: body.xii_score || null,
-        cet_score: body.cet_score || null,
-        jee_score: body.jee_score || null,
-        college_name: body.college_name || null,
-        referred_by: body.referred_by || null,
-        total_fees: body.total_fees ? new Decimal(body.total_fees) : undefined,
-        pending_fees: body.pending_fees ? new Decimal(body.pending_fees) : undefined,
-        university_name: body.university_name || null,
-        status: body.status || null,
-        remark: body.remark || null,
-        enrolled: body.enrolled ?? undefined, // Keep existing if not provided
-      },
+    const packageIds = body.packages ? Object.keys(body.packages) : [];
+    const subjectIds = body.subjects ? Object.keys(body.subjects) : [];
+
+    const totalAmount = await getTotalAmout(packageIds, subjectIds, prismaClient);
+
+    await prismaClient.$transaction(async (prisma): Promise<void> => {
+      // TODO : there will be also packages and subjects array fix when update
+      const updatedStudent: StudentDetail = await prisma.studentDetail.update({
+        where: { user_id: studentId },
+        data: {
+          parent_contact: body.parent_contact || null,
+          branch_id: body.branch_id || null,
+          diploma_score: body.diploma_score || null,
+          xii_score: body.xii_score || null,
+          cet_score: body.cet_score || null,
+          jee_score: body.jee_score || null,
+          college_name: body.college_name || null,
+          referred_by: body.referred_by || null,
+          student_fees: body.student_fees ? new Decimal(body.student_fees) : undefined,
+          total_fees: new Decimal(totalAmount),                                              // totalAmount is being assigned in backend only
+          pending_fees: body.pending_fees ? new Decimal(body.pending_fees) : undefined,
+          university_name: body.university_name || null,
+          status: body.status || null,
+          remark: body.remark || null,
+          enrolled: body.enrolled ?? undefined, // Keep existing if not provided
+        },
+      });
+
+      // TODO: think a way to optimize below things
+      if (packageIds.length > 0) {
+        await prisma.studentPackage.deleteMany({
+          where: { student_id: updatedStudent.id },
+        });
+        //    b. Create new package records. 
+        const packageData = packageIds.map((packageId: string) => ({
+          student_id: updatedStudent.id,
+          package_id: packageId,
+        }));
+
+        if (packageData.length > 0) {
+          await prisma.studentPackage.createMany({
+            data: packageData,
+          });
+        }
+      }
+
+      if (subjectIds.length > 0) {
+        await prisma.studentSubject.deleteMany({
+          where: { student_id: updatedStudent.id },
+        });
+        //    b. Create new subject records
+        const subjectData = subjectIds.map((subjectId: string) => ({
+          student_id: updatedStudent.id,
+          subject_id: subjectId,
+        }));
+
+        if (subjectData.length > 0) {
+          await prisma.studentSubject.createMany({
+            data: subjectData,
+          });
+        }
+      }
     });
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Record Updated Successfully", 1));
   } catch (error) {

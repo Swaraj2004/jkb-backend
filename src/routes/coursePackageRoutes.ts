@@ -56,7 +56,7 @@ router.get('/course-packages', async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * /api/v3/admin/subject-package-users:
+ * /api/v3/admin/package-users:
  *   get:
  *     tags: [Course Package Management]
  *     summary: Get users enrolled in a specific subject package
@@ -79,7 +79,7 @@ router.get('/course-packages', async (req: Request, res: Response) => {
  */
 
 // this function requires nice testing
-router.get('/subject-package-users', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+router.get('/package-users', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
     return getSubjectPackageUsers(req, res);
 });
 
