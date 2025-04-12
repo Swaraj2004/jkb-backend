@@ -32,21 +32,21 @@ const router = express.Router();
  */
 
 router.get('/:user_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), async (req: AuthenticatedRequest, res: Response) => {
-    // another student cant access this route only current authorizedStundent and professor
-    if (!req.user) {
-        res.status(401).json(errorJson("Please log in first", null));
-        return;
-    }
-    
-    if (
-        !AUTH_ROLES.includes(req.user.role_name) &&
-        req.user.role_name !== PROFESSOR_ROLE &&
-        req.user.id != req.params.user_id
-    ) {
-        res.status(403).json(errorJson("Unauthorized", null));
-        return;
-    }
-    return getUserById(req, res, req.params.user_id);
+  // another student cant access this route only current authorizedStundent and professor
+  if (!req.user) {
+    res.status(401).json(errorJson("Please log in first", null));
+    return;
+  }
+
+  if (
+    !AUTH_ROLES.includes(req.user.role_name) &&
+    req.user.role_name !== PROFESSOR_ROLE &&
+    req.user.user_id != req.params.user_id
+  ) {
+    res.status(403).json(errorJson("Unauthorized", null));
+    return;
+  }
+  return getUserById(req, res, req.params.user_id);
 });
 
 /**
@@ -68,8 +68,8 @@ router.get('/:user_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_
  */
 
 router.get('/', authMiddleware, authorizeRoles(), async (req: AuthenticatedRequest, res: Response) => {
-    const { year } = req.query;
-    return getUsers(req, res, year as string);
+  const { year } = req.query;
+  return getUsers(req, res, year as string);
 });
 
 /**
@@ -89,8 +89,8 @@ router.get('/', authMiddleware, authorizeRoles(), async (req: AuthenticatedReque
  *         description: The created user object
  */
 
-router.post('/',authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
-    return createUser(req, res);
+router.post('/', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+  return createUser(req, res);
 });
 
 /**
@@ -111,7 +111,7 @@ router.post('/',authMiddleware, authorizeRoles(), async (req: Request, res: Resp
  */
 
 router.post('/student', async (req: Request, res: Response) => {
-    return createStudent(req, res);
+  return createStudent(req, res);
 });
 
 /**
@@ -132,7 +132,7 @@ router.post('/student', async (req: Request, res: Response) => {
  */
 
 router.post('/student', async (req: Request, res: Response) => {
-    return createStudent(req, res);
+  return createStudent(req, res);
 });
 
 /**
@@ -153,8 +153,8 @@ router.post('/student', async (req: Request, res: Response) => {
  *         description: User deleted successfully
  */
 
-router.delete('/:user_id',authMiddleware, authorizeRoles(), async (req: AuthenticatedRequest, res: Response) => {
-    return deleteUser(req, res);
+router.delete('/:user_id', authMiddleware, authorizeRoles(), async (req: AuthenticatedRequest, res: Response) => {
+  return deleteUser(req, res);
 });
 
 /**
@@ -173,8 +173,8 @@ router.delete('/:user_id',authMiddleware, authorizeRoles(), async (req: Authenti
  *       202:
  *         description: The updated user object
  */
-router.put('/',authMiddleware, authorizeRoles(),async (req: AuthenticatedRequest, res: Response) => {
-    return updateUser(req, res);
+router.put('/', authMiddleware, authorizeRoles(), async (req: AuthenticatedRequest, res: Response) => {
+  return updateUser(req, res);
 });
 
 export default router;

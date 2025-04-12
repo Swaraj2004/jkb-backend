@@ -168,7 +168,18 @@ export async function getSubjectUsers(req: Request, res: Response): Promise<void
             },
           },
         },
-        select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true }
+        select: {
+          email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true,
+          studentDetail: {
+            include: {
+              studentPackages: true,
+              studentSubjects: true
+            }
+          },
+          userRole: {
+            select: { role: { select: { id: true, name: true } } }
+          }
+        }
       });
 
       res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Subject users fetched successfully", subjectUsers));
@@ -190,7 +201,18 @@ export async function getSubjectUsers(req: Request, res: Response): Promise<void
           },
         },
       },
-      select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true }
+      select: {
+        email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true,
+        studentDetail: {
+          include: {
+            studentPackages: true,
+            studentSubjects: true
+          }
+        },
+        userRole: {
+          select: { role: { select: { id: true, name: true } } }
+        }
+      }
     });
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Subject users fetched successfully", subjectUsers));

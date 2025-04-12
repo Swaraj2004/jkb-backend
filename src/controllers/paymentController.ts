@@ -128,7 +128,7 @@ export async function createPayment(req: AuthenticatedRequest, res: Response): P
           is_gst: paymentBody.is_gst,
           pending: newPendingFees,
           user_id: paymentBody.user_id,
-          created_by: paymentBody.staff_id == null ? req.user?.id : paymentBody.staff_id, // review this i am adding staff_id from body to created_by col
+          created_by: paymentBody.staff_id == null ? req.user?.user_id : paymentBody.staff_id, // review this i am adding staff_id from body to created_by col
         }
       });
 
@@ -137,7 +137,7 @@ export async function createPayment(req: AuthenticatedRequest, res: Response): P
         where: { user_id: paymentBody.user_id },
         data: {
           pending_fees: newPendingFees,
-          enrolled: true
+          enrolled: true              // important handle it in post,delete
         }
       });
 
@@ -185,15 +185,20 @@ export async function deletePayment(req: Request, res: Response, paymentId: stri
 
     // 4. Execute transaction
     await prismaClient.$transaction(async (tx): Promise<void> => {
+      await tx.payment.delete({
+        where: { id: paymentId }
+      });
+
+      const remainingPaymentCount = await tx.payment.count({
+        where: { user_id: payment.user_id }
+      });
+
+      const enrolled = remainingPaymentCount > 0;
+
       // Update student details first
       await tx.studentDetail.update({
         where: { user_id: payment.user_id },
-        data: { pending_fees: updatedPendingFees, }
-      });
-
-      // Then delete payment
-      await tx.payment.delete({
-        where: { id: paymentId }
+        data: { pending_fees: updatedPendingFees, enrolled: enrolled }
       });
     });
 
@@ -206,11 +211,11 @@ export async function deletePayment(req: Request, res: Response, paymentId: stri
 // WARN: Ravi sir did the student_fees caclulation here but I have done none
 export async function editPayment(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const { record_id, ...paymentData } = req.body as PaymentBody & { record_id: string };
+    const { id, ...paymentData } = req.body as PaymentBody & { id: string };
 
     // 1. Get existing payment and student
     const existingPayment = await prismaClient.payment.findUnique({
-      where: { id: record_id },
+      where: { id: id },
       select: { amount: true, user_id: true }
     });
 
@@ -247,7 +252,7 @@ export async function editPayment(req: AuthenticatedRequest, res: Response): Pro
     await prismaClient.$transaction(async (tx) => {
       // Update payment record
       const payment = await tx.payment.update({
-        where: { id: record_id },
+        where: { id: id },
         data: {
           mode: paymentData.mode,
           amount: newAmount,
@@ -256,7 +261,7 @@ export async function editPayment(req: AuthenticatedRequest, res: Response): Pro
           pending: pendingFees,
           remark: paymentData.remark,
           // receipt_number should not be updated as it's generated
-          created_by: paymentData.staff_id == null ? req.user?.id : paymentData.staff_id
+          created_by: paymentData.staff_id == null ? req.user?.user_id : paymentData.staff_id
         }
       });
 

@@ -119,7 +119,6 @@ export async function editStudentDetails(req: Request, res: Response): Promise<v
     const totalAmount = await getTotalAmout(packageIds, subjectIds, prismaClient);
 
     await prismaClient.$transaction(async (prisma): Promise<void> => {
-      // TODO : there will be also packages and subjects array fix when update
       const updatedStudent: StudentDetail = await prisma.studentDetail.update({
         where: { user_id: studentId },
         data: {

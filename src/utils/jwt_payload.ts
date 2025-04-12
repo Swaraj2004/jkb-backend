@@ -5,7 +5,6 @@
  * @property role_name - Role of the authenticated user.
  */
 export interface TokenPayload {
-    id: string;
-    username: string;
-    role_name: string;
+  user_id: string;
+  role_name: string;
 }

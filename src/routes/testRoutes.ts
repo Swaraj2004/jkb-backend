@@ -11,7 +11,7 @@ router.get('/professor/tests', authMiddleware, authorizeRoles([PROFESSOR_ROLE]),
 });
 
 router.post('/professor/tests', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), (req: AuthenticatedRequest, res: Response) => {
-  const professorId = req.user!.id;
+  const professorId = req.user!.user_id;
   return createTest(req, res, professorId);
 });
 

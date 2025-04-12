@@ -33,7 +33,7 @@ const router = express.Router();
  */
 router.get('/:student_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const studentId = req.params.student_id;
-  if (req.user!.role_name === STUDENT_ROLE && studentId !== req.user!.id) {
+  if (req.user!.role_name === STUDENT_ROLE && studentId !== req.user!.user_id) {
     res.status(STATUS_CODES.UNAUTHORIZED).json(errorJson("Cannot see Other student Student Detail", null));
     return;
   }
@@ -119,7 +119,7 @@ router.delete('/:student_id', authMiddleware, authorizeRoles(), async (req: Requ
  *         description: The updated student record object
  */
 router.put('/', authMiddleware, authorizeRoles([STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  if (req.user!.role_name === STUDENT_ROLE && req.user!.id !== req.body.student_id) {
+  if (req.user!.role_name === STUDENT_ROLE && req.user!.user_id !== req.body.student_id) {
     res.status(STATUS_CODES.UNAUTHORIZED).json(errorJson("Current User cannot edit other users Student-Detail", null));
     return;
   }

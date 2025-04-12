@@ -142,7 +142,23 @@ export async function getSubjectPackageUsers(req: Request, res: Response): Promi
 
     const users = await prismaClient.user.findMany({
       where: filter,
-      select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true }
+      select: {
+        email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true,
+        studentDetail: {
+          include: {
+            branch: true,
+            studentPackages: {
+              select: { package: true }
+            },
+            studentSubjects: {
+              select: { subject: true }
+            }
+          }
+        },
+        userRole: {
+          select: { role: { select: { id: true, name: true } } }
+        }
+      }
     });
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson('Record fetched successfully', users));

@@ -185,6 +185,9 @@ export const getUsers = async (req: Request, res: Response, year: string): Promi
             }
           }
         },
+        userRole: {
+          select: { role: { select: { id: true, name: true } } }
+        }
       }
     });
 
