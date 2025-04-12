@@ -48,8 +48,8 @@ export async function createStudentDetails(req: Request, res: Response): Promise
   const body: StudentDetailReqBodyModel = req.body;
 
   try {
-    const packageIds = body.packages ? Object.keys(body.packages) : [];
-    const subjectIds = body.subjects ? Object.keys(body.subjects) : [];
+    const packageIds = Array.isArray(body.packages) ? body.packages : [];
+    const subjectIds = Array.isArray(body.subjects) ? body.subjects : [];
 
     let totalAmount = await getTotalAmout(packageIds, subjectIds, prismaClient);
 
@@ -113,8 +113,8 @@ export async function editStudentDetails(req: Request, res: Response): Promise<v
   const studentId = body.student_id;
 
   try {
-    const packageIds = body.packages ? Object.keys(body.packages) : [];
-    const subjectIds = body.subjects ? Object.keys(body.subjects) : [];
+    const packageIds = Array.isArray(body.packages) ? body.packages : [];
+    const subjectIds = Array.isArray(body.subjects) ? body.subjects : [];
 
     const totalAmount = await getTotalAmout(packageIds, subjectIds, prismaClient);
 
@@ -155,14 +155,16 @@ export async function editStudentDetails(req: Request, res: Response): Promise<v
         if (packageData.length > 0) {
           await prisma.studentPackage.createMany({
             data: packageData,
+            // skipDuplicates: true
           });
         }
       }
 
       if (subjectIds.length > 0) {
-        await prisma.studentSubject.deleteMany({
+        const studentSubjects = await prisma.studentSubject.deleteMany({
           where: { student_id: updatedStudent.id },
         });
+        // console.log(studentSubjects);
         //    b. Create new subject records
         const subjectData = subjectIds.map((subjectId: string) => ({
           student_id: updatedStudent.id,
@@ -172,6 +174,7 @@ export async function editStudentDetails(req: Request, res: Response): Promise<v
         if (subjectData.length > 0) {
           await prisma.studentSubject.createMany({
             data: subjectData,
+            // skipDuplicates: true
           });
         }
       }
