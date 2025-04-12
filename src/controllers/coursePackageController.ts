@@ -2,20 +2,40 @@ import { Request, Response } from 'express';
 import { errorJson, successJson } from '../utils/common_funcs';
 import { prismaClient } from '../utils/database';
 import { PROFESSOR_ROLE, STATUS_CODES } from '../utils/consts';
+import { PackageRequestBody } from '../models/package_req_body';
 
 export async function updateCoursePackage(req: Request, res: Response): Promise<void> {
   try {
-    // TODO: add subject Packages
-    const updatedRecord = req.body;
-    if (!updatedRecord.id) {
+    const { id, ...rest } = req.body;
+    const subjectReqBody: PackageRequestBody = rest;
+
+    if (!id) {
       res.status(STATUS_CODES.UPDATE_SUCCESS).json(errorJson('Course package id is required', null));
       return;
     }
-    const updatedCoursePackage = await prismaClient.package.update({
-      where: { id: updatedRecord.id },
-      data: updatedRecord,
+    const updatedPackage = await prismaClient.package.update({
+      where: { id: id },
+      data: {
+        package_name: subjectReqBody.package_name,
+        package_fees: subjectReqBody.package_fees
+      },
     });
-    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson('CoursePackage Updated Successfully!', updatedCoursePackage.id));
+
+    // TODO: think of a way to optimize if possible
+    await prismaClient.packageSubject.deleteMany({
+      where: { package_id: updatedPackage.id }
+    });
+
+    const data = subjectReqBody.subjects.map(subject => ({
+      package_id: updatedPackage.id,
+      subject_id: subject,
+    }));
+
+    await prismaClient.packageSubject.createMany({
+      data: data
+    });
+
+    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson('CoursePackage Updated Successfully!', 1));
   } catch (error: any) {
     res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson('Server Error', error));
   }
@@ -34,12 +54,29 @@ export async function deleteCoursePackage(req: Request, res: Response, course_pa
 
 export async function createCoursePackage(req: Request, res: Response): Promise<void> {
   try {
-    // TODO: add subject Packages
-    const createRecord = req.body;
-    const newCoursePackage = await prismaClient.package.create({
-      data: createRecord,
+    const createRecord: PackageRequestBody = req.body;
+    const newPackage = await prismaClient.package.create({
+      data: {
+        package_name: createRecord.package_name,
+        package_fees: createRecord.package_fees
+      },
     });
-    res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson('CoursePackage created successfully!', newCoursePackage.id));
+
+    if (!newPackage) {
+      res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Failed to Create Package", null));
+      return;
+    }
+
+    const data = createRecord.subjects.map(subject => ({
+      package_id: newPackage.id,
+      subject_id: subject,
+    }));
+
+    await prismaClient.packageSubject.createMany({
+      data: data
+    });
+
+    res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson('CoursePackage created successfully!', newPackage.id));
   } catch (error: any) {
     res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson('Server Error', error));
   }
@@ -174,10 +211,10 @@ export async function getProfessors(req: Request, res: Response): Promise<void> 
 
 
     if (!professors) {
-      res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson('Course package not found', null));
+      res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson('Professors not found', null));
       return;
     }
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson('Course Package Fetched Successfully!', professors));
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson('Professors Fetched Successfully!', professors));
   } catch (error: any) {
     res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson('Server error', error));
   }

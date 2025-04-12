@@ -14,9 +14,9 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/v3/admin/course-packages/{course_package_id}:
+ * /api/v3/admin/packages/{package_id}:
  *   get:
- *     tags: [Course Package Management]
+ *     tags: [Package Management]
  *     summary: Get a specific course package by ID
  *     parameters:
  *       - in: path
@@ -29,13 +29,13 @@ const router = express.Router();
  *       200:
  *         description: A single course package object
  */
-router.get('/course-packages/:course_package_id', async (req: Request, res: Response) => {
-    return getCoursePackageById(req, res, req.params.course_package_id);
+router.get('/packages/:package_id', async (req: Request, res: Response) => {
+  return getCoursePackageById(req, res, req.params.package_id);
 });
 
 /**
  * @swagger
- * /api/v3/admin/course-packages:
+ * /api/v3/admin/packages:
  *   get:
  *     tags: [Course Package Management]
  *     summary: Get all course packages
@@ -44,14 +44,14 @@ router.get('/course-packages/:course_package_id', async (req: Request, res: Resp
  *         description: A list of course package objects
  */
 // It is an open route ask Swaraj Bhaiya
-router.get('/course-packages', async (req: Request, res: Response) => {
-    const { type } = req.query;
+router.get('/packages', async (req: Request, res: Response) => {
+  const { type } = req.query;
 
-    if (type === GET_ALTERNATIVE) {
-        return getAllCoursePackagesIdName(req, res);
-    }
+  if (type === GET_ALTERNATIVE) {
+    return getAllCoursePackagesIdName(req, res);
+  }
 
-    return getAllCoursePackages(req, res);
+  return getAllCoursePackages(req, res);
 });
 
 /**
@@ -80,7 +80,7 @@ router.get('/course-packages', async (req: Request, res: Response) => {
 
 // this function requires nice testing
 router.get('/package-users', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
-    return getSubjectPackageUsers(req, res);
+  return getSubjectPackageUsers(req, res);
 });
 
 /**
@@ -101,25 +101,25 @@ router.get('/package-users', authMiddleware, authorizeRoles(), async (req: Reque
  *         description: A list of course packages for the student
  */
 router.get('/student-packages/:student_id', authMiddleware, authorizeRoles([PROFESSOR_ROLE, STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response) => {
-    // if (!req.user) {
-    //     res.status(401).json(errorJson("Please log in first", null));
-    //     return;
-    // }
+  // if (!req.user) {
+  //     res.status(401).json(errorJson("Please log in first", null));
+  //     return;
+  // }
 
-    // if (
-    //     !AUTH_ROLES.includes(req.user.role_name) &&
-    //     req.user.role_name !== PROFESSOR_ROLE &&
-    //     req.user.id != req.params.user_id
-    // ) {
-    //     res.status(403).json(errorJson("Unauthorized", null));
-    //     return;
-    // }
-    return getStudentPackages(req, res, req.params.student_id);
+  // if (
+  //     !AUTH_ROLES.includes(req.user.role_name) &&
+  //     req.user.role_name !== PROFESSOR_ROLE &&
+  //     req.user.id != req.params.user_id
+  // ) {
+  //     res.status(403).json(errorJson("Unauthorized", null));
+  //     return;
+  // }
+  return getStudentPackages(req, res, req.params.student_id);
 });
 
 /**
  * @swagger
- * /api/v3/admin/course-packages:
+ * /api/v3/admin/packages:
  *   post:
  *     tags: [Course Package Management]
  *     summary: Create a new course package
@@ -133,13 +133,13 @@ router.get('/student-packages/:student_id', authMiddleware, authorizeRoles([PROF
  *       201:
  *         description: The created course package object
  */
-router.post('/course-packages', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
-    return createCoursePackage(req, res);
+router.post('/packages', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+  return createCoursePackage(req, res);
 });
 
 /**
  * @swagger
- * /api/v3/admin/course-packages/{course_package_id}:
+ * /api/v3/admin/packages/{package_id}:
  *   delete:
  *     tags: [Course Package Management]
  *     summary: Delete a course package by ID
@@ -154,13 +154,13 @@ router.post('/course-packages', authMiddleware, authorizeRoles(), async (req: Re
  *       204:
  *         description: Course package deleted successfully
  */
-router.delete('/course-packages/:course_package_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
-    return deleteCoursePackage(req, res, req.params.course_package_id);
+router.delete('/packages/:package_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+  return deleteCoursePackage(req, res, req.params.package_id);
 });
 
 /**
  * @swagger
- * /api/v3/admin/course-packages:
+ * /api/v3/admin/packages:
  *   put:
  *     tags: [Course Package Management]
  *     summary: Update a course package
@@ -174,8 +174,8 @@ router.delete('/course-packages/:course_package_id', authMiddleware, authorizeRo
  *       202:
  *         description: The updated course package object
  */
-router.put('/course-packages', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
-    return updateCoursePackage(req, res);
+router.put('/packages', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+  return updateCoursePackage(req, res);
 });
 
 /**
@@ -188,8 +188,8 @@ router.put('/course-packages', authMiddleware, authorizeRoles(), async (req: Req
  *       200:
  *         description: A list of professor objects
  */
-router.get('/professors', authMiddleware, authorizeRoles(), async (req:Request, res:Response) => {
-    return getProfessors(req, res);
+router.get('/professors', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+  return getProfessors(req, res);
 });
 
 export default router;
