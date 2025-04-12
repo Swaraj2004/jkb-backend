@@ -3,8 +3,9 @@ import { errorJson, successJson } from '../utils/common_funcs';
 import { prismaClient } from '../utils/database';
 import { PROFESSOR_ROLE, STATUS_CODES } from '../utils/consts';
 
-export async function updateCoursePackage(req: Request, res: Response) {
+export async function updateCoursePackage(req: Request, res: Response): Promise<void> {
   try {
+    // TODO: add subject Packages
     const updatedRecord = req.body;
     if (!updatedRecord.id) {
       res.status(STATUS_CODES.UPDATE_SUCCESS).json(errorJson('Course package id is required', null));
@@ -20,7 +21,7 @@ export async function updateCoursePackage(req: Request, res: Response) {
   }
 }
 
-export async function deleteCoursePackage(req: Request, res: Response, course_package_id: string) {
+export async function deleteCoursePackage(req: Request, res: Response, course_package_id: string): Promise<void> {
   try {
     await prismaClient.package.delete({
       where: { id: course_package_id },
@@ -31,8 +32,9 @@ export async function deleteCoursePackage(req: Request, res: Response, course_pa
   }
 }
 
-export async function createCoursePackage(req: Request, res: Response) {
+export async function createCoursePackage(req: Request, res: Response): Promise<void> {
   try {
+    // TODO: add subject Packages
     const createRecord = req.body;
     const newCoursePackage = await prismaClient.package.create({
       data: createRecord,
@@ -43,7 +45,7 @@ export async function createCoursePackage(req: Request, res: Response) {
   }
 }
 
-export async function getStudentPackages(req: Request, res: Response, student_id: string) {
+export async function getStudentPackages(req: Request, res: Response, student_id: string): Promise<void> {
   try {
     // const { student_id } = req.params;
     const student = await prismaClient.studentDetail.findUnique({
@@ -71,7 +73,7 @@ export async function getStudentPackages(req: Request, res: Response, student_id
   }
 }
 
-export async function getSubjectPackageUsers(req: Request, res: Response) {
+export async function getSubjectPackageUsers(req: Request, res: Response): Promise<void> {
   try {
     const { subject_package_id, year } = req.query;
     if (!subject_package_id) {
@@ -100,19 +102,19 @@ export async function getSubjectPackageUsers(req: Request, res: Response) {
         lte: endDate,
       };
     }
-    console.log(filter);
-    const studentDetails = await prismaClient.studentDetail.findMany({
+
+    const users = await prismaClient.user.findMany({
       where: filter,
-      // include: { user: { select: { password: false, email: true, ... } } }
+      select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true }
     });
 
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson('Record fetched successfully', studentDetails));
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson('Record fetched successfully', users));
   } catch (error: any) {
     res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson('Server Error', error));
   }
 }
 
-export async function getAllCoursePackages(req: Request, res: Response) {
+export async function getAllCoursePackages(req: Request, res: Response): Promise<void> {
   try {
     const coursePackages = await prismaClient.package.findMany({
       include: {
@@ -128,7 +130,7 @@ export async function getAllCoursePackages(req: Request, res: Response) {
     res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson('Server error', error));
   }
 }
-export async function getAllCoursePackagesIdName(req: Request, res: Response) {
+export async function getAllCoursePackagesIdName(req: Request, res: Response): Promise<void> {
   try {
     const coursePackages = await prismaClient.package.findMany({
       select: { id: true, package_name: true },
@@ -139,7 +141,7 @@ export async function getAllCoursePackagesIdName(req: Request, res: Response) {
   }
 }
 
-export async function getCoursePackageById(req: Request, res: Response, course_package_id: string) {
+export async function getCoursePackageById(req: Request, res: Response, course_package_id: string): Promise<void> {
   try {
     const coursePackage = await prismaClient.package.findUnique({
       where: { id: course_package_id },
@@ -155,7 +157,7 @@ export async function getCoursePackageById(req: Request, res: Response, course_p
   }
 }
 
-export async function getProfessors(req: Request, res: Response) {
+export async function getProfessors(req: Request, res: Response): Promise<void> {
   try {
     const professors = await prismaClient.user.findMany({
       where: {

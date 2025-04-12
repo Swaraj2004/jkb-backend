@@ -135,7 +135,10 @@ export async function createPayment(req: AuthenticatedRequest, res: Response): P
       // Update student record
       await tx.studentDetail.update({
         where: { user_id: paymentBody.user_id },
-        data: { pending_fees: newPendingFees, }
+        data: {
+          pending_fees: newPendingFees,
+          enrolled: true
+        }
       });
 
       return newPayment;
@@ -154,6 +157,7 @@ export async function deletePayment(req: Request, res: Response, paymentId: stri
   }
 
   try {
+    // TODO: if total payments of the student are 0 then make enrolled of studentDetail false
     // 1. Find the payment record
     const payment = await prismaClient.payment.findUnique({
       where: { id: paymentId },

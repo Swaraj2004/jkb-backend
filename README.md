@@ -69,7 +69,7 @@ http://localhost:3000
 
 - **Reset the Database**:
   ```sh
-  npx prisma migrate reset
+  npx prisma migrate reset    # use it when you add new col to the database or make a major change in database schema
   ```
   This will reset all data and apply migrations again.
 

@@ -108,10 +108,9 @@ export const getUserById = async (req: Request, res: Response, id: string): Prom
             }
           }
         },
-        // send role here id,name in future see the response propely before you uncommnet this
-        // userRole: {
-        //   select: { role: { select: { id: true, name: true } } }
-        // }
+        userRole: {
+          select: { role: { select: { id: true, name: true } } }
+        }
       }
     });
 
@@ -138,6 +137,9 @@ export const getUsers = async (req: Request, res: Response, year: string): Promi
               }
             }
           },
+          userRole: {
+            select: { role: { select: { id: true, name: true } } }
+          }
         }
       });
 

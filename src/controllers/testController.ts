@@ -98,7 +98,7 @@ export const getQuestions = async (req: Request, res: Response, testId: string):
       res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Question Not found", null));
       return;
     }
-    console.log(questionOptions, testId);
+    // console.log(questionOptions, testId);
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Quesion and Options fetched Succesfully!", questionOptions));
   } catch (error) {

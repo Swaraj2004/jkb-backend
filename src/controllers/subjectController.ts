@@ -74,16 +74,14 @@ export async function createSubject(req: Request, res: Response): Promise<void> 
       });
 
       // for now there are no checks here but in future there can be bugs like there is an entry in subject but not in SubjectProfessor
-      await Promise.all(
-        reqBody.professor_user_ids.map((professor_id: string) => {
-          return tx.subjectProfessor.create({
-            data: {
-              professor_id: professor_id,
-              subject_id: subject.id
-            }
-          });
-        })
-      );
+      const data = reqBody.professor_user_ids.map((professorUserId: string) => ({
+        professor_id: professorUserId,
+        subject_id: subject.id,
+      }));
+
+      await tx.subjectProfessor.createMany({
+        data: data
+      });
 
       return subject.id;
     });
@@ -97,16 +95,40 @@ export async function createSubject(req: Request, res: Response): Promise<void> 
 // Update a subject
 export async function updateSubject(req: Request, res: Response): Promise<void> {
   try {
-    const { id, name, subject_fees } = req.body;
+    const { id, ...rest } = req.body;
+    const subjectReqBody: SubjectRequestBody = rest;
+    console.log(subjectReqBody, '\t', id);
 
-    if (!id || !name || !subject_fees) {
+    if (!id || !subjectReqBody.name || !subjectReqBody.subject_fees) {
       res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("ID, Name, and Subject Fees are required", null));
       return;
     }
 
     const updatedSubject = await prismaClient.subject.update({
       where: { id },
-      data: { name, subject_fees }
+      data: {
+        name: subjectReqBody.name,
+        subject_fees: subjectReqBody.subject_fees
+      }
+    });
+
+    if (!updatedSubject) {
+      res.status(STATUS_CODES.SELECT_FAILURE).json(successJson("Subject Not Found", null));
+      return;
+    }
+
+    // TODO: improve the logic for now its hard coded
+    await prismaClient.subjectProfessor.deleteMany({
+      where: { subject_id: updatedSubject.id }
+    });
+
+    const data = subjectReqBody.professor_user_ids.map((professorUserId: string) => ({
+      professor_id: professorUserId,
+      subject_id: updatedSubject.id,
+    }));
+
+    await prismaClient.subjectProfessor.createMany({
+      data: data
     });
 
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Subject updated successfully", 1));
@@ -131,7 +153,6 @@ export async function deleteSubject(req: Request, res: Response): Promise<void> 
 export async function getSubjectUsers(req: Request, res: Response): Promise<void> {
   try {
     const { subject_id, year } = req.query;
-    // WARN: here I am not sending the studendtDetail information ask Bhaiya
     if (!subject_id) {
       res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('Subject Id or year absent', null));
       return;
@@ -147,7 +168,7 @@ export async function getSubjectUsers(req: Request, res: Response): Promise<void
             },
           },
         },
-        select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true }
+        select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true }
       });
 
       res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Subject users fetched successfully", subjectUsers));
@@ -169,7 +190,7 @@ export async function getSubjectUsers(req: Request, res: Response): Promise<void
           },
         },
       },
-      select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true }
+      select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true }
     });
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Subject users fetched successfully", subjectUsers));
