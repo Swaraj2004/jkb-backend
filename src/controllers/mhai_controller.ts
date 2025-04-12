@@ -1,10 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { STATUS_CODES } from '../utils/consts';
 import { successJson } from '../utils/common_funcs';
 import { PredictByScoreRequest } from '../models/mhai_req_body';
+import { prismaClient } from '../utils/database';
 
-const prisma = new PrismaClient();
 
 // WARN: ask bhaiya about this whether to throw error or not
 // function checkScore(score: number): void {
@@ -31,20 +30,18 @@ export async function predictCollegesByScore(req: Request, res: Response): Promi
 
     if (reqBody.exam_type === 'JEE') {
       sortingKey = 'open';
-    //   whereClause[sortingKey] = { lte: reqBody.score };
-    } else if (reqBody.exam_type === 'MHT-CET') {
-      sortingKey = reqBody.caste;
       whereClause[sortingKey] = { lte: reqBody.score };
     } else {
-      throw new Error('Invalid exam type');
+      sortingKey = reqBody.caste;
+      whereClause[sortingKey] = { lte: reqBody.score };
     }
-    console.log(whereClause, '\n', sortingKey);
+    // console.log(whereClause, '\n', sortingKey);
     // Query database
-    const colleges = await prisma.mhAiCollege.findMany({
+    const colleges = await prismaClient.mhAiCollege.findMany({
       where: whereClause,
-    //   orderBy: {
-    //     [sortingKey]: 'desc',
-    //   },
+      orderBy: {
+        [sortingKey]: 'desc',
+      },
     });
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Colleges Fetched Successfully", colleges));
@@ -58,7 +55,7 @@ export async function predictCollegesByLocation(req: Request, res: Response): Pr
     const { district, year } = req.body;
 
     // Get distinct college codes
-    const distinctCodes = await prisma.mhAiCollege.groupBy({
+    const distinctCodes = await prismaClient.mhAiCollege.groupBy({
       by: ['college_code'],
       where: {
         location: district,
@@ -66,19 +63,17 @@ export async function predictCollegesByLocation(req: Request, res: Response): Pr
       },
     });
 
-    // Get first record for each college code
-    const colleges = [];
-    for (const { college_code } of distinctCodes) {
-      const college = await prisma.mhAiCollege.findFirst({
-        where: {
-          college_code,
-          location: district,
-          year: year,
+    const collegeCodes = distinctCodes.map(code => code.college_code);
+    const colleges = await prismaClient.mhAiCollege.findMany({
+      where: {
+        college_code: {
+          in: collegeCodes
         },
-      });
-      if (college) colleges.push(college);
-    }
-    console.log(distinctCodes);
+        location: district,
+        year: year
+      }
+    });
+    // console.log(distinctCodes);
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Colleges Fetched Successfully", colleges));
   } catch (error) {
