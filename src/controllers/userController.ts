@@ -6,25 +6,26 @@ import { Roles, User } from "@prisma/client";
 import { successJson, errorJson } from "../utils/common_funcs";
 
 interface RequestBody extends User {
-  role_name: Roles
+  role_id: string
 }
 
 export const createUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const user: RequestBody = req.body;
-    if (user.role_name === 'super_admin') {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Cannot create a new Super Admin", null));
-      return;
-    }
     user.password = await hash(user.password, SALT);      // Hash the password
 
+    // NOTE:: ask swaraj Bhaiya if he can send the role_name from frontend
     const userRole = await prismaClient.role.findUnique({
-      where: { name: user.role_name }
+      where: { id: user.role_id }
     }); // Find student role_id
 
     if (!userRole) {
       res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("User role not found", null));
       return;     // dont allow to create a new user
+    }
+    if (userRole.name === 'super_admin') {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Cannot create a new Super Admin", null));
+      return;
     }
 
     // Using transaction to ensure both user and role assignment happen together
