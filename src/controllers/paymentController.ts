@@ -249,7 +249,7 @@ export async function editPayment(req: AuthenticatedRequest, res: Response): Pro
     }
 
     // 3. Update payment and student in transaction
-    await prismaClient.$transaction(async (tx) => {
+    await prismaClient.$transaction(async (tx): Promise<void> => {
       // Update payment record
       const payment = await tx.payment.update({
         where: { id: id },
@@ -270,8 +270,6 @@ export async function editPayment(req: AuthenticatedRequest, res: Response): Pro
         where: { user_id: existingPayment.user_id },
         data: { pending_fees: pendingFees }
       });
-
-      return payment;
     });
 
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Payment updated successfully", 1));

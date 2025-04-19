@@ -117,7 +117,7 @@ export async function updateSubject(req: Request, res: Response): Promise<void> 
       return;
     }
 
-    // TODO: improve the logic for now its hard coded
+    // OPTIMIZE: improve the logic for now its hard coded
     await prismaClient.subjectProfessor.deleteMany({
       where: { subject_id: updatedSubject.id }
     });

@@ -127,15 +127,3 @@ router.put('/', authMiddleware, authorizeRoles([STUDENT_ROLE]), async (req: Auth
 });
 
 export default router;
-
-// TODO :
-// student fees 
-// year one filter
-// MHai routes
-// get subjects mein professor ane chahiye - send res body to bhaiya
-// update subject mein array of professorId will be given same as student-detail
-// delete subject professor fix also delete SubjectProfessor - this should work
-// get Packages uske subjects aane chahiye - send res body to bhaiya
-
-// roles related api, delete student  - Keep for later
-// full stop in message

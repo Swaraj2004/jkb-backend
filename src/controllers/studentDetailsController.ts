@@ -124,31 +124,42 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
     const packageIds = Array.isArray(body.packages) ? body.packages : [];
     const subjectIds = Array.isArray(body.subjects) ? body.subjects : [];
 
+    if (student_fees > 0) {           // student_fees cant be edited if there is even a single payment record in the Payment Table
+      const paymentCount = await prismaClient.payment.count({
+        where: { user_id: studentId }
+      });
+      if (paymentCount > 0) {
+        res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("student_fees can't be edited payment aldready exist of the given student_id", null));
+        return;
+      }
+    }
+
     const totalAmount = await getTotalAmout(packageIds, subjectIds, prismaClient);
+    const pending_fees = student_fees > 0 ? student_fees : body.pending_fees;       // NOTE: this logic is only applicable if there is no payment Record in table
 
     await prismaClient.$transaction(async (prisma): Promise<void> => {
       const updatedStudent: StudentDetail = await prisma.studentDetail.update({
         where: { user_id: studentId },
         data: {
-          parent_contact: body.parent_contact || null,
-          branch_id: body.branch_id || null,
-          diploma_score: body.diploma_score || null,
-          xii_score: body.xii_score || null,
-          cet_score: body.cet_score || null,
-          jee_score: body.jee_score || null,
-          college_name: body.college_name || null,
-          referred_by: body.referred_by || null,
-          student_fees: body.student_fees ? new Decimal(body.student_fees) : undefined,
+          parent_contact: body.parent_contact || undefined,
+          branch_id: body.branch_id || undefined,
+          diploma_score: body.diploma_score || undefined,
+          xii_score: body.xii_score || undefined,
+          cet_score: body.cet_score || undefined,
+          jee_score: body.jee_score || undefined,
+          college_name: body.college_name || undefined,
+          referred_by: body.referred_by || undefined,
+          student_fees: new Decimal(student_fees),
           total_fees: new Decimal(totalAmount),                                              // totalAmount is being assigned in backend only
-          pending_fees: body.pending_fees ? new Decimal(body.pending_fees) : undefined,
-          university_name: body.university_name || null,
-          status: body.status || null,
-          remark: body.remark || null,
+          pending_fees: new Decimal(pending_fees),
+          university_name: body.university_name || undefined,
+          status: body.status || undefined,
+          remark: body.remark || undefined,
           enrolled: body.enrolled ?? undefined, // Keep existing if not provided
         },
       });
 
-      // TODO: think a way to optimize below things
+      // OPTIMIZE: think a way to optimize below things
       if (packageIds.length > 0) {
         await prisma.studentPackage.deleteMany({
           where: { student_id: updatedStudent.id },

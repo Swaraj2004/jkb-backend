@@ -21,7 +21,7 @@ export async function updateCoursePackage(req: Request, res: Response): Promise<
       },
     });
 
-    // TODO: think of a way to optimize if possible
+    // OPTIMIZE: think of a way to optimize if possible
     await prismaClient.packageSubject.deleteMany({
       where: { package_id: updatedPackage.id }
     });
