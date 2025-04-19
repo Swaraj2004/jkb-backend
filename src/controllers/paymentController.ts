@@ -9,7 +9,12 @@ import { STATUS_CODES } from '../utils/consts';
 export async function getPaymentById(req: Request, res: Response, paymentId: string): Promise<void> {
   try {
     const payment = await prismaClient.payment.findUnique({
-      where: { id: paymentId }
+      where: { id: paymentId },
+      include: {
+        student: {
+          include: { studentDetail: true }      // NOTE: not sending here student packages and subjects
+        }
+      }
     });
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Payment fetched successfully", payment));
@@ -59,7 +64,12 @@ export async function getStudentPayments(req: Request, res: Response, userId: st
   }
   try {
     const payment = await prismaClient.payment.findFirst({
-      where: { user_id: userId }
+      where: { user_id: userId },
+      include: {
+        student: {
+          include: { studentDetail: true }      // NOTE: not sending here student packages and subjects
+        }
+      }
     });
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Payment fetched successfully", payment));
