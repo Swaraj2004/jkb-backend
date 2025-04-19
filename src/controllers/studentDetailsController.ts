@@ -4,7 +4,8 @@ import { StudentDetailReqBodyModel } from "../models/student_detail_req_body";
 import { successJson, errorJson } from "../utils/common_funcs";
 import { prismaClient } from "../utils/database";
 import { Request, Response } from 'express';
-import { STATUS_CODES } from "../utils/consts";
+import { STATUS_CODES, STUDENT_ROLE } from "../utils/consts";
+import { AuthenticatedRequest } from "../middlewares/authMiddleware";
 
 async function getTotalAmout(packageIds: string[], subjectIds: string[], prisma: PrismaClient): Promise<Decimal> {
   let totalAmount = new Decimal(0);
@@ -108,9 +109,15 @@ export async function createStudentDetails(req: Request, res: Response): Promise
   }
 }
 
-export async function editStudentDetails(req: Request, res: Response): Promise<void> {
+export async function editStudentDetails(req: AuthenticatedRequest, res: Response): Promise<void> {
   const body: StudentDetailReqBodyModel = req.body;
   const studentId = body.student_id;
+  const student_fees = body.student_fees;
+  // remove power for student to edit student_fees, WARN: there can be a potential security threat to tamper jwt token
+  if (student_fees > 0 && req.user!.role_name === STUDENT_ROLE) {
+    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Student can't edit student_fees!", null));
+    return;
+  }
 
   try {
     const packageIds = Array.isArray(body.packages) ? body.packages : [];

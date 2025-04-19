@@ -291,7 +291,7 @@ model TestSubmissionAnswer {
 }
 
 model MhAiCollege {
-  id String @id @default(uuid())
+  id String @id @default(uuid()) @db.Uuid
 
   university_name String
   university_code String
@@ -315,4 +315,9 @@ model MhAiCollege {
 
   college_type String
   year         Int
+}
+
+model Qna{
+  id  String @id @default(uuid()) @db.Uuid
+  qna Json
 }
