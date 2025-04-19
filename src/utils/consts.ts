@@ -3,9 +3,8 @@ export const ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 60 * 24;
 export const SECRET_KEY = process.env.SECRET_KEY || "secret_key";
 export const ALGORITHM = process.env.ALGORITHM;
 export const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-export const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
-
+export const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+export const gemini_url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`;
 export const SALT = 10;         // , here 10 is the round of salt that will be added to hash
 
 // const BRANCH_COLLECTION_NAME = 'branches'; // Define your collection name

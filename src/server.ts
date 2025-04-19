@@ -63,7 +63,7 @@ app.use(`/api/v3/admin`, subjectRoutes);
 // app.use(BASE_URLS.ATTENDANCE, testRoutes);
 app.use(`/api/v3/auth/users`, userRoutes);
 app.use(`/api/v3`, mhaiRoutes);
-// app.use('/api/v3/qna', qnaRoutes);
+app.use('/api/v3/qna', qnaRoutes);
 
 // Swagger UI
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
