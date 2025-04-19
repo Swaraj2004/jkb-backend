@@ -23,8 +23,8 @@ export async function getAllPayments(req: Request, res: Response, start_date: st
     res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Start date and end date are required", null));
     return;
   }
-  const startDate = new Date(start_date as string);
-  const endDate = new Date(end_date as string);
+  const startDate = new Date(`${start_date}T00:00:00.000Z`);
+  const endDate = new Date(`${end_date}T23:59:59.999Z`);
 
   if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
     res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Invalid date format", null));
@@ -37,6 +37,11 @@ export async function getAllPayments(req: Request, res: Response, start_date: st
         created_at: {
           gte: startDate,
           lte: endDate
+        }
+      },
+      include: {
+        student: {
+          include: { studentDetail: true }      // NOTE: not sending here student packages and subjects
         }
       }
     });
