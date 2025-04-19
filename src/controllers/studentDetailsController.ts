@@ -22,7 +22,7 @@ async function getTotalAmout(packageIds: string[], subjectIds: string[], prisma:
     });
 
     packages.forEach(pkg => {
-      totalAmount.plus(pkg.package_fees);
+      totalAmount = totalAmount.plus(pkg.package_fees);
     });
   }
 
@@ -39,7 +39,7 @@ async function getTotalAmout(packageIds: string[], subjectIds: string[], prisma:
     });
 
     subjects.forEach(subject => {
-      totalAmount.plus(subject.subject_fees);
+      totalAmount = totalAmount.plus(subject.subject_fees);
     });
   }
   return totalAmount;
@@ -53,6 +53,7 @@ export async function createStudentDetails(req: Request, res: Response): Promise
     const subjectIds = Array.isArray(body.subjects) ? body.subjects : [];
 
     let totalAmount = await getTotalAmout(packageIds, subjectIds, prismaClient);
+    // console.log(totalAmount);
 
     const createRecord = {
       user_id: body.student_id, // Assign from request body
