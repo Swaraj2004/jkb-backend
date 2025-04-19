@@ -3,6 +3,8 @@ export const ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 60 * 24;
 export const SECRET_KEY = process.env.SECRET_KEY || "secret_key";
 export const ALGORITHM = process.env.ALGORITHM;
 export const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+export const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
 
 export const SALT = 10;         // , here 10 is the round of salt that will be added to hash
 
@@ -20,21 +22,21 @@ export const DEFAULT_QUERRY_SKIP = 0;
 export const DEFAULT_QUERRY_TAKE = 50;
 export const GET_ALTERNATIVE = 'alternative';
 export const STATUS_CODES = {
-    CREATE_SUCCESS: 201,
-    CREATE_FAILURE: 500,
+  CREATE_SUCCESS: 201,
+  CREATE_FAILURE: 500,
 
-    SELECT_SUCCESS: 200,
-    SELECT_FAILURE: 404,
+  SELECT_SUCCESS: 200,
+  SELECT_FAILURE: 404,
 
-    UPDATE_SUCCESS: 200,
-    UPDATE_FAILURE: 500,
-    
-    DELETE_SUCCESS: 200,
-    DELETE_FAILURE: 500,
-    
-    BAD_REQUEST: 400,
-    FORBIDDEN_REQUEST: 403,
-    UNAUTHORIZED: 401
+  UPDATE_SUCCESS: 200,
+  UPDATE_FAILURE: 500,
+
+  DELETE_SUCCESS: 200,
+  DELETE_FAILURE: 500,
+
+  BAD_REQUEST: 400,
+  FORBIDDEN_REQUEST: 403,
+  UNAUTHORIZED: 401
 };
 // const LECTURE_COLLECTION_NAME = 'lectures'; // Define your lecture collection name
 // const ATTENDANCE_COLLECTION_NAME = 'attendance'; // Define your attendance collection name

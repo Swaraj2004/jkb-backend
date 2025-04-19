@@ -317,7 +317,11 @@ model MhAiCollege {
   year         Int
 }
 
-model Qna{
-  id  String @id @default(uuid()) @db.Uuid
-  qna Json
+model Qna {
+  id        String @id @default(uuid()) @db.Uuid
+  email     String
+  full_name String?
+  location  String?
+  contact   String?
+  qna       Json
 }

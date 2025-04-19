@@ -3,7 +3,7 @@ interface QuestionAnswer {
   answer: string | string[]; // Because some answers are arrays
 }
 
-interface FormResponse {
+interface QnaFormResponse {
   name: string;
   email: string;
   contact: string;
