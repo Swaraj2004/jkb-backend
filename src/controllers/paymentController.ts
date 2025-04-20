@@ -63,7 +63,7 @@ export async function getStudentPayments(req: Request, res: Response, userId: st
     return;
   }
   try {
-    const payment = await prismaClient.payment.findFirst({
+    const payment = await prismaClient.payment.findMany({
       where: { user_id: userId },
       include: {
         student: {
