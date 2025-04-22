@@ -28,8 +28,8 @@ const router = express.Router();
  *       200:
  *         description: A single role object
  */
-router.get('/roles/:role_id', async (req: Request, res: Response) => {
-    return getRolesById(req, res, req.params.role_id);
+router.get('/roles/:role_id', async (req: Request, res: Response): Promise<void> => {
+  return getRolesById(req, res, req.params.role_id);
 });
 
 /**
@@ -42,8 +42,8 @@ router.get('/roles/:role_id', async (req: Request, res: Response) => {
  *       200:
  *         description: A list of role objects
  */
-router.get('/roles', async (req: Request, res: Response) => {
-    return getAllRoles(req, res);
+router.get('/roles', async (req: Request, res: Response): Promise<void> => {
+  return getAllRoles(req, res);
 });
 
 /**
@@ -62,8 +62,8 @@ router.get('/roles', async (req: Request, res: Response) => {
  *       201:
  *         description: The created role object
  */
-router.post('/roles', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
-    return createRole(req, res);
+router.post('/roles', authMiddleware, authorizeRoles(), async (req: Request, res: Response): Promise<void> => {
+  return createRole(req, res);
 });
 
 /**
@@ -83,8 +83,8 @@ router.post('/roles', authMiddleware, authorizeRoles(), async (req: Request, res
  *       204:
  *         description: Role deleted successfully
  */
-router.delete('/roles/:role_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
-    return deleteRole(req, res, req.params.role_id);
+router.delete('/roles/:role_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response): Promise<void> => {
+  return deleteRole(req, res, req.params.role_id);
 });
 
 /**
@@ -103,8 +103,8 @@ router.delete('/roles/:role_id', authMiddleware, authorizeRoles(), async (req: R
  *       202:
  *         description: The updated role object
  */
-router.put('/roles', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
-    return updateRole(req, res);
+router.put('/roles', authMiddleware, authorizeRoles(), async (req: Request, res: Response): Promise<void> => {
+  return updateRole(req, res);
 });
 
 export default router;

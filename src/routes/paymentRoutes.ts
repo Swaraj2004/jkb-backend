@@ -1,7 +1,8 @@
 import express, { Request, Response } from 'express';
 import { createPayment, deletePayment, editPayment, getAllPayments, getPaymentById, getStudentPayments } from '../controllers/paymentController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
-import { STUDENT_ROLE } from '../utils/consts';
+import { STUDENT_ROLE, STATUS_CODES } from '../utils/consts';
+import { errorJson } from '../utils/common_funcs';
 
 const router = express.Router();
 
@@ -30,9 +31,9 @@ const router = express.Router();
  *       200:
  *         description: A single payment object
  */
-router.get('/admin/payments/:payment_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
-    const paymentId = req.params.payment_id;
-    return getPaymentById(req, res, paymentId);
+router.get('/admin/payments/:payment_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response): Promise<void> => {
+  const paymentId = req.params.payment_id;
+  return getPaymentById(req, res, paymentId);
 });
 
 /**
@@ -58,9 +59,9 @@ router.get('/admin/payments/:payment_id', authMiddleware, authorizeRoles(), asyn
  *       200:
  *         description: A list of payment objects
  */
-router.get('/admin/payments', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
-    const { start_date, end_date } = req.query;
-    return getAllPayments(req, res, start_date as string, end_date as string);
+router.get('/admin/payments', authMiddleware, authorizeRoles(), async (req: Request, res: Response): Promise<void> => {
+  const { start_date, end_date } = req.query;
+  return getAllPayments(req, res, start_date as string, end_date as string);
 });
 
 /**
@@ -80,9 +81,13 @@ router.get('/admin/payments', authMiddleware, authorizeRoles(), async (req: Requ
  *       200:
  *         description: A list of payment objects for the student
  */
-router.get('/admin/student-payments/:user_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
-    const userId = req.params.user_id;
-    return getStudentPayments(req, res, userId);
+router.get('/admin/student-payments/:user_id', authMiddleware, authorizeRoles([STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const userId = req.params.user_id;
+  if (userId != req.user!.user_id) {
+    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Can't see other Students Payments", null));
+    return;
+  }
+  return getStudentPayments(req, res, userId);
 });
 
 /**
@@ -101,8 +106,8 @@ router.get('/admin/student-payments/:user_id', authMiddleware, authorizeRoles(),
  *       201:
  *         description: The created payment object
  */
-router.post('/admin/payments', authMiddleware, authorizeRoles(), async (req: AuthenticatedRequest, res: Response) => {
-    return createPayment(req, res);
+router.post('/admin/payments', authMiddleware, authorizeRoles(), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  return createPayment(req, res);
 });
 
 /**
@@ -122,9 +127,9 @@ router.post('/admin/payments', authMiddleware, authorizeRoles(), async (req: Aut
  *       204:
  *         description: Payment deleted successfully
  */
-router.delete('/admin/payments/:payment_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
-    const paymentId = req.params.payment_id;
-    return deletePayment(req, res, paymentId);
+router.delete('/admin/payments/:payment_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response): Promise<void> => {
+  const paymentId = req.params.payment_id;
+  return deletePayment(req, res, paymentId);
 });
 
 /**
@@ -143,8 +148,8 @@ router.delete('/admin/payments/:payment_id', authMiddleware, authorizeRoles(), a
  *       202:
  *         description: The updated payment object
  */
-router.put('/admin/payments', authMiddleware, authorizeRoles(), async (req: AuthenticatedRequest, res: Response) => {
-    return editPayment(req, res);
+router.put('/admin/payments', authMiddleware, authorizeRoles(), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  return editPayment(req, res);
 });
 
 /**
@@ -164,9 +169,9 @@ router.put('/admin/payments', authMiddleware, authorizeRoles(), async (req: Auth
  *       200:
  *         description: A list of payment records for the student
  */
-router.get('/student/payments', authMiddleware, authorizeRoles([STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response) => {
-    const studentId = req.query.student_id as string;
-    return getStudentPayments(req, res, studentId);
+router.get('/student/payments', authMiddleware, authorizeRoles([STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const studentId = req.query.student_id as string;
+  return getStudentPayments(req, res, studentId);
 });
 
 export default router;

@@ -12,7 +12,7 @@ export async function getPaymentById(req: Request, res: Response, paymentId: str
       where: { id: paymentId },
       include: {
         student: {
-          include: { studentDetail: true }      // NOTE: not sending here student packages and subjects
+          select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true },      // NOTE: not sending here student packages and subjects
         }
       }
     });
@@ -46,7 +46,7 @@ export async function getAllPayments(req: Request, res: Response, start_date: st
       },
       include: {
         student: {
-          include: { studentDetail: true }      // NOTE: not sending here student packages and subjects
+          select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true },
         }
       }
     });
@@ -67,7 +67,7 @@ export async function getStudentPayments(req: Request, res: Response, userId: st
       where: { user_id: userId },
       include: {
         student: {
-          include: { studentDetail: true }      // NOTE: not sending here student packages and subjects
+          select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true },
         }
       }
     });
