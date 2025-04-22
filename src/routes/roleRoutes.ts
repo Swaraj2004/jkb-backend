@@ -62,9 +62,9 @@ router.get('/roles', async (req: Request, res: Response): Promise<void> => {
  *       201:
  *         description: The created role object
  */
-router.post('/roles', authMiddleware, authorizeRoles(), async (req: Request, res: Response): Promise<void> => {
-  return createRole(req, res);
-});
+// router.post('/roles', authMiddleware, authorizeRoles(), async (req: Request, res: Response): Promise<void> => {
+//   return createRole(req, res);
+// });
 
 /**
  * @swagger
@@ -83,9 +83,9 @@ router.post('/roles', authMiddleware, authorizeRoles(), async (req: Request, res
  *       204:
  *         description: Role deleted successfully
  */
-router.delete('/roles/:role_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response): Promise<void> => {
-  return deleteRole(req, res, req.params.role_id);
-});
+// router.delete('/roles/:role_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response): Promise<void> => {
+//   return deleteRole(req, res, req.params.role_id);
+// });
 
 /**
  * @swagger
@@ -103,8 +103,8 @@ router.delete('/roles/:role_id', authMiddleware, authorizeRoles(), async (req: R
  *       202:
  *         description: The updated role object
  */
-router.put('/roles', authMiddleware, authorizeRoles(), async (req: Request, res: Response): Promise<void> => {
-  return updateRole(req, res);
-});
+// router.put('/roles', authMiddleware, authorizeRoles(), async (req: Request, res: Response): Promise<void> => {
+//   return updateRole(req, res);
+// });
 
 export default router;
