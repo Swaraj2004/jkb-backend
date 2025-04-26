@@ -4,6 +4,7 @@ import { prismaClient } from "../utils/database";
 import { DEFAULT_QUERRY_SKIP, DEFAULT_QUERRY_TAKE, SALT, STATUS_CODES, STUDENT_ROLE } from "../utils/consts";
 import { Roles, User } from "@prisma/client";
 import { successJson, errorJson } from "../utils/common_funcs";
+import { UserStudentRequestBody } from "../models/userStudentReqBody";
 
 interface RequestBody extends User {
   role_id: string
@@ -14,7 +15,6 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
     const user: RequestBody = req.body;
     user.password = await hash(user.password, SALT);      // Hash the password
 
-    // NOTE:: ask swaraj Bhaiya if he can send the role_name from frontend
     const userRole = await prismaClient.role.findUnique({
       where: { id: user.role_id }
     }); // Find student role_id
@@ -37,16 +37,20 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
           full_name: user.full_name,
           location: user.location,
           phone: user.phone,
+          userRole: {
+            create: {
+              role_id: userRole.id,
+            }
+          }
         }
       });
 
-      await prisma.userRole.create({
-        data: {
-          role_id: userRole.id,
-          user_id: createdUser.id
-        }
-      });
-
+      // await prisma.userRole.create({
+      //   data: {
+      //     role_id: userRole.id,
+      //     user_id: createdUser.id
+      //   }
+      // });
       return createdUser;
     });
 
@@ -71,20 +75,82 @@ export const createStudent = async (req: Request, res: Response): Promise<void> 
     }
 
     // Using transaction to ensure both user and role assignment happen together
-    const newUser = await prismaClient.$transaction(async (prisma) => {
-      const createdUser = await prisma.user.create({
-        data: user
-      });
-
-      await prisma.userRole.create({
-        data: {
-          role_id: studentRole.id,
-          user_id: createdUser.id
+    const newUser = await prismaClient.user.create({
+      data: {
+        full_name: user.full_name,
+        password: user.password,
+        email: user.email,
+        location: user.location,
+        phone: user.phone,
+        userRole: {
+          create: {
+            role_id: studentRole.id
+          }
         }
-      });
-
-      return createdUser;
+      }
     });
+
+    res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Record inserted Successfully", newUser.id));
+  } catch (error) {
+    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Failed to create user", error instanceof Error ? error.message : "Unknown Error"));
+  }
+};
+
+export const createUserAndStudent = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user: UserStudentRequestBody = req.body;
+    user.password = await hash(user.password, SALT);      // Hash the password
+
+    const studentRole = await prismaClient.role.findUnique({
+      where: { name: STUDENT_ROLE }
+    }); // Find student role_id
+
+    if (!studentRole) {
+      res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Student role not found", null));
+      return;     // dont allow to create a new user
+    }
+
+    // Using transaction to ensure both user and role assignment happen together
+    const newUser = await prismaClient.user.create({
+      data: {
+        full_name: user.full_name,
+        password: user.password,
+        email: user.email,
+        location: user.location,
+        phone: user.phone,
+        userRole: {
+          create: {
+            role_id: studentRole.id
+          }
+        },
+        studentDetail: {
+          create: {
+            parent_contact: user.studentDetail.parent_contact,
+            branch_id: user.studentDetail.branch_id,
+            diploma_score: user.studentDetail.diploma_score,
+            xii_score: user.studentDetail.xii_score,
+            cet_score: user.studentDetail.cet_score,
+            jee_score: user.studentDetail.jee_score,
+            college_name: user.studentDetail.college_name,
+            referred_by: user.studentDetail.referred_by,
+            student_fees: user.studentDetail.student_fees,
+            total_fees: user.studentDetail.total_fees,
+            pending_fees: user.studentDetail.pending_fees,
+            university_name: user.studentDetail.university_name,
+            jkb_centre: user.studentDetail.jkb_centre,
+            semester: user.studentDetail.semester,
+            status: user.studentDetail.status,
+            remark: user.studentDetail.remark,
+            enrolled: user.studentDetail.enrolled,
+          }
+        }
+      }
+    });
+
+    // if (!newUser) {
+    //   res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("User creation failed!", null));
+    //   return;
+    // }
 
     res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Record inserted Successfully", newUser.id));
   } catch (error) {

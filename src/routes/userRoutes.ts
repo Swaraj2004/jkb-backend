@@ -1,5 +1,5 @@
 import express, { Response, Request } from 'express';
-import { createStudent, createUser, deleteUser, getUserById, getUsers, updateUser } from '../controllers/userController';
+import { createStudent, createUser, createUserAndStudent, deleteUser, getUserById, getUsers, updateUser } from '../controllers/userController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { AUTH_ROLES, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
 import { errorJson } from '../utils/common_funcs';
@@ -31,7 +31,7 @@ const router = express.Router();
  *         description: A single user object
  */
 
-router.get('/:user_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), async (req: AuthenticatedRequest, res: Response) => {
+router.get('/:user_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   // another student cant access this route only current authorizedStundent and professor
   if (!req.user) {
     res.status(401).json(errorJson("Please log in first", null));
@@ -67,7 +67,7 @@ router.get('/:user_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_
  *         description: A list of user objects
  */
 
-router.get('/', authMiddleware, authorizeRoles(), async (req: AuthenticatedRequest, res: Response) => {
+router.get('/', authMiddleware, authorizeRoles(), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const { year } = req.query;
   return getUsers(req, res, year as string);
 });
@@ -89,7 +89,7 @@ router.get('/', authMiddleware, authorizeRoles(), async (req: AuthenticatedReque
  *         description: The created user object
  */
 
-router.post('/', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+router.post('/', authMiddleware, authorizeRoles(), async (req: Request, res: Response): Promise<void> => {
   return createUser(req, res);
 });
 
@@ -110,16 +110,16 @@ router.post('/', authMiddleware, authorizeRoles(), async (req: Request, res: Res
  *         description: The created user object
  */
 
-router.post('/student', async (req: Request, res: Response) => {
+router.post('/student', async (req: Request, res: Response): Promise<void> => {
   return createStudent(req, res);
 });
 
 /**
  * @swagger
- * api/v3/auth/users/student:
+ * api/v3/auth/users/students:
  *   post:
  *     tags: [User Management]
- *     summary: Create a new Student
+ *     summary: Create a new Student with both creation of User and student
  *     requestBody:
  *       required: true
  *       content:
@@ -131,8 +131,8 @@ router.post('/student', async (req: Request, res: Response) => {
  *         description: The created user object
  */
 
-router.post('/student', async (req: Request, res: Response) => {
-  return createStudent(req, res);
+router.post('/students', async (req: Request, res: Response): Promise<void> => {
+  return createUserAndStudent(req, res);
 });
 
 /**
@@ -153,7 +153,7 @@ router.post('/student', async (req: Request, res: Response) => {
  *         description: User deleted successfully
  */
 
-router.delete('/:user_id', authMiddleware, authorizeRoles(), async (req: AuthenticatedRequest, res: Response) => {
+router.delete('/:user_id', authMiddleware, authorizeRoles(), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   return deleteUser(req, res);
 });
 
@@ -173,7 +173,7 @@ router.delete('/:user_id', authMiddleware, authorizeRoles(), async (req: Authent
  *       202:
  *         description: The updated user object
  */
-router.put('/', authMiddleware, authorizeRoles(), async (req: AuthenticatedRequest, res: Response) => {
+router.put('/', authMiddleware, authorizeRoles(), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   return updateUser(req, res);
 });
 
