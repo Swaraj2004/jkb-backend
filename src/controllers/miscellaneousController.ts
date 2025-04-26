@@ -3,6 +3,7 @@ import { gemini_url, STATUS_CODES } from '../utils/consts';
 import { errorJson, successJson } from '../utils/common_funcs';
 import { prismaClient } from '../utils/database';
 import { QnaFormResponse } from '../models/qna_req_body';
+import { ContactEnquiryReqBody } from '../models/contact_enquiry_req_body';
 
 export async function getGeminiResponse(req: Request, res: Response, body: QnaFormResponse): Promise<void> {
   if (!body.questions || !body.email) {
@@ -86,6 +87,36 @@ export async function getGeminiResponse(req: Request, res: Response, body: QnaFo
     }
 
     res.status(STATUS_CODES.SELECT_FAILURE).json({ error: 'No candidates returned by Gemini' });
+  } catch (err) {
+    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Error occured in either database or AI Model Response!", null));
+  }
+}
+
+export async function createContactEnquiry(req: Request, res: Response, body: ContactEnquiryReqBody): Promise<void> {
+  try {
+    const contactEnquiry = await prismaClient.contactEnquiry.create({
+      data: {
+        email: body.email,
+        full_name: body.full_name,
+        location: body.location,
+        contact: body.contact,
+        message: body.message
+      }
+    });
+
+    res.status(STATUS_CODES.SELECT_FAILURE).json(successJson("Contact Saved Successfully!", contactEnquiry.id));
+  } catch (err) {
+    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Error occured in either database or AI Model Response!", null));
+  }
+}
+
+export async function getContactEnquiry(req: Request, res: Response, body: ContactEnquiryReqBody): Promise<void> {
+  try {
+    // const contactEnquiry = await prismaClient.contactEnquiry.findMany({
+    //
+    // });
+
+    res.status(STATUS_CODES.SELECT_FAILURE).json(successJson("Contact Saved Successfully!", 1));
   } catch (err) {
     res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Error occured in either database or AI Model Response!", null));
   }

@@ -323,5 +323,23 @@ model Qna {
   full_name String?
   location  String?
   contact   String?
-  qna       Json
+  qna       Json?
+}
+
+model ContactEnquiry {
+  id        String @id @default(uuid()) @db.Uuid
+  email     String
+  full_name String?
+  location  String?
+  contact   String?
+  message   String?
+}
+
+model BranchEnquiry {
+  id         String  @id @default(uuid()) @db.Uuid
+  email      String
+  full_name  String?
+  location   String?
+  contact    String?
+  branch_qna Json?
 }

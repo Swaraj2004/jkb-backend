@@ -17,7 +17,7 @@ import attendanceRoutes from "./routes/attendanceRoutes";
 import paymentRoutes from "./routes/paymentRoutes";
 import testRoutes from "./routes/testRoutes";
 import mhaiRoutes from "./routes/mhai_routes";
-import qnaRoutes from "./routes/qna_routes";
+import miscellaneousRoutesRoutes from "./routes/miscellaneousRoutes";
 
 dotenv.config();
 
@@ -63,7 +63,7 @@ app.use(`/api/v3/admin`, subjectRoutes);
 // app.use(BASE_URLS.ATTENDANCE, testRoutes);
 app.use(`/api/v3/auth/users`, userRoutes);
 app.use(`/api/v3`, mhaiRoutes);
-app.use('/api/v3/qna', qnaRoutes);
+app.use('/api/v3', miscellaneousRoutesRoutes);
 
 // Swagger UI
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
