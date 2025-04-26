@@ -5,7 +5,7 @@ dist
 
 prisma/dev.db
 prisma/dev.db-journal
-prisma/migrations/
+prisma/migrations*
 prisma/.env
 prisma/generated/
 *.sql
