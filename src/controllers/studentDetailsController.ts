@@ -115,7 +115,7 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
   const studentId = body.student_id;
   const student_fees = body.student_fees;
   // remove power for student to edit student_fees, WARN: there can be a potential security threat to tamper jwt token
-  if (student_fees > 0 && req.user!.role_name === STUDENT_ROLE) {
+  if (req.user!.role_name === STUDENT_ROLE && student_fees && student_fees > 0) {
     res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Student can't edit student_fees!", null));
     return;
   }
