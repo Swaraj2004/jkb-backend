@@ -135,7 +135,7 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
     }
 
     const totalAmount = await getTotalAmout(packageIds, subjectIds, prismaClient);
-    const pending_fees = student_fees > 0 ? student_fees : body.pending_fees;       // NOTE: this logic is only applicable if there is no payment Record in table
+    const pending_fees = student_fees > 0 ? student_fees : body.pending_fees ? body.pending_fees : 0;       // NOTE: this logic is only applicable if there is no payment Record in table
 
     await prismaClient.$transaction(async (prisma): Promise<void> => {
       const updatedStudent: StudentDetail = await prisma.studentDetail.update({
@@ -158,6 +158,7 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
           enrolled: body.enrolled ?? undefined, // Keep existing if not provided
         },
       });
+      console.log(updatedStudent.id);
 
       // OPTIMIZE: think a way to optimize below things
       if (packageIds.length > 0) {
