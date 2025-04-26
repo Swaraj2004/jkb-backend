@@ -86,7 +86,7 @@ export async function getGeminiResponse(req: Request, res: Response, body: QnaFo
       return;
     }
 
-    res.status(STATUS_CODES.SELECT_FAILURE).json({ error: 'No candidates returned by Gemini' });
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("No candidates returned by Gemini", null));
   } catch (err) {
     res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Error occured in either database or AI Model Response!", null));
   }
@@ -104,20 +104,35 @@ export async function createContactEnquiry(req: Request, res: Response, body: Co
       }
     });
 
-    res.status(STATUS_CODES.SELECT_FAILURE).json(successJson("Contact Saved Successfully!", contactEnquiry.id));
+    res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Contact Saved Successfully!", contactEnquiry.id));
   } catch (err) {
-    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Error occured in either database or AI Model Response!", null));
+    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Contact not saved Unsuccessful!", null));
   }
 }
 
-export async function getContactEnquiry(req: Request, res: Response, body: ContactEnquiryReqBody): Promise<void> {
+export async function getContactEnquiry(req: Request, res: Response, reqLimit: string, reqOffset: string): Promise<void> {
   try {
-    // const contactEnquiry = await prismaClient.contactEnquiry.findMany({
-    //
-    // });
+    if (!reqLimit && !reqOffset) {
+      const contactEnquiry = await prismaClient.contactEnquiry.findMany();
+      res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Contact Fetched Successfully!", contactEnquiry));
+      return;
+    }
 
-    res.status(STATUS_CODES.SELECT_FAILURE).json(successJson("Contact Saved Successfully!", 1));
+    const limit = parseInt(reqLimit);
+    const offset = parseInt(reqOffset);
+
+    if (isNaN(limit) || isNaN(offset)) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Limit or offset is NaN", null));
+      return;
+    }
+
+    const contactEnquiry = await prismaClient.contactEnquiry.findMany({
+      skip: offset,
+      take: limit
+    });
+
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Contact Fetched Successfully!", contactEnquiry));
   } catch (err) {
-    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Error occured in either database or AI Model Response!", null));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Contact fetch Unsuccessful!", null));
   }
 }
