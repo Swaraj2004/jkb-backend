@@ -153,9 +153,9 @@ export const getUsers = async (req: Request, res: Response, year: string): Promi
       return;
     }
     // Create the beginning and end date for the given year
-    const startDate = new Date(`${year}-01-01T00:00:00.000Z`);
+    const startDate = new Date(`${year}-04-01T00:00:00.000Z`);
     // Use the next year as the upper bound (non-inclusive)
-    const endDate = new Date(`${parseInt(year) + 1}-01-01T00:00:00.000Z`);
+    const endDate = new Date(`${parseInt(year) + 1}-04-01T00:00:00.000Z`);
 
     // const { skip = DEFAULT_QUERRY_SKIP, take = DEFAULT_QUERRY_TAKE } = req.query;
 

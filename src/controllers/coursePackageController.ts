@@ -131,9 +131,9 @@ export async function getSubjectPackageUsers(req: Request, res: Response): Promi
         res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('Invalid year', null));
         return;
       }
-      // Filter by createdAt between the start and end of the year.
-      const startDate = new Date(y, 0, 1);
-      const endDate = new Date(y, 11, 31, 23, 59, 59, 999);
+      // Filter by createdAt between the start and end of the year. (1st april to next year 31 march)
+      const startDate = new Date(y, 3, 1);
+      const endDate = new Date(y + 1, 2, 31, 23, 59, 59, 999);
       filter.createdAt = {
         gte: startDate,
         lte: endDate,
