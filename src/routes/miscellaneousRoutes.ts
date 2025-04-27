@@ -6,7 +6,7 @@ import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 
 const router = express.Router();
 
-router.post('/career-enquiry', (req: Request, res: Response): Promise<void> => {
+router.post('/qna', (req: Request, res: Response): Promise<void> => {
   const body: QnaFormResponse = req.body;
   return getGeminiResponse(req, res, body);
 });
