@@ -131,7 +131,7 @@ export async function resetPassword(req: Request, res: Response, email_address: 
       data: { password: newPassword },
     });
 
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(successJson("Password Reset Successfully!", null));
+    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Password Reset Successfully!", null));
   } catch (error: any) {
     res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Error resetting password", error.message));
   }
