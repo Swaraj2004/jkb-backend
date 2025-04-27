@@ -107,6 +107,6 @@ export async function checkLoginStatus(req: Request, res: Response, userId: stri
       time_left: timeLeft
     });
   } catch (error) {
-    res.send(500).json(errorJson('Server Error', error));
+    res.send(STATUS_CODES.UPDATE_FAILURE).json(errorJson('Server Error', error));
   }
 }
