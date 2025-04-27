@@ -83,7 +83,7 @@ router.get('/admin/payments', authMiddleware, authorizeRoles(), async (req: Requ
  */
 router.get('/admin/student-payments/:user_id', authMiddleware, authorizeRoles([STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const userId = req.params.user_id;
-  if (userId != req.user!.user_id) {
+  if (req.user!.role_name == STUDENT_ROLE && userId != req.user!.user_id) {
     res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Can't see other Students Payments", null));
     return;
   }

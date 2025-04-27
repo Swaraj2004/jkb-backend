@@ -38,11 +38,7 @@ router.get('/:user_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_
     return;
   }
 
-  if (
-    !AUTH_ROLES.includes(req.user.role_name) &&
-    req.user.role_name !== PROFESSOR_ROLE &&
-    req.user.user_id != req.params.user_id
-  ) {
+  if (req.user!.role_name == STUDENT_ROLE && req.user.user_id != req.params.user_id) {
     res.status(403).json(errorJson("Unauthorized", null));
     return;
   }
