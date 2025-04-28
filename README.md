@@ -37,6 +37,7 @@ SMTP_SERVER="smtp.gmail.com"
 SMTP_PORT=587
 # The URL allowed to access this server via CORS
 HOST_URLS=https://link1.com/,https://link2.com/,.......
+GEMINI_API_KEYS=key1,key2.....
 ```
 
 **Note:** Update `DATABASE_URL` with your actual database credentials.
