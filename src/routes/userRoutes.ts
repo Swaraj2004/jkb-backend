@@ -1,7 +1,7 @@
 import express, { Response, Request } from 'express';
 import { createStudent, createUser, createUserAndStudent, deleteUser, getUserById, getUsers, updateUser } from '../controllers/userController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
-import { AUTH_ROLES, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
+import { AUTH_ROLES, DEFAULT_QUERRY_LIMIT, DEFAULT_QUERRY_OFFSET, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
 import { errorJson } from '../utils/common_funcs';
 
 const router = express.Router();

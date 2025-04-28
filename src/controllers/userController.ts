@@ -1,7 +1,7 @@
 import { hash } from "bcrypt";
 import { Request, Response } from "express";
 import { prismaClient } from "../utils/database";
-import { DEFAULT_QUERRY_SKIP, DEFAULT_QUERRY_TAKE, SALT, STATUS_CODES, STUDENT_ROLE } from "../utils/consts";
+import { DEFAULT_QUERRY_LIMIT, DEFAULT_QUERRY_OFFSET, SALT, STATUS_CODES, STUDENT_ROLE } from "../utils/consts";
 import { Roles, User } from "@prisma/client";
 import { successJson, errorJson } from "../utils/common_funcs";
 import { UserStudentRequestBody } from "../models/userStudentReqBody";
@@ -28,30 +28,19 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    // Using transaction to ensure both user and role assignment happen together
-    const newUser = await prismaClient.$transaction(async (prisma) => {
-      const createdUser = await prisma.user.create({
-        data: {
-          email: user.email,
-          password: user.password,
-          full_name: user.full_name,
-          location: user.location,
-          phone: user.phone,
-          userRole: {
-            create: {
-              role_id: userRole.id,
-            }
+    const newUser = await prismaClient.user.create({
+      data: {
+        email: user.email,
+        password: user.password,
+        full_name: user.full_name,
+        location: user.location,
+        phone: user.phone,
+        userRole: {
+          create: {
+            role_id: userRole.id,
           }
         }
-      });
-
-      // await prisma.userRole.create({
-      //   data: {
-      //     role_id: userRole.id,
-      //     user_id: createdUser.id
-      //   }
-      // });
-      return createdUser;
+      }
     });
 
     res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Record inserted Successfully", newUser.id));

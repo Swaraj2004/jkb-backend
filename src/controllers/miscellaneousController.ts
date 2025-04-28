@@ -1,10 +1,12 @@
-import express, { Request, Response } from 'express';
-import { gemini_url, STATUS_CODES } from '../utils/consts';
+import { Request, Response } from 'express';
+import { GEMINI_API_KEYS, gemini_url, STATUS_CODES } from '../utils/consts';
 import { errorJson, successJson } from '../utils/common_funcs';
 import { prismaClient } from '../utils/database';
 import { BranchFormResponse, QnaFormResponse } from '../models/miscellaneous_req_bodies';
 import { ContactEnquiryReqBody } from '../models/contact_enquiry_req_body';
 import { branchPrompt, carrerPrompt } from '../utils/prompts';
+
+let currentIndex = 0;
 
 export async function getCarrerPrediction(req: Request, res: Response, body: QnaFormResponse): Promise<void> {
   if (!body.questions || !body.email) {
@@ -43,24 +45,41 @@ export async function getCarrerPrediction(req: Request, res: Response, body: Qna
         }
       ]
     };
-    const response = await fetch(gemini_url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
 
-    const data = await response.json();
-
-    if (data.candidates && data.candidates.length > 0) {
-      const reply = data.candidates[0].content.parts[0].text;
-      res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Temprory User created successfully and Recieved Gemini Response!", reply));
-      return;
-    }
-
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("No candidates returned by Gemini", null));
+    const data = await getGeminiResponse(gemini_url, currentIndex, payload);
+    return sendRespone(data, payload, res, GEMINI_API_KEYS.length);
   } catch (err) {
     res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Error occured in either database or AI Model Response!", null));
   }
+}
+
+// IMPORTANT: for now i am doing this using local variable as there is only one server but in future if number of servers 
+// are increased then we can use redis
+async function sendRespone(data: any, payload: any, res: Response, round: number): Promise<void> {
+  if (round < 1) {
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("No candidates returned by Gemini", null));
+    return;
+  }
+  if (data.candidates && data.candidates.length > 0) {
+    const reply = data.candidates[0].content.parts[0].text;
+    res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Temprory User created successfully and Recieved Gemini Response!", reply));
+    return;
+  }
+  currentIndex = (currentIndex + 1) % GEMINI_API_KEYS.length;
+  data = await getGeminiResponse(gemini_url, currentIndex, payload);
+  return sendRespone(data, payload, res, round - 1);
+}
+
+async function getGeminiResponse(url: string, index: number, payload: any): Promise<any> {
+  // console.log('Using api key - ', GEMINI_API_KEYS[index]);
+  const response = await fetch(url + GEMINI_API_KEYS[index], {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await response.json();
+  return data;
 }
 
 export async function getBranchPrediction(req: Request, res: Response, body: BranchFormResponse): Promise<void> {
@@ -95,21 +114,9 @@ export async function getBranchPrediction(req: Request, res: Response, body: Bra
         }
       ]
     };
-    const response = await fetch(gemini_url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
 
-    const data = await response.json();
-
-    if (data.candidates && data.candidates.length > 0) {
-      const reply = data.candidates[0].content.parts[0].text;
-      res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Temprory User created successfully and Recieved Gemini Response!", reply));
-      return;
-    }
-
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("No candidates returned by Gemini", null));
+    const data = await getGeminiResponse(gemini_url, currentIndex, payload);
+    return sendRespone(data, payload, res, GEMINI_API_KEYS.length);
   } catch (err) {
     res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Error occured in either database or AI Model Response!", null));
   }
