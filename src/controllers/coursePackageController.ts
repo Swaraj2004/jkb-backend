@@ -120,8 +120,10 @@ export async function getSubjectPackageUsers(req: Request, res: Response): Promi
 
     // Build filter for StudentDetail.
     let filter: any = {
-      packages: {
-        has: subject_package_id, // Assuming 'packages' is a string[] field.
+      studentPackages: {
+        some: {
+          package_id: subject_package_id as string
+        } // Assuming 'packages' is a string[] field.
       },
     };
 
@@ -134,14 +136,17 @@ export async function getSubjectPackageUsers(req: Request, res: Response): Promi
       // Filter by createdAt between the start and end of the year. (1st april to next year 31 march)
       const startDate = new Date(y, 3, 15);
       const endDate = new Date(y + 1, 3, 14, 23, 59, 59, 999);
-      filter.createdAt = {
+      filter.created_at = {
         gte: startDate,
         lte: endDate,
       };
     }
 
+    // console.log(filter);
     const users = await prismaClient.user.findMany({
-      where: filter,
+      where: {
+        studentDetail: filter,
+      },
       select: {
         email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true,
         studentDetail: {
