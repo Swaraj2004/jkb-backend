@@ -145,7 +145,7 @@ model Payment {
   updated_at     DateTime? @updatedAt @db.Timestamptz()
   created_by     String?   @db.Uuid
 
-  student   User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  student   User  @relation(fields: [user_id], references: [id])
   createdBy User? @relation("PaymentCreatedBy", fields: [created_by], references: [id])
 }
 
