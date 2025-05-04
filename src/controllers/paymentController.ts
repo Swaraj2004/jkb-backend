@@ -247,6 +247,11 @@ export async function editPayment(req: AuthenticatedRequest, res: Response): Pro
       return;
     }
 
+    if (!existingPayment.user_id) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("User Id is null that is that user has been Deleted!", null));
+      return;
+    }
+
     const student = await prismaClient.studentDetail.findUnique({
       where: { user_id: existingPayment.user_id },
       select: { pending_fees: true }
@@ -290,7 +295,7 @@ export async function editPayment(req: AuthenticatedRequest, res: Response): Pro
 
       // Update student pending fees
       await tx.studentDetail.update({
-        where: { user_id: existingPayment.user_id },
+        where: { user_id: existingPayment.user_id! },
         data: { pending_fees: pendingFees }
       });
     });
