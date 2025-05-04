@@ -7,7 +7,7 @@ import { Request, Response } from 'express';
 import { STATUS_CODES, STUDENT_ROLE } from "../utils/consts";
 import { AuthenticatedRequest } from "../middlewares/authMiddleware";
 
-async function getTotalAmout(packageIds: string[], subjectIds: string[], prisma: PrismaClient): Promise<Decimal> {
+export async function getTotalAmout(packageIds: string[], subjectIds: string[], prisma: PrismaClient): Promise<Decimal> {
   let totalAmount = new Decimal(0);
   if (packageIds.length > 0) {
     const packages = await prisma.package.findMany({
@@ -82,6 +82,7 @@ export async function createStudentDetails(req: Request, res: Response): Promise
       data: createRecord
     });
 
+    // OPTIMIZE: use create many in above querry
     if (subjectIds.length > 0) {
       const subjectData = subjectIds.map((subjectId: string) => ({
         student_id: newStudentDetail.id,
@@ -158,7 +159,7 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
           enrolled: body.enrolled ?? undefined, // Keep existing if not provided
         },
       });
-      console.log(updatedStudent.id);
+      // console.log(updatedStudent.id);
 
       // OPTIMIZE: think a way to optimize below things
       if (packageIds.length > 0) {

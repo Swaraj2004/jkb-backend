@@ -194,8 +194,8 @@ export async function getSubjectUsers(req: Request, res: Response): Promise<void
             some: {
               subject_id: subject_id as string,
               created_at: {
-                gte: new Date(`${numericYear}-04-01T00:00:00.000Z`), // Start of the given year
-                lt: new Date(`${numericYear + 1}-04-01T00:00:00.000Z`), // Start of the next year
+                gte: new Date(`${numericYear}-04-15T00:00:00.000Z`), // Start of the given year
+                lt: new Date(`${numericYear + 1}-04-15T00:00:00.000Z`), // Start of the next year
               },
             },
           },

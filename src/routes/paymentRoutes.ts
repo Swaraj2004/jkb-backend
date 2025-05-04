@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { createPayment, deletePayment, editPayment, getAllPayments, getPaymentById, getStudentPayments } from '../controllers/paymentController';
+import { createPayment, editPayment, getAllPayments, getPaymentById, getStudentPayments } from '../controllers/paymentController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { STUDENT_ROLE, STATUS_CODES } from '../utils/consts';
 import { errorJson } from '../utils/common_funcs';
@@ -127,11 +127,11 @@ router.post('/admin/payments', authMiddleware, authorizeRoles(), async (req: Aut
  *       204:
  *         description: Payment deleted successfully
  */
-router.delete('/admin/payments/:payment_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response): Promise<void> => {
-  const paymentId = req.params.payment_id;
-  return deletePayment(req, res, paymentId);
-});
-
+// router.delete('/admin/payments/:payment_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response): Promise<void> => {
+//   const paymentId = req.params.payment_id;
+//   return deletePayment(req, res, paymentId);
+// });
+//
 /**
  * @swagger
  * /api/v3/payments:
@@ -170,6 +170,7 @@ router.put('/admin/payments', authMiddleware, authorizeRoles(), async (req: Auth
  *         description: A list of payment records for the student
  */
 router.get('/student/payments', authMiddleware, authorizeRoles([STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  // TODO: here other student can see any student details fix this
   const studentId = req.query.student_id as string;
   return getStudentPayments(req, res, studentId);
 });

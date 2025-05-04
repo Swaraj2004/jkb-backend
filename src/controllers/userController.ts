@@ -5,6 +5,8 @@ import { DEFAULT_QUERRY_LIMIT, DEFAULT_QUERRY_OFFSET, SALT, STATUS_CODES, STUDEN
 import { Roles, User } from "@prisma/client";
 import { successJson, errorJson } from "../utils/common_funcs";
 import { UserStudentRequestBody } from "../models/userStudentReqBody";
+import { getTotalAmout } from "./studentDetailsController";
+import { Decimal } from "@prisma/client/runtime/library";
 
 interface RequestBody extends User {
   role_id: string
@@ -99,6 +101,11 @@ export const createUserAndStudent = async (req: Request, res: Response): Promise
       return;     // dont allow to create a new user
     }
 
+    const packageIds = Array.isArray(user.studentDetail.packages) ? user.studentDetail.packages : [];
+    const subjectIds = Array.isArray(user.studentDetail.subjects) ? user.studentDetail.subjects : [];
+
+    let totalAmount = await getTotalAmout(packageIds, subjectIds, prismaClient);
+
     // Using transaction to ensure both user and role assignment happen together
     const newUser = await prismaClient.user.create({
       data: {
@@ -122,17 +129,27 @@ export const createUserAndStudent = async (req: Request, res: Response): Promise
             jee_score: user.studentDetail.jee_score,
             college_name: user.studentDetail.college_name,
             referred_by: user.studentDetail.referred_by,
-            student_fees: user.studentDetail.student_fees,
-            total_fees: user.studentDetail.total_fees,
-            pending_fees: user.studentDetail.pending_fees,
+            student_fees: new Decimal(totalAmount),
+            total_fees: new Decimal(totalAmount),
+            pending_fees: new Decimal(totalAmount),
             university_name: user.studentDetail.university_name,
             jkb_centre: user.studentDetail.jkb_centre,
             semester: user.studentDetail.semester,
             status: user.studentDetail.status,
             remark: user.studentDetail.remark,
             enrolled: user.studentDetail.enrolled,
-          }
-        }
+            studentSubjects: {
+              createMany: {
+                data: subjectIds.map(subjectId => ({ subject_id: subjectId }))
+              }
+            },
+            studentPackages: {
+              createMany: {
+                data: packageIds.map(packageId => ({ package_id: packageId }))
+              }
+            },
+          },
+        },
       }
     });
 
@@ -208,9 +225,9 @@ export const getUsers = async (req: Request, res: Response, year: string): Promi
       return;
     }
     // Create the beginning and end date for the given year
-    const startDate = new Date(`${year}-04-01T00:00:00.000Z`);
+    const startDate = new Date(`${year}-04-15T00:00:00.000Z`);
     // Use the next year as the upper bound (non-inclusive)
-    const endDate = new Date(`${parseInt(year) + 1}-04-01T00:00:00.000Z`);
+    const endDate = new Date(`${parseInt(year) + 1}-04-15T00:00:00.000Z`);
 
     // const { skip = DEFAULT_QUERRY_SKIP, take = DEFAULT_QUERRY_TAKE } = req.query;
 

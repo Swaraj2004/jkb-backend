@@ -96,17 +96,25 @@ export async function createPayment(req: AuthenticatedRequest, res: Response): P
     }
 
     // 2. Generate receipt number
-    const currentYear = new Date().getFullYear();
-    const nextYear = (currentYear % 100) + 1;       // to get last 2 nums of the year eg - 2025 -> 26
+    const today = new Date();
+    const currentYear = today.getFullYear();
     const prefix = paymentBody.is_gst ? "G" : "NG";
 
     // Find last payment of this type in current year
+    const startOfFinancialYear = today >= new Date(currentYear, 3, 15) // 3 = April, 15th April
+      ? new Date(currentYear, 3, 15)
+      : new Date(currentYear - 1, 3, 15);
+
+    const endOfFinancialYear = new Date(startOfFinancialYear.getFullYear() + 1, 3, 14, 23, 59, 59, 999); // next year 14 April
+
+    const nextYear = (startOfFinancialYear.getFullYear() + 1) % 100;       // to get last 2 nums of the year eg - 2025 -> 26
+
     const lastPayment = await prismaClient.payment.findFirst({
       where: {
         is_gst: paymentBody.is_gst,
         created_at: {
-          gte: new Date(`${currentYear}-01-01`),
-          lt: new Date(`${currentYear + 1}-01-01`)
+          gte: startOfFinancialYear,
+          lt: endOfFinancialYear
         }
       },
       orderBy: { created_at: 'desc' },
@@ -165,63 +173,63 @@ export async function createPayment(req: AuthenticatedRequest, res: Response): P
   }
 }
 
-export async function deletePayment(req: Request, res: Response, paymentId: string): Promise<void> {
-  if (!paymentId || paymentId.trim().length === 0) {
-    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Payment Id Required", null));
-    return;
-  }
-
-  try {
-    // TODO: if total payments of the student are 0 then make enrolled of studentDetail false
-    // 1. Find the payment record
-    const payment = await prismaClient.payment.findUnique({
-      where: { id: paymentId },
-      select: { id: true, amount: true, user_id: true }
-    });
-
-    if (!payment || !payment.amount) {
-      res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Payment not found", null));
-      return;
-    }
-
-    // 2. Find the associated student
-    const student = await prismaClient.studentDetail.findUnique({
-      where: { user_id: payment.user_id },
-      select: { pending_fees: true }
-    });
-
-    if (!student || !student.pending_fees) {
-      res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Student not found", null));
-      return;
-    }
-
-    // 3. Calculate updates
-    const updatedPendingFees = student.pending_fees.plus(payment.amount);
-
-    // 4. Execute transaction
-    await prismaClient.$transaction(async (tx): Promise<void> => {
-      await tx.payment.delete({
-        where: { id: paymentId }
-      });
-
-      const remainingPaymentCount = await tx.payment.count({
-        where: { user_id: payment.user_id }
-      });
-
-      const enrolled = remainingPaymentCount > 0;
-
-      // Update student details first
-      await tx.studentDetail.update({
-        where: { user_id: payment.user_id },
-        data: { pending_fees: updatedPendingFees, enrolled: enrolled }
-      });
-    });
-
-    res.status(STATUS_CODES.DELETE_SUCCESS).json(successJson("Payment deleted successfully", 1));
-  } catch (error) {
-    res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
-  }
-}
+// export async function deletePayment(req: Request, res: Response, paymentId: string): Promise<void> {
+//   if (!paymentId || paymentId.trim().length === 0) {
+//     res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Payment Id Required", null));
+//     return;
+//   }
+//
+//   try {
+//     // TODO: if total payments of the student are 0 then make enrolled of studentDetail false
+//     // 1. Find the payment record
+//     const payment = await prismaClient.payment.findUnique({
+//       where: { id: paymentId },
+//       select: { id: true, amount: true, user_id: true }
+//     });
+//
+//     if (!payment || !payment.amount) {
+//       res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Payment not found", null));
+//       return;
+//     }
+//
+//     // 2. Find the associated student
+//     const student = await prismaClient.studentDetail.findUnique({
+//       where: { user_id: payment.user_id },
+//       select: { pending_fees: true }
+//     });
+//
+//     if (!student || !student.pending_fees) {
+//       res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Student not found", null));
+//       return;
+//     }
+//
+//     // 3. Calculate updates
+//     const updatedPendingFees = student.pending_fees.plus(payment.amount);
+//
+//     // 4. Execute transaction
+//     await prismaClient.$transaction(async (tx): Promise<void> => {
+//       await tx.payment.delete({
+//         where: { id: paymentId }
+//       });
+//
+//       const remainingPaymentCount = await tx.payment.count({
+//         where: { user_id: payment.user_id }
+//       });
+//
+//       const enrolled = remainingPaymentCount > 0;
+//
+//       // Update student details first
+//       await tx.studentDetail.update({
+//         where: { user_id: payment.user_id },
+//         data: { pending_fees: updatedPendingFees, enrolled: enrolled }
+//       });
+//     });
+//
+//     res.status(STATUS_CODES.DELETE_SUCCESS).json(successJson("Payment deleted successfully", 1));
+//   } catch (error) {
+//     res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
+//   }
+// }
 
 // WARN: Ravi sir did the student_fees caclulation here but I have done none
 export async function editPayment(req: AuthenticatedRequest, res: Response): Promise<void> {

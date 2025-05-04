@@ -132,8 +132,8 @@ export async function getSubjectPackageUsers(req: Request, res: Response): Promi
         return;
       }
       // Filter by createdAt between the start and end of the year. (1st april to next year 31 march)
-      const startDate = new Date(y, 3, 1);
-      const endDate = new Date(y + 1, 2, 31, 23, 59, 59, 999);
+      const startDate = new Date(y, 3, 15);
+      const endDate = new Date(y + 1, 3, 14, 23, 59, 59, 999);
       filter.createdAt = {
         gte: startDate,
         lte: endDate,

@@ -23,6 +23,8 @@ export interface UserStudentRequestBody {
     semester?: string;
     status?: string;
     remark?: string;
+    packages: string[]; // Array of UUIDs
+    subjects: string[]; // Array of UUIDs
     enrolled?: boolean;
   };
 }
