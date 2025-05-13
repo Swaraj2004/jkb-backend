@@ -318,28 +318,31 @@ model MhAiCollege {
 }
 
 model Qna {
-  id        String @id @default(uuid()) @db.Uuid
-  email     String
-  full_name String?
-  location  String?
-  contact   String?
-  qna       Json?
+  id         String   @id @default(uuid()) @db.Uuid
+  email      String   @unique
+  full_name  String?
+  location   String?
+  contact    String   @unique
+  qna        Json?
+  created_at DateTime @default(now()) @db.Timestamptz()
 }
 
 model ContactEnquiry {
-  id        String @id @default(uuid()) @db.Uuid
-  email     String
-  full_name String?
-  location  String?
-  contact   String?
-  message   String?
+  id         String   @id @default(uuid()) @db.Uuid
+  email      String   @unique
+  full_name  String?
+  location   String?
+  contact    String   @unique
+  message    String?
+  created_at DateTime @default(now()) @db.Timestamptz()
 }
 
 model BranchEnquiry {
-  id         String  @id @default(uuid()) @db.Uuid
-  email      String
+  id         String   @id @default(uuid()) @db.Uuid
+  email      String   @unique
   full_name  String?
   location   String?
-  contact    String?
+  contact    String   @unique
   branch_qna Json?
+  created_at DateTime @default(now()) @db.Timestamptz()
 }
