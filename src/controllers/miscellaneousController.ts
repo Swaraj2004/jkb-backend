@@ -15,13 +15,28 @@ export async function getCarrerPrediction(req: Request, res: Response, body: Qna
   }
 
   // INFO: below 4 lines of code can help you to get all the available models for gemini_url
-  // const LIST_URL = `https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_API_KEY}`;
+  // docs - https://ai.google.dev/gemini-api/docs/api-key
+  // const LIST_URL = `https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_API_KEYS[0]}`;
   // const listRes = await fetch(LIST_URL);
   // const listData = await listRes.json();
   // console.log("Available models:", listData.models.map((m: any) => m.name));
   const careerData = body.questions;
   const prompt = `Q&A: ${JSON.stringify(careerData)} ${carrerPrompt}`;
   try {
+    const user = await prismaClient.qna.findFirst({
+      where: {
+        OR: [
+          { email: body.email },
+          { contact: body.contact }
+        ]
+      },
+      select: { id: true }
+    });
+    if (user) {
+      res.status(STATUS_CODES.CREATE_SUCCESS).json(errorJson("An enquiry with this email or contact no. already exists. Duplicate submissions are not allowed.", null));
+      return;
+    }
+
     const newEnquiry = await prismaClient.qna.create({
       data: {
         email: body.email,
@@ -62,7 +77,7 @@ async function sendRespone(data: any, payload: any, res: Response, round: number
   }
   if (data.candidates && data.candidates.length > 0) {
     const reply = data.candidates[0].content.parts[0].text;
-    res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Temprory User created successfully and Recieved Gemini Response!", reply));
+    res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("User Enquiry created successfully and Recieved Gemini Response!", reply));
     return;
   }
   currentIndex = (currentIndex + 1) % GEMINI_API_KEYS.length;
@@ -72,12 +87,12 @@ async function sendRespone(data: any, payload: any, res: Response, round: number
 
 async function getGeminiResponse(url: string, index: number, payload: any): Promise<any> {
   // console.log('Using api key - ', GEMINI_API_KEYS[index]);
-  const response = await fetch(url + GEMINI_API_KEYS[index], {
+  const fullUrl = url + GEMINI_API_KEYS[index];
+  const response = await fetch(fullUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
-
   const data = await response.json();
   return data;
 }
@@ -91,6 +106,20 @@ export async function getBranchPrediction(req: Request, res: Response, body: Bra
   const careerData = body.branch_qna;
   const prompt = `Q&A: ${JSON.stringify(careerData)} ${branchPrompt}`;
   try {
+    const branchEnquiry = await prismaClient.branchEnquiry.findFirst({
+      where: {
+        OR: [
+          { email: body.email },
+          { contact: body.contact }
+        ]
+      },
+      select: { id: true }
+    });
+    if (branchEnquiry) {
+      res.status(STATUS_CODES.CREATE_SUCCESS).json(errorJson("An enquiry with this email or contact no. already exists. Duplicate submissions are not allowed.", null));
+      return;
+    }
+
     const newEnquiry = await prismaClient.branchEnquiry.create({
       data: {
         email: body.email,
@@ -116,6 +145,7 @@ export async function getBranchPrediction(req: Request, res: Response, body: Bra
     };
 
     const data = await getGeminiResponse(gemini_url, currentIndex, payload);
+    // console.log(data);
     return sendRespone(data, payload, res, GEMINI_API_KEYS.length);
   } catch (err) {
     res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Error occured in either database or AI Model Response!", null));
@@ -123,6 +153,10 @@ export async function getBranchPrediction(req: Request, res: Response, body: Bra
 }
 
 export async function createContactEnquiry(req: Request, res: Response, body: ContactEnquiryReqBody): Promise<void> {
+  if (!body.contact) {
+    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Contact number is Required", null));
+    return;
+  }
   try {
     const contactEnquiry = await prismaClient.contactEnquiry.create({
       data: {
