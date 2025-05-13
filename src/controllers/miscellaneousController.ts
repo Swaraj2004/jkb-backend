@@ -33,7 +33,7 @@ export async function getCarrerPrediction(req: Request, res: Response, body: Qna
       select: { id: true }
     });
     if (user) {
-      res.status(STATUS_CODES.CREATE_SUCCESS).json(errorJson("An enquiry with this email or contact no. already exists. Duplicate submissions are not allowed.", null));
+      res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("An enquiry with this email or contact no. already exists. Duplicate submissions are not allowed.", null));
       return;
     }
 
@@ -116,7 +116,7 @@ export async function getBranchPrediction(req: Request, res: Response, body: Bra
       select: { id: true }
     });
     if (branchEnquiry) {
-      res.status(STATUS_CODES.CREATE_SUCCESS).json(errorJson("An enquiry with this email or contact no. already exists. Duplicate submissions are not allowed.", null));
+      res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("An enquiry with this email or contact no. already exists. Duplicate submissions are not allowed.", null));
       return;
     }
 
