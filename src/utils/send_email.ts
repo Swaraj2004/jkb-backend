@@ -3,7 +3,7 @@ import nodemailer from "nodemailer";
 import { prismaClient } from "../utils/database";
 import { errorJson, generateOTP, successJson } from "./common_funcs";
 import { hash } from 'bcrypt';
-import { SALT, STATUS_CODES } from "./consts";
+import { emailPassword, fromEmail, SALT, smtpPort, smtpServer, STATUS_CODES } from "./consts";
 
 export async function sendOTPOverEmail(req: Request, res: Response, email: string): Promise<void> {
   try {
@@ -28,11 +28,6 @@ export async function sendOTPOverEmail(req: Request, res: Response, email: strin
 
     const subject = "OTP for password reset";
     const body = `Your OTP code is: ${otp}`;
-    const fromEmail = process.env.FROM_EMAIL || "personalmail@gmail.com";
-    const smtpServer = process.env.SMTP_SERVER || "smtp.gmail.com";
-    const smtpPort = parseInt(process.env.SMTP_PORT || "587");
-    const emailPassword = process.env.GMAIL_APP_PASSWORD;
-
     const emailSent = await sendEmail(subject, body, email, fromEmail, smtpServer, smtpPort, emailPassword);
 
     if (emailSent) {
@@ -45,7 +40,7 @@ export async function sendOTPOverEmail(req: Request, res: Response, email: strin
   }
 }
 
-async function sendEmail(
+export async function sendEmail(
   subject: string,
   body: string,
   to: string,

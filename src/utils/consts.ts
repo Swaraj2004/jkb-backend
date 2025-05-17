@@ -7,6 +7,10 @@ export const GEMINI_API_KEYS = process.env.GEMINI_API_KEYS?.split(",") || [];;
 export const gemini_url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=`;
 export const SALT = 10;         // , here 10 is the round of salt that will be added to hash
 
+export const fromEmail = process.env.FROM_EMAIL || "personalmail@gmail.com";
+export const smtpServer = process.env.SMTP_SERVER || "smtp.gmail.com";
+export const smtpPort = parseInt(process.env.SMTP_PORT || "587");
+export const emailPassword = process.env.GMAIL_APP_PASSWORD;
 // const BRANCH_COLLECTION_NAME = 'branches'; // Define your collection name
 // const COURSEPACKAGE_COLLECTION_NAME = 'coursePackages'; // Define your collection name
 // const STUDENT_DETAIL_COLLECTION_NAME = 'studentDetails'; // Define your student detail collection name

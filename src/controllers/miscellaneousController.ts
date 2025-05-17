@@ -1,14 +1,15 @@
 import { Request, Response } from 'express';
-import { GEMINI_API_KEYS, gemini_url, STATUS_CODES } from '../utils/consts';
+import { emailPassword, fromEmail, GEMINI_API_KEYS, gemini_url, smtpPort, smtpServer, STATUS_CODES } from '../utils/consts';
 import { errorJson, successJson } from '../utils/common_funcs';
 import { prismaClient } from '../utils/database';
 import { BranchFormResponse, QnaFormResponse } from '../models/miscellaneous_req_bodies';
 import { ContactEnquiryReqBody } from '../models/contact_enquiry_req_body';
 import { branchPrompt, carrerPrompt } from '../utils/prompts';
+import { sendEmail } from '../utils/send_email';
 
 let currentIndex = 0;
 
-export async function getCarrerPrediction(req: Request, res: Response, body: QnaFormResponse): Promise<void> {
+export async function getCarrerPrediction(req: Request, res: Response, body: QnaFormResponse, sendEmail: boolean): Promise<void> {
   if (!body.questions || !body.email) {
     res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Email and Questions Required", null));
     return;
@@ -45,7 +46,7 @@ export async function getCarrerPrediction(req: Request, res: Response, body: Qna
         contact: body.contact,
         qna: body.questions
       },
-      select: { id: true }
+      select: { id: true, email: true }
     });
 
     if (!newEnquiry) {
@@ -62,7 +63,10 @@ export async function getCarrerPrediction(req: Request, res: Response, body: Qna
     };
 
     const data = await getGeminiResponse(gemini_url, currentIndex, payload);
-    return sendRespone(data, payload, res, GEMINI_API_KEYS.length);
+    if (sendEmail) {
+      return sendRespone(data, payload, res, GEMINI_API_KEYS.length, newEnquiry.email);
+    }
+    return sendRespone(data, payload, res, GEMINI_API_KEYS.length, null);
   } catch (err) {
     res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Error occured in either database or AI Model Response!", null));
   }
@@ -70,19 +74,31 @@ export async function getCarrerPrediction(req: Request, res: Response, body: Qna
 
 // IMPORTANT: for now i am doing this using local variable as there is only one server but in future if number of servers 
 // are increased then we can use redis
-async function sendRespone(data: any, payload: any, res: Response, round: number): Promise<void> {
+async function sendRespone(data: any, payload: any, res: Response, round: number, emailId: string | null): Promise<void> {
   if (round < 1) {
     res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("No candidates returned by Gemini", null));
     return;
   }
   if (data.candidates && data.candidates.length > 0) {
     const reply = data.candidates[0].content.parts[0].text;
+    if (emailId) {
+      const subject = "Your Career Prediction Report";
+      const sentEmail = sendEmail(subject, reply, emailId, fromEmail, smtpServer, smtpPort, emailPassword);
+      if (!sentEmail) {
+        res.status(STATUS_CODES.CREATE_FAILURE).json(successJson("Gemini Response received, but failed to send email!", null));
+        return;
+      }
+      res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Email sent Successfully!", null));
+      return;
+    }
+
     res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("User Enquiry created successfully and Recieved Gemini Response!", reply));
     return;
   }
+  // retry with other api key
   currentIndex = (currentIndex + 1) % GEMINI_API_KEYS.length;
   data = await getGeminiResponse(gemini_url, currentIndex, payload);
-  return sendRespone(data, payload, res, round - 1);
+  return sendRespone(data, payload, res, round - 1, emailId);
 }
 
 async function getGeminiResponse(url: string, index: number, payload: any): Promise<any> {
@@ -97,7 +113,7 @@ async function getGeminiResponse(url: string, index: number, payload: any): Prom
   return data;
 }
 
-export async function getBranchPrediction(req: Request, res: Response, body: BranchFormResponse): Promise<void> {
+export async function getBranchPrediction(req: Request, res: Response, body: BranchFormResponse, sendEmail: boolean): Promise<void> {
   if (!body.branch_qna || !body.email) {
     res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Email and Questions Required", null));
     return;
@@ -128,7 +144,7 @@ export async function getBranchPrediction(req: Request, res: Response, body: Bra
         contact: body.contact,
         branch_qna: body.branch_qna
       },
-      select: { id: true }
+      select: { id: true, email: true }
     });
 
     if (!newEnquiry) {
@@ -146,7 +162,10 @@ export async function getBranchPrediction(req: Request, res: Response, body: Bra
 
     const data = await getGeminiResponse(gemini_url, currentIndex, payload);
     // console.log(data);
-    return sendRespone(data, payload, res, GEMINI_API_KEYS.length);
+    if (sendEmail) {
+      return sendRespone(data, payload, res, GEMINI_API_KEYS.length, newEnquiry.email);
+    }
+    return sendRespone(data, payload, res, GEMINI_API_KEYS.length, null);
   } catch (err) {
     res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Error occured in either database or AI Model Response!", null));
   }
