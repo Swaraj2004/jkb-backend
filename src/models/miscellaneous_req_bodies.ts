@@ -3,7 +3,7 @@ export interface QnaFormResponse {
   email: string;
   contact: string;
   address: string;
-  questions: any;
+  questions: Record<string, string>;
 }
 
 export interface BranchFormResponse {
@@ -11,5 +11,5 @@ export interface BranchFormResponse {
   email: string;
   contact: string;
   address: string;
-  branch_qna: any;
+  branch_qna: Record<string, string>;
 }
