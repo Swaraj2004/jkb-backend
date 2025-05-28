@@ -10,3 +10,27 @@
     "rootDir": "src"
   }
 }
+// {
+//   "compilerOptions": {
+//     "target": "ES2020",                          // Supports optional chaining, nullish coalescing, etc.
+//     "module": "CommonJS",                        // Node.js compatible module system
+//     "lib": ["ES2020"],                           // Latest modern JS features
+//     "esModuleInterop": true,                     // Allows default imports from CommonJS
+//     "moduleResolution": "node",                  // Resolve modules like Node.js
+//     "resolveJsonModule": true,                   // Allow importing JSON files
+//     "allowSyntheticDefaultImports": true,        // Allow default imports for modules without default exports
+//     "forceConsistentCasingInFileNames": true,    // Prevent case-related import bugs
+//     "strict": true,                              // Enable all strict type-checking options
+//     "skipLibCheck": true,                        // Skip checking .d.ts files for performance
+//     "outDir": "dist",                            // Where to output compiled JS
+//     "rootDir": "src",                            // Where source files are
+//     "noImplicitAny": true,                       // Disallow `any` unless explicitly stated
+//     "noUnusedLocals": true,                      // Warn on unused variables
+//     "noUnusedParameters": true,                  // Warn on unused function args
+//     "noFallthroughCasesInSwitch": true,          // Catch missing break statements
+//     "strictNullChecks": true,                    // Prevent undefined/null type bugs
+//     "strictPropertyInitialization": true         // Ensure class properties are initialized
+//   },
+//   "include": ["src"],
+//   "exclude": ["node_modules", "dist"]
+// }
