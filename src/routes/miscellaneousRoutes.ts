@@ -21,7 +21,7 @@ router.post('/contact-enquiries', (req: Request, res: Response): Promise<void> =
   return createContactEnquiry(req, res, body);
 });
 
-router.get('/contact-enquiries', authMiddleware, authorizeRoles(), (req: Request, res: Response): Promise<void> => {
+router.get('/admin/contact-enquiries', authMiddleware, authorizeRoles(), (req: Request, res: Response): Promise<void> => {
   const { limit, offset } = req.query;
   return getContactEnquiry(req, res, limit as string, offset as string);
 });
