@@ -162,10 +162,16 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
       // console.log(updatedStudent.id);
 
       // OPTIMIZE: think a way to optimize below things
+
+      // first delete all packages and subjects
+      await prisma.studentPackage.deleteMany({
+        where: { student_id: updatedStudent.id },
+      });
+      await prisma.studentSubject.deleteMany({
+        where: { student_id: updatedStudent.id },
+      });
+
       if (packageIds.length > 0) {
-        await prisma.studentPackage.deleteMany({
-          where: { student_id: updatedStudent.id },
-        });
         //    b. Create new package records. 
         const packageData = packageIds.map((packageId: string) => ({
           student_id: updatedStudent.id,
@@ -181,9 +187,6 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
       }
 
       if (subjectIds.length > 0) {
-        const studentSubjects = await prisma.studentSubject.deleteMany({
-          where: { student_id: updatedStudent.id },
-        });
         // console.log(studentSubjects);
         //    b. Create new subject records
         const subjectData = subjectIds.map((subjectId: string) => ({
