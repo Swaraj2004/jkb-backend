@@ -1,4 +1,4 @@
-export interface ContactEnquiryReqBody {
+export interface FacebookEnquiryReqBody {
   email: string;
   full_name?: string;
   location?: string;

@@ -130,6 +130,15 @@ model StudentDetail {
   studentPackages StudentPackage[]
   attendance      Attendance[]
 }
+// model Fees{
+//     user_id
+//     student_fees
+//     total_fees
+//     pending_fees
+//     year
+//
+//     payments[]
+// }
 
 model Payment {
   id             String    @id @default(uuid()) @db.Uuid
@@ -344,5 +353,15 @@ model BranchEnquiry {
   location   String?
   contact    String   @unique
   branch_qna Json?
+  created_at DateTime @default(now()) @db.Timestamptz()
+}
+
+model FacebookEnquiry {
+  id         String   @id @default(uuid()) @db.Uuid
+  email      String   @unique
+  full_name  String?
+  location   String?
+  contact    String   @unique
+  message    String?
   created_at DateTime @default(now()) @db.Timestamptz()
 }

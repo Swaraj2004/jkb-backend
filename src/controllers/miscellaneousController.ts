@@ -6,6 +6,7 @@ import { BranchFormResponse, QnaFormResponse } from '../models/miscellaneous_req
 import { ContactEnquiryReqBody } from '../models/contact_enquiry_req_body';
 import { branchPrompt, carrerPrompt } from '../utils/prompts';
 import { sendEmail } from '../utils/send_email';
+import { FacebookEnquiryReqBody } from '../models/facebook_enq_req_body';
 
 let currentIndex = 0;
 
@@ -217,5 +218,112 @@ export async function getContactEnquiry(req: Request, res: Response, reqLimit: s
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Contact Fetched Successfully!", contactEnquiry));
   } catch (err) {
     res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Contact fetch Unsuccessful!", null));
+  }
+}
+export async function getQnaEnquiry(req: Request, res: Response, reqLimit: string, reqOffset: string): Promise<void> {
+  try {
+    if (!reqLimit && !reqOffset) {
+      const contactEnquiry = await prismaClient.qna.findMany({
+        select: { id: true, full_name: true, contact: true, created_at: true, email: true, location: true }
+      });
+      res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Qna Fetched Successfully!", contactEnquiry));
+      return;
+    }
+
+    const limit = parseInt(reqLimit);
+    const offset = parseInt(reqOffset);
+
+    if (isNaN(limit) || isNaN(offset)) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Limit or offset is NaN", null));
+      return;
+    }
+
+    const contactEnquiry = await prismaClient.qna.findMany({
+      skip: offset,
+      take: limit,
+      select: { id: true, full_name: true, contact: true, created_at: true, email: true, location: true }
+    });
+
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Qna Fetched Successfully!", contactEnquiry));
+  } catch (err) {
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Qna fetch Unsuccessful!", null));
+  }
+}
+export async function getBranchEnquiry(req: Request, res: Response, reqLimit: string, reqOffset: string): Promise<void> {
+  try {
+    if (!reqLimit && !reqOffset) {
+      const branchEnquiries = await prismaClient.branchEnquiry.findMany({
+        select: { id: true, full_name: true, contact: true, created_at: true, email: true, location: true }
+      });
+      res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Branch Enquiry Fetched Successfully!", branchEnquiries));
+      return;
+    }
+
+    const limit = parseInt(reqLimit);
+    const offset = parseInt(reqOffset);
+
+    if (isNaN(limit) || isNaN(offset)) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Limit or offset is NaN", null));
+      return;
+    }
+
+    const branchEnquiries = await prismaClient.branchEnquiry.findMany({
+      skip: offset,
+      take: limit,
+      select: { id: true, full_name: true, contact: true, created_at: true, email: true, location: true }
+    });
+
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Branch Enquiry Fetched Successfully!", branchEnquiries));
+  } catch (err) {
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Branch Enquiry fetch Unsuccessful!", err));
+  }
+}
+
+// Facebook enquiry controller
+export async function createFacebookEnquiry(req: Request, res: Response, body: FacebookEnquiryReqBody): Promise<void> {
+  if (!body.contact || !body.email) {
+    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Contact number and email is Required", null));
+    return;
+  }
+  try {
+    const facebookEnquiry = await prismaClient.facebookEnquiry.create({
+      data: {
+        email: body.email,
+        full_name: body.full_name,
+        location: body.location,
+        contact: body.contact,
+        message: body.message
+      }
+    });
+
+    res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Facebook Enquiry Saved Successfully!", facebookEnquiry.id));
+  } catch (err) {
+    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Facebook Enquiry not saved Unsuccessful!", null));
+  }
+}
+export async function getFacebookEnquiry(req: Request, res: Response, reqLimit: string, reqOffset: string): Promise<void> {
+  try {
+    if (!reqLimit && !reqOffset) {
+      const facebookEnquiries = await prismaClient.facebookEnquiry.findMany();
+      res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Facebook Enquiry Fetched Successfully!", facebookEnquiries));
+      return;
+    }
+
+    const limit = parseInt(reqLimit);
+    const offset = parseInt(reqOffset);
+
+    if (isNaN(limit) || isNaN(offset)) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Limit or offset is NaN", null));
+      return;
+    }
+
+    const facebookEnquiries = await prismaClient.facebookEnquiry.findMany({
+      skip: offset,
+      take: limit
+    });
+
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Facebook Enquiry Fetched Successfully!", facebookEnquiries));
+  } catch (err) {
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Facebook Enquiry fetch Unsuccessful!", null));
   }
 }
