@@ -114,9 +114,9 @@ export async function createStudentDetails(req: Request, res: Response): Promise
 export async function editStudentDetails(req: AuthenticatedRequest, res: Response): Promise<void> {
   const body: StudentDetailReqBodyModel = req.body;
   const studentId = body.student_id;
-  const student_fees = body.student_fees || 0;
+  const student_fees: number | null = body.student_fees;
   // remove power for student to edit student_fees, WARN: there can be a potential security threat to tamper jwt token
-  if (req.user!.role_name === STUDENT_ROLE && student_fees > 0) {
+  if (req.user!.role_name === STUDENT_ROLE && student_fees !== null && student_fees > 0) {
     res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Student can't edit student_fees!", null));
     return;
   }
@@ -125,39 +125,96 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
     const packageIds = Array.isArray(body.packages) ? body.packages : [];
     const subjectIds = Array.isArray(body.subjects) ? body.subjects : [];
 
-    if (student_fees > 0) {           // student_fees cant be edited if there is even a single payment record in the Payment Table
-      const paymentCount = await prismaClient.payment.count({
-        where: { user_id: studentId }
-      });
-      if (paymentCount > 0) {
-        res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("student_fees can't be edited payment aldready exist of the given student_id", null));
-        return;
+    const studentDetails = await prismaClient.studentDetail.findUnique({
+      where: { user_id: studentId },
+      select: {
+        student_fees: true,
+        user: {
+          select: {
+            payments: {
+              select: { amount: true, packagePayments: true, subjectPayments: true }
+            }
+          }
+        }
+      }
+    });
+
+    if (!studentDetails) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Student Detail does not exist!", null));
+      return;
+    }
+
+    for (const payment of studentDetails!.user.payments) {
+      for (const packagePayment of payment.packagePayments) {
+        // If the package_id is NOT in packageIds → error
+        if (!packageIds.includes(packagePayment.package_id)) {
+          res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("You cannot delete a package that already has a payment.", null));
+          return;
+        }
+      }
+      for (const subjectPayment of payment.subjectPayments) {
+        if (!subjectIds.includes(subjectPayment.subject_id)) {
+          res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("You cannot delete a subject that already has a payment.", null));
+          return;
+        }
       }
     }
 
-    const totalAmount = await getTotalAmout(packageIds, subjectIds, prismaClient);
-    const pending_fees = student_fees > 0 ? student_fees : body.pending_fees ? body.pending_fees : 0;       // NOTE: this logic is only applicable if there is no payment Record in table
+    let amountPaid = new Decimal(0);
+    studentDetails!.user.payments.forEach(payment => {
+      if (payment.amount)
+        amountPaid = amountPaid.plus(payment.amount);
+    });
 
+    if (student_fees !== null && student_fees !== undefined && student_fees > 0) {
+      // const paymentCount = await prismaClient.payment.count({
+      //   where: { user_id: studentId }
+      // });
+      // IMPORTANT: student_fees handling
+      if (body.total_fees < student_fees || student_fees < amountPaid.toNumber()) {
+        res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("student_fees can't be less that amountPaid or greater than total_fees!", null));
+        return;
+      }
+
+      // if (paymentCount > 0) {
+      //   res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("student_fees can't be edited payment aldready exist of the given student_id", null));
+      //   return;
+      // }
+    }
+
+    const totalAmount = await getTotalAmout(packageIds, subjectIds, prismaClient);
+    // IMPORTANT: student_fees cannot be greater than totalAmount
+    if (studentDetails!.student_fees!.gt(totalAmount) || (student_fees !== null && student_fees !== undefined && student_fees > totalAmount.toNumber())) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("student_fees cannot be greater than the total_fees!", null));
+      return;
+    }
+
+    const updateData: any = {
+      parent_contact: body.parent_contact || undefined,
+      branch_id: body.branch_id || undefined,
+      diploma_score: body.diploma_score || undefined,
+      xii_score: body.xii_score || undefined,
+      cet_score: body.cet_score || undefined,
+      jee_score: body.jee_score || undefined,
+      college_name: body.college_name || undefined,
+      referred_by: body.referred_by || undefined,
+      total_fees: new Decimal(totalAmount),
+      // pending_fees: new Decimal(pending_fees),
+      university_name: body.university_name || undefined,
+      status: body.status || undefined,
+      remark: body.remark || undefined,
+      enrolled: body.enrolled ?? undefined,
+    };
+
+    // Conditionally add `student_fees` only if not null
+    if (student_fees !== null && student_fees !== undefined) {
+      updateData.student_fees = new Decimal(student_fees);
+      updateData.pending_fees = new Decimal(student_fees - amountPaid.toNumber());
+    }
     await prismaClient.$transaction(async (prisma): Promise<void> => {
       const updatedStudent: StudentDetail = await prisma.studentDetail.update({
         where: { user_id: studentId },
-        data: {
-          parent_contact: body.parent_contact || undefined,
-          branch_id: body.branch_id || undefined,
-          diploma_score: body.diploma_score || undefined,
-          xii_score: body.xii_score || undefined,
-          cet_score: body.cet_score || undefined,
-          jee_score: body.jee_score || undefined,
-          college_name: body.college_name || undefined,
-          referred_by: body.referred_by || undefined,
-          student_fees: new Decimal(student_fees),
-          total_fees: new Decimal(totalAmount),                                              // totalAmount is being assigned in backend only
-          pending_fees: new Decimal(pending_fees),
-          university_name: body.university_name || undefined,
-          status: body.status || undefined,
-          remark: body.remark || undefined,
-          enrolled: body.enrolled ?? undefined, // Keep existing if not provided
-        },
+        data: updateData
       });
       // console.log(updatedStudent.id);
 
