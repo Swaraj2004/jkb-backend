@@ -34,7 +34,8 @@ app.listen(PORT, () => {
 const allowedOrigins = process.env.HOST_URLS?.split(",") || [];
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    const cleanedOrigin = origin?.replace(/\/$/, "");
+    if (!cleanedOrigin || allowedOrigins.includes(cleanedOrigin)) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
