@@ -136,6 +136,7 @@ model StudentDetail {
 //     total_fees
 //     pending_fees
 //     year
+//student_fees < total_fees always and always greater than prev paid fees
 //
 //     payments[]
 // }
