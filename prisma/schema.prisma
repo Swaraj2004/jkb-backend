@@ -88,6 +88,7 @@ model Subject {
   packageSubjects   PackageSubject[]
   studentSubjects   StudentSubject[]
   tests             Test[]
+  subjectPayments   SubjectPayment[]  
 }
 
 model Package {
@@ -99,6 +100,7 @@ model Package {
 
   packageSubjects PackageSubject[]
   studentPackages StudentPackage[]
+  packagePayments PackagePayment[]
 }
 
 model StudentDetail {
@@ -155,8 +157,33 @@ model Payment {
   updated_at     DateTime? @updatedAt @db.Timestamptz()
   created_by     String?   @db.Uuid
 
-  student   User?  @relation(fields: [user_id], references: [id], onDelete: SetNull)
-  createdBy User? @relation("PaymentCreatedBy", fields: [created_by], references: [id])
+  student        User?           @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  createdBy      User?           @relation("PaymentCreatedBy", fields: [created_by], references: [id])
+  
+  subjectPayments SubjectPayment[]
+  packagePayments PackagePayment[]
+}
+
+model SubjectPayment {
+  subject_id String   @db.Uuid
+  payment_id String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz()
+
+  subject Subject @relation(fields: [subject_id], references: [id], onDelete: Cascade)
+  payment Payment @relation(fields: [payment_id], references: [id], onDelete: Cascade)
+
+  @@id([subject_id, payment_id])
+}
+
+model PackagePayment {
+  payment_id String   @db.Uuid
+  package_id String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz()
+
+  package Package @relation(fields: [package_id], references: [id], onDelete: Cascade)
+  payment Payment @relation(fields: [payment_id], references: [id], onDelete: Cascade)
+
+  @@id([package_id, payment_id])
 }
 
 model Lecture {
