@@ -9,4 +9,6 @@ export interface PaymentBody {
   staff_id: string;
   remark?: string;
   receipt_number?: string;
+  subjectIds: string[];
+  packageIds: string[];
 }

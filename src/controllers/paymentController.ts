@@ -85,7 +85,7 @@ export async function createPayment(req: AuthenticatedRequest, res: Response): P
     // 1. Find the student
     const student = await prismaClient.studentDetail.findUnique({
       where: {
-        user_id: paymentBody.student_id
+        user_id: paymentBody.student_id     // IMPORTANT: paymentBody.student_id is actually user_id
       },
       select: { pending_fees: true }
     });
@@ -152,7 +152,17 @@ export async function createPayment(req: AuthenticatedRequest, res: Response): P
           pending: newPendingFees,
           user_id: paymentBody.student_id,
           created_by: paymentBody.staff_id == null ? req.user?.user_id : paymentBody.staff_id, // review this i am adding staff_id from body to created_by col
-        }
+          subjectPayments: {
+            create: paymentBody.subjectIds.map((subjectId: string) => ({
+              subject: { connect: { id: subjectId } }
+            }))
+          },
+          packagePayments: {
+            create: paymentBody.packageIds.map((packageId: string) => ({
+              package: { connect: { id: packageId } }
+            }))
+          }
+        },
       });
 
       // Update student record
