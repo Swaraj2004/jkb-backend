@@ -67,8 +67,10 @@ export async function getStudentPayments(req: Request, res: Response, userId: st
       where: { user_id: userId },
       include: {
         student: {
-          select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true },
-        }
+          select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true, },
+        },
+        subjectPayments: { select: { subject: { select: { name: true, id: true, subject_fees: true } } } },
+        packagePayments: { select: { package: { select: { package_name: true, id: true, package_fees: true } } } }
       }
     });
 
