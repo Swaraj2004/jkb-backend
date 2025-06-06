@@ -155,12 +155,12 @@ export async function createPayment(req: AuthenticatedRequest, res: Response): P
           user_id: paymentBody.student_id,
           created_by: paymentBody.staff_id == null ? req.user?.user_id : paymentBody.staff_id, // review this i am adding staff_id from body to created_by col
           subjectPayments: {
-            create: paymentBody.subjectIds.map((subjectId: string) => ({
+            create: paymentBody.subjects.map((subjectId: string) => ({
               subject: { connect: { id: subjectId } }
             }))
           },
           packagePayments: {
-            create: paymentBody.packageIds.map((packageId: string) => ({
+            create: paymentBody.packages.map((packageId: string) => ({
               package: { connect: { id: packageId } }
             }))
           }
