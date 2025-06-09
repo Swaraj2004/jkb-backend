@@ -203,6 +203,8 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
       university_name: body.university_name || undefined,
       status: body.status || undefined,
       remark: body.remark || undefined,
+      jkb_centre: body.jkb_centre || null,
+      semester: body.semester || null,
       enrolled: body.enrolled ?? undefined,
     };
 
