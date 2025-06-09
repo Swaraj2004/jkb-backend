@@ -220,6 +220,29 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
       });
       // console.log(updatedStudent.id);
 
+      // when student_fees is updated update the pending_fees in Payment
+      // if there are previous transactions update their pending_fees and update them
+      if (!updatedStudent) {
+        res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Failed to update user", null));
+        return;
+      }
+
+      const prevPayments = await prisma.payment.findMany({
+        where: { user_id: studentId },
+        orderBy: { created_at: "asc" }
+      });
+
+      let paymentTillNow = new Decimal(0);
+      for (let i = 0; i < prevPayments.length; i++) {
+        paymentTillNow = paymentTillNow.plus(prevPayments[i].amount!);
+        prevPayments[i].pending = updatedStudent.student_fees!.minus(paymentTillNow);
+      }
+
+      await prismaClient.payment.updateMany({
+        where: { user_id: studentId },
+        data: prevPayments
+      });
+
       // OPTIMIZE: think a way to optimize below things
 
       // first delete all packages and subjects
