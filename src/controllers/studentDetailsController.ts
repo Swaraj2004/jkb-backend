@@ -232,17 +232,29 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
         orderBy: { created_at: "asc" }
       });
 
-      if(prevPayments.length > 0){
+      if (prevPayments.length > 0) {
         let paymentTillNow = new Decimal(0);
+        const paymentUpdates = [];
+
         for (let i = 0; i < prevPayments.length; i++) {
-          paymentTillNow = paymentTillNow.plus(prevPayments[i].amount!);
-          prevPayments[i].pending = updatedStudent.student_fees!.minus(paymentTillNow);
+          const currentPayment = prevPayments[i];
+
+          paymentTillNow = paymentTillNow.plus(currentPayment.amount || new Decimal(0));
+
+          const newPending = (updatedStudent.student_fees || new Decimal(0)).minus(paymentTillNow);
+
+          paymentUpdates.push(
+            prisma.payment.update({
+              where: { id: currentPayment.id },
+              data: {
+                pending: newPending,
+              }
+            })
+          );
         }
 
-        await prismaClient.payment.updateMany({
-          where: { user_id: studentId },
-          data: prevPayments
-        });
+        // Await all individual update promises.
+        await Promise.all(paymentUpdates);
       }
 
       // OPTIMIZE: think a way to optimize below things
