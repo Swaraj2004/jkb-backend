@@ -26,7 +26,29 @@ export const getTests = async (req: Request, res: Response, professor_id: string
   } catch (error) {
     res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
   }
+};
 
+// Get test using subject_id
+export const getSubjectTests = async (req: Request, res: Response, subject_id: string): Promise<void> => {
+  try {
+    if (!subject_id) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Subject Id required", null));
+      return;
+    }
+
+    const tests = await prismaClient.test.findMany({
+      where: { subject_id: subject_id }
+    });
+
+    if (!tests || tests.length == 0) {
+      res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("No Test found related to the subject_id", null));
+      return;
+    }
+
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Test fetched Succesfully!", tests));
+  } catch (error) {
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+  }
 };
 
 export const createTest = async (req: Request, res: Response, professorId: string): Promise<void> => {
@@ -91,8 +113,17 @@ export const getQuestions = async (req: Request, res: Response, testId: string):
 
     const questionOptions = await prismaClient.testQuestion.findMany({
       where: { test_id: testId },
-      include: { options: true }
-      // select: {}     uncomment and add the required features after talking to frontend devs
+      select: {
+        id: true,
+        question_text: true,
+        marks: true,
+        options: {
+          select: {
+            id: true,
+            option_text: true,
+          }
+        }
+      }
     });
     if (!questionOptions) {
       res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Question Not found", null));
@@ -123,7 +154,7 @@ export const createQuestion = async (req: Request, res: Response): Promise<void>
     const question = await prismaClient.testQuestion.create({
       data: {
         test_id: reqBody.test_id,
-        question_text: reqBody.question_test,
+        question_text: reqBody.question_text,
         marks: marks,
       }
     });

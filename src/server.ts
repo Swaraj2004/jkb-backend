@@ -48,7 +48,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 // API Routes
-app.get("/", (req: Request, res: Response) => {
+app.get("/", (req: Request, res: Response): void => {
   res.send("Server is running");
 });
 app.use(`/api/v3`, attendanceRoutes);
@@ -61,7 +61,7 @@ app.use(`/api/v3/professor`, professorRoutes);
 app.use(`/api/v3/auth`, roleRoutes);
 app.use(`/api/v3/student-details`, studentDetailsRoutes);
 app.use(`/api/v3/admin`, subjectRoutes);
-// app.use(BASE_URLS.ATTENDANCE, testRoutes);
+app.use('/api/v3/', testRoutes);
 app.use(`/api/v3/auth/users`, userRoutes);
 app.use(`/api/v3`, mhaiRoutes);
 app.use('/api/v3', miscellaneousRoutesRoutes);
