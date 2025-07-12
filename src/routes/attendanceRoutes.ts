@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { getLectureAttendance, getStudentAttendance, markAttendance } from '../controllers/attendanceController';
-import { PROFESSOR_ROLE, STATUS_CODES, STUDENT_ROLE } from '../utils/consts';
+import { ADMIN_ROLE, PROFESSOR_ROLE, STATUS_CODES, STUDENT_ROLE } from '../utils/consts';
 
 const router = express.Router();
 
@@ -29,7 +29,7 @@ const router = express.Router();
  *       200:
  *         description: A list of student attendance records
  */
-router.get('/lectures/:lecture_id/attendance', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async (req: Request, res: Response): Promise<void> => {
+router.get('/lectures/:lecture_id/attendance', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), async (req: Request, res: Response): Promise<void> => {
   const lectureId = req.params.lecture_id;
   return getLectureAttendance(req, res, lectureId);
 });
@@ -81,7 +81,7 @@ router.put('/lectures/:lecture_id/toggle-attendance', async (req: Request, res: 
  *       201:
  *         description: Attendance marked successfully
  */
-router.post('/student/mark-attendance', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), async (req: Request, res: Response): Promise<void> => {
+router.post('/student/mark-attendance', authMiddleware, authorizeRoles([ADMIN_ROLE, STUDENT_ROLE, PROFESSOR_ROLE]), async (req: Request, res: Response): Promise<void> => {
   const { lecture_id, student_id } = req.body;
   return markAttendance(req, res, lecture_id, student_id);
 });
@@ -103,7 +103,7 @@ router.post('/student/mark-attendance', authMiddleware, authorizeRoles([STUDENT_
  *       200:
  *         description: A list of attendance records for the student
  */
-router.get('/student/attendance', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+router.get('/student/attendance', authMiddleware, authorizeRoles([ADMIN_ROLE, STUDENT_ROLE, PROFESSOR_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   // if (!req.user) {
   //     res.status(401).json(errorJson("Please log in first", null));
   //     return;

@@ -1,16 +1,16 @@
 import express, { Request, Response } from 'express';
 import {
-    createSubject,
-    getSubjects,
-    getSubjectById,
-    updateSubject,
-    deleteSubject,
-    getSubjectUsers,
-    getSubjectAttendance,
-    getStudentSubjects,
+  createSubject,
+  getSubjects,
+  getSubjectById,
+  updateSubject,
+  deleteSubject,
+  getSubjectUsers,
+  getSubjectAttendance,
+  getStudentSubjects,
 } from '../controllers/subjectController';
 import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
-import { STUDENT_ROLE } from '../utils/consts';
+import { ADMIN_ROLE, STUDENT_ROLE } from '../utils/consts';
 
 
 const router = express.Router();
@@ -39,8 +39,8 @@ const router = express.Router();
  *       200:
  *         description: A single subject object
  */
-router.get('/subjects/:subject_id', async (req: Request, res: Response) => {
-    return getSubjectById(req, res);
+router.get('/subjects/:subject_id', async (req: Request, res: Response): Promise<void> => {
+  return getSubjectById(req, res);
 });
 
 /**
@@ -53,8 +53,8 @@ router.get('/subjects/:subject_id', async (req: Request, res: Response) => {
  *       200:
  *         description: A list of subject objects
  */
-router.get('/subjects', async (req: Request, res: Response) => {
-    return getSubjects(req, res);
+router.get('/subjects', async (req: Request, res: Response): Promise<void> => {
+  return getSubjects(req, res);
 });
 
 /**
@@ -80,8 +80,8 @@ router.get('/subjects', async (req: Request, res: Response) => {
  *       200:
  *         description: A list of users enrolled in the subject
  */
-router.get('/subject-users', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
-    return getSubjectUsers(req, res);
+router.get('/subject-users', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
+  return getSubjectUsers(req, res);
 });
 
 /**
@@ -101,8 +101,8 @@ router.get('/subject-users', authMiddleware, authorizeRoles(), async (req: Reque
  *       200:
  *         description: Attendance records for the subject
  */
-router.get('/subject-attendance', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
-    return getSubjectAttendance(req, res);
+router.get('/subject-attendance', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
+  return getSubjectAttendance(req, res);
 });
 
 /**
@@ -122,8 +122,8 @@ router.get('/subject-attendance', authMiddleware, authorizeRoles(), async (req: 
  *       200:
  *         description: A list of subjects for the student
  */
-router.get('/student-subjects/:student_id', authMiddleware, authorizeRoles([STUDENT_ROLE]), async (req: Request, res: Response) => {
-    return getStudentSubjects(req, res);
+router.get('/student-subjects/:student_id', authMiddleware, authorizeRoles([ADMIN_ROLE, STUDENT_ROLE]), async (req: Request, res: Response): Promise<void> => {
+  return getStudentSubjects(req, res);
 });
 
 /**
@@ -142,8 +142,8 @@ router.get('/student-subjects/:student_id', authMiddleware, authorizeRoles([STUD
  *       201:
  *         description: The created subject object
  */
-router.post('/subjects', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
-    return createSubject(req, res);
+router.post('/subjects', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
+  return createSubject(req, res);
 });
 
 /**
@@ -163,8 +163,8 @@ router.post('/subjects', authMiddleware, authorizeRoles(), async (req: Request, 
  *       204:
  *         description: Subject deleted successfully
  */
-router.delete('/subjects/:subject_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
-    return deleteSubject(req, res);
+router.delete('/subjects/:subject_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response): Promise<void> => {
+  return deleteSubject(req, res);
 });
 
 /**
@@ -183,8 +183,8 @@ router.delete('/subjects/:subject_id', authMiddleware, authorizeRoles(), async (
  *       202:
  *         description: The updated subject object
  */
-router.put('/subjects', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
-    return updateSubject(req, res);
+router.put('/subjects', authMiddleware, authorizeRoles(), async (req: Request, res: Response): Promise<void> => {
+  return updateSubject(req, res);
 });
 
 export default router;

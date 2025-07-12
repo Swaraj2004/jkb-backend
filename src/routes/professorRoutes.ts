@@ -1,7 +1,7 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { createProfessorLectures, deleteProfessorLectures, getProfessorLectures, getProfessorSubjects, updateProfessorLectures } from '../controllers/professorController';
 import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
-import { PROFESSOR_ROLE } from '../utils/consts';
+import { ADMIN_ROLE, PROFESSOR_ROLE } from '../utils/consts';
 
 const router = express.Router();
 
@@ -28,7 +28,7 @@ const router = express.Router();
  *       200:
  *         description: A list of subjects for the professor
  */
-router.get('/subjects', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async (req, res) => {
+router.get('/subjects', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
   return getProfessorSubjects(req, res);
 });
 
@@ -43,7 +43,7 @@ router.get('/subjects', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async 
  *       200:
  *         description: A list of lecture objects
  */
-router.get('/lectures', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async (req, res) => {
+router.get('/lectures', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
   const professorId = req.query.professor_id as string;
   return getProfessorLectures(req, res, professorId);
 });
@@ -65,7 +65,7 @@ router.get('/lectures', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async 
 *       200:
 *         description: A list of lectures for the professor
 */
-router.put('/lectures', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async (req, res) => {
+router.put('/lectures', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
   return updateProfessorLectures(req, res);
 });
 
@@ -85,7 +85,7 @@ router.put('/lectures', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async 
 *       201:
 *         description: The created lecture object
 */
-router.post('/lectures', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async (req, res) => {
+router.post('/lectures', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), async (req: Request, res: Response): Promise<void> => {
   return createProfessorLectures(req, res);
 });
 
@@ -106,7 +106,7 @@ router.post('/lectures', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async
 *       204:
 *         description: Lecture deleted successfully
 */
-router.delete('/lectures/:lecture_id', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async (req, res) => {
+router.delete('/lectures/:lecture_id', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), async (req: Request, res: Response): Promise<void> => {
   return deleteProfessorLectures(req, res);
 });
 

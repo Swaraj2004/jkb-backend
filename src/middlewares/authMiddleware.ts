@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { verifyToken } from "../utils/jwt_token";
 import { TokenPayload } from "../utils/jwt_payload";
 import { errorJson } from "../utils/common_funcs";
-import { AUTH_ROLES, STATUS_CODES } from "../utils/consts";
+import { STATUS_CODES, SUPER_ADMIN_ROLE } from "../utils/consts";
 
 export interface AuthenticatedRequest extends Request {
   user?: TokenPayload;
@@ -35,17 +35,8 @@ export function authorizeRoles(allowedRoles: string[] = []) {
       return;
     }
 
-    // delete only accessible to super_admin
-    if (req.method === 'DELETE') {
-      if (req.user.role_name === 'super_admin') {
-        return next();
-      }
-      res.status(STATUS_CODES.FORBIDDEN_REQUEST).json(errorJson("Forbidden only super_admin may delete", null));
-      return;
-    }
-
-    // Full authority users(AUTH_ROLES) get access to everything
-    if (AUTH_ROLES.includes(req.user.role_name) || allowedRoles.includes(req.user.role_name)) {
+    // Full authority SUPER_ADMIN_ROLE get access to everything
+    if (req.user.role_name === SUPER_ADMIN_ROLE || allowedRoles.includes(req.user.role_name)) {
       return next();
     }
 

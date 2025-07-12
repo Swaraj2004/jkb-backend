@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { createCoursePackage, deleteCoursePackage, getAllCoursePackages, getAllCoursePackagesIdName, getCoursePackageById, getProfessors, getStudentPackages, getSubjectPackageUsers, updateCoursePackage } from '../controllers/coursePackageController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
-import { GET_ALTERNATIVE, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
+import { ADMIN_ROLE, GET_ALTERNATIVE, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
 
 const router = express.Router();
 
@@ -29,7 +29,7 @@ const router = express.Router();
  *       200:
  *         description: A single course package object
  */
-router.get('/packages/:package_id', async (req: Request, res: Response) => {
+router.get('/packages/:package_id', async (req: Request, res: Response): Promise<void> => {
   return getCoursePackageById(req, res, req.params.package_id);
 });
 
@@ -44,7 +44,7 @@ router.get('/packages/:package_id', async (req: Request, res: Response) => {
  *         description: A list of course package objects
  */
 // It is an open route ask Swaraj Bhaiya
-router.get('/packages', async (req: Request, res: Response) => {
+router.get('/packages', async (req: Request, res: Response): Promise<void> => {
   const { type } = req.query;
 
   if (type === GET_ALTERNATIVE) {
@@ -79,7 +79,7 @@ router.get('/packages', async (req: Request, res: Response) => {
  */
 
 // this function requires nice testing
-router.get('/package-users', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+router.get('/package-users', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
   return getSubjectPackageUsers(req, res);
 });
 
@@ -100,7 +100,7 @@ router.get('/package-users', authMiddleware, authorizeRoles(), async (req: Reque
  *       200:
  *         description: A list of course packages for the student
  */
-router.get('/student-packages/:student_id', authMiddleware, authorizeRoles([PROFESSOR_ROLE, STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response) => {
+router.get('/student-packages/:student_id', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE, STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   // if (!req.user) {
   //     res.status(401).json(errorJson("Please log in first", null));
   //     return;
@@ -133,7 +133,7 @@ router.get('/student-packages/:student_id', authMiddleware, authorizeRoles([PROF
  *       201:
  *         description: The created course package object
  */
-router.post('/packages', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+router.post('/packages', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
   return createCoursePackage(req, res);
 });
 
@@ -154,7 +154,7 @@ router.post('/packages', authMiddleware, authorizeRoles(), async (req: Request, 
  *       204:
  *         description: Course package deleted successfully
  */
-router.delete('/packages/:package_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+router.delete('/packages/:package_id', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
   return deleteCoursePackage(req, res, req.params.package_id);
 });
 
@@ -174,7 +174,7 @@ router.delete('/packages/:package_id', authMiddleware, authorizeRoles(), async (
  *       202:
  *         description: The updated course package object
  */
-router.put('/packages', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+router.put('/packages', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
   return updateCoursePackage(req, res);
 });
 
@@ -188,7 +188,7 @@ router.put('/packages', authMiddleware, authorizeRoles(), async (req: Request, r
  *       200:
  *         description: A list of professor objects
  */
-router.get('/professors', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+router.get('/professors', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
   return getProfessors(req, res);
 });
 

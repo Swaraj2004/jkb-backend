@@ -1,6 +1,5 @@
 import express, { Request, Response } from 'express';
 import { createRole, deleteRole, getAllRoles, getRolesById, updateRole } from '../controllers/roleController';
-import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 
 const router = express.Router();
 

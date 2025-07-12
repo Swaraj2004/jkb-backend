@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { createBranch, deleteBranch, editBranch, getAllBranchesIdName, getBranchById } from '../controllers/branchController';
+import { ADMIN_ROLE } from '../utils/consts';
 
 const router = express.Router();
 /**
@@ -27,7 +28,7 @@ const router = express.Router();
  *       200:
  *         description: A single branch object
  */
-router.get('/:branch_id', async (req: Request, res: Response) => {
+router.get('/:branch_id', async (req: Request, res: Response): Promise<void> => {
   return getBranchById(req, res);
 });
 
@@ -45,7 +46,7 @@ router.get('/:branch_id', async (req: Request, res: Response) => {
  *         description: A list of branch objects
  */
 // Get all branches
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response): Promise<void> => {
   return getAllBranchesIdName(req, res);
 });
 
@@ -66,7 +67,7 @@ router.get('/', async (req: Request, res: Response) => {
  *         description: The created branch object
  */
 // Create a new branch
-router.post('/', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+router.post('/', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
   return createBranch(req, res);
 });
 
@@ -87,7 +88,7 @@ router.post('/', authMiddleware, authorizeRoles(), async (req: Request, res: Res
  *       204:
  *         description: Branch deleted successfully
  */
-router.delete('/:branch_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+router.delete('/:branch_id', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
   return deleteBranch(req, res);
 });
 /**
@@ -107,7 +108,7 @@ router.delete('/:branch_id', authMiddleware, authorizeRoles(), async (req: Reque
  *         description: The updated branch object
  */
 // Update a branch
-router.put('/:branch_id', authMiddleware, authorizeRoles(), async (req: Request, res: Response) => {
+router.put('/:branch_id', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
   return editBranch(req, res);
 });
 

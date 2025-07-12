@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { createStudentDetails, deleteStudentDetails, editStudentDetails, getAllStudentDetails, getStudentDetailById } from '../controllers/studentDetailsController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
-import { PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
+import { ADMIN_ROLE, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
 import { STATUS_CODES } from '../utils/consts';
 import { errorJson } from '../utils/common_funcs';
 
@@ -31,7 +31,7 @@ const router = express.Router();
  *       200:
  *         description: A single student record object
  */
-router.get('/:student_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+router.get('/:student_id', authMiddleware, authorizeRoles([ADMIN_ROLE, STUDENT_ROLE, PROFESSOR_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const studentId = req.params.student_id;
   if (req.user!.role_name === STUDENT_ROLE && studentId !== req.user!.user_id) {
     res.status(STATUS_CODES.UNAUTHORIZED).json(errorJson("Cannot see Other student Student Detail", null));
@@ -57,7 +57,7 @@ router.get('/:student_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESS
  *       200:
  *         description: A list of student record objects
  */
-router.get('/', authMiddleware, authorizeRoles([PROFESSOR_ROLE]), async (req: Request, res: Response): Promise<void> => {
+router.get('/', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), async (req: Request, res: Response): Promise<void> => {
   return getAllStudentDetails(req, res);
 });
 
@@ -118,7 +118,7 @@ router.delete('/:student_id', authMiddleware, authorizeRoles(), async (req: Requ
  *       202:
  *         description: The updated student record object
  */
-router.put('/', authMiddleware, authorizeRoles([STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+router.put('/', authMiddleware, authorizeRoles([ADMIN_ROLE, STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   if (req.user!.role_name === STUDENT_ROLE && req.user!.user_id !== req.body.student_id) {
     res.status(STATUS_CODES.UNAUTHORIZED).json(errorJson("Current User cannot edit other users Student-Detail", null));
     return;

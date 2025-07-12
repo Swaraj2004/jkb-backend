@@ -1,7 +1,7 @@
 import express, { Response, Request } from 'express';
 import { createStudent, createUser, createUserAndStudent, deleteUser, getUserById, getUsers, updateUser } from '../controllers/userController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
-import { AUTH_ROLES, DEFAULT_QUERRY_LIMIT, DEFAULT_QUERRY_OFFSET, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
+import { ADMIN_ROLE, DEFAULT_QUERRY_LIMIT, DEFAULT_QUERRY_OFFSET, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
 import { errorJson } from '../utils/common_funcs';
 
 const router = express.Router();
@@ -31,7 +31,7 @@ const router = express.Router();
  *         description: A single user object
  */
 
-router.get('/:user_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+router.get('/:user_id', authMiddleware, authorizeRoles([ADMIN_ROLE, STUDENT_ROLE, PROFESSOR_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   // another student cant access this route only current authorizedStundent and professor
   if (!req.user) {
     res.status(401).json(errorJson("Please log in first", null));
@@ -63,7 +63,7 @@ router.get('/:user_id', authMiddleware, authorizeRoles([STUDENT_ROLE, PROFESSOR_
  *         description: A list of user objects
  */
 
-router.get('/', authMiddleware, authorizeRoles(), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+router.get('/', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const { year } = req.query;
   return getUsers(req, res, year as string);
 });
@@ -85,7 +85,7 @@ router.get('/', authMiddleware, authorizeRoles(), async (req: AuthenticatedReque
  *         description: The created user object
  */
 
-router.post('/', authMiddleware, authorizeRoles(), async (req: Request, res: Response): Promise<void> => {
+router.post('/', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
   return createUser(req, res);
 });
 
@@ -169,7 +169,7 @@ router.delete('/:user_id', authMiddleware, authorizeRoles(), async (req: Authent
  *       202:
  *         description: The updated user object
  */
-router.put('/', authMiddleware, authorizeRoles(), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+router.put('/', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   return updateUser(req, res);
 });
 
