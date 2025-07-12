@@ -19,7 +19,7 @@ export const getTests = async (req: Request, res: Response, professor_id: string
       where: { user_id: professor_id }
     });
 
-    if (!tests) {
+    if (tests.length === 0) {
       res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("No Test found related to the professor_id", null));
       return;
     }
@@ -42,7 +42,7 @@ export const getSubjectTests = async (req: Request, res: Response, subject_id: s
       where: { subject_id: subject_id }
     });
 
-    if (!tests || tests.length == 0) {
+    if (tests.length == 0) {
       res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("No Test found related to the subject_id", null));
       return;
     }
@@ -55,12 +55,31 @@ export const getSubjectTests = async (req: Request, res: Response, subject_id: s
 
 export const createTest = async (req: Request, res: Response, professorId: string): Promise<void> => {
   try {
-    const reqBody: TestRequestBody = req.body;
+    const { title, start_time, subject_id, test_duration }: TestRequestBody = req.body;
+    if (!title || !subject_id) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Request Body not complete.", null));
+      return;
+    }
+
+    const startTime = start_time ? new Date(start_time) : new Date();
+
+    if (start_time && isNaN(startTime.getTime())) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Invalid start_time format.", null));
+      return;
+    }
+    if (start_time && startTime.getTime() < Date.now()) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Start time cannot be in the past.", null));
+      return;
+    }
+
     const test = await prismaClient.test.create({
       data: {
         user_id: professorId,
-        subject_id: reqBody.subject_id,
-        title: reqBody.title,
+        subject_id: subject_id,
+        title: title,
+        test_toggle: start_time ? false : true,
+        test_timestamp: startTime,
+        total_time: test_duration ?? undefined,
       }
     });
 
@@ -80,12 +99,54 @@ export const updateTest = async (req: Request, res: Response, testId: string): P
     await prismaClient.test.update({
       where: { id: testId },
       data: {
-        title: reqBody.title,
-        subject_id: reqBody.subject_id
+        title: reqBody.title ?? undefined,
+        subject_id: reqBody.subject_id ?? undefined,
+        test_timestamp: reqBody.start_time ? new Date(reqBody.start_time) : undefined,
+        total_time: reqBody.test_duration ?? undefined,
       }
     });
 
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Updated Succesfully!", 1));
+  } catch (error) {
+    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+  }
+};
+
+export const startTest = async (req: Request, res: Response, testId: string): Promise<void> => {
+  try {
+    if (!testId) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test Id required", null));
+      return;
+    }
+    await prismaClient.test.update({
+      where: { id: testId },
+      data: {
+        test_toggle: true,
+        test_timestamp: new Date(),
+      }
+    });
+
+    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Started Succesfully!", 1));
+  } catch (error) {
+    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+  }
+};
+
+export const endTest = async (req: Request, res: Response, testId: string): Promise<void> => {
+  try {
+    if (!testId) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test Id required", null));
+      return;
+    }
+    await prismaClient.test.update({
+      where: { id: testId },
+      data: {
+        test_toggle: false,
+        conducted: true
+      }
+    });
+
+    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Ended Succesfully!", 1));
   } catch (error) {
     res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
   }
@@ -99,7 +160,7 @@ export const deleteTest = async (req: Request, res: Response, testId: string): P
     }
     await prismaClient.test.delete({ where: { id: testId }, });
 
-    res.status(STATUS_CODES.DELETE_SUCCESS).json(successJson("Test Updated Succesfully!", 1));
+    res.status(STATUS_CODES.DELETE_SUCCESS).json(successJson("Test Deleted Succesfully!", 1));
   } catch (error) {
     res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
   }
@@ -255,7 +316,7 @@ export const saveStudentSubmissions = async (req: Request, res: Response, testSu
 
     const sid = testSubmission.id;
 
-    const questionIds = answer.map((a) => a.question_id);
+    const questionIds = answer.map((a): string => a.question_id);
 
     // Delete previous answers for only the submitted question IDs
     await prismaClient.testSubmissionAnswer.deleteMany({
