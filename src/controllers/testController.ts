@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
 import { errorJson, successJson } from '../utils/common_funcs';
-import { STATUS_CODES } from '../utils/consts';
+import { STATUS_CODES, STUDENT_ROLE } from '../utils/consts';
 import { prismaClient } from '../utils/database';
 import { TestRequestBody } from '../models/test_req_body';
 import { Question } from '../models/testQuestion_req_body';
+import { TestSubmissionReqBody } from '../models/test_submission_req_body';
+import { AuthenticatedRequest } from '../middlewares/authMiddleware';
 
 // ====== Tests ======
 export const getTests = async (req: Request, res: Response, professor_id: string): Promise<void> => {
@@ -222,8 +224,146 @@ export const getSubmissions = async (req: Request, res: Response, testId: string
       // select:{},
     });
 
-    res.status(STATUS_CODES.SELECT_FAILURE).json(successJson("Test Submission Found Succesfully!", testSubmission));
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Test Submission Found Succesfully!", testSubmission));
   } catch (error) {
     res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
   }
 };
+
+export const saveStudentSubmissions = async (req: Request, res: Response, testSubmissionReqBody: TestSubmissionReqBody): Promise<void> => {
+  try {
+    const { test_id, user_id, answer } = testSubmissionReqBody;
+    if (!test_id || !user_id || !answer) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Invalid request body", null));
+      return;
+    }
+
+    let testSubmission = await prismaClient.testSubmission.findFirst({
+      where: { test_id, user_id },
+      select: { id: true },
+    });
+
+    if (!testSubmission) {
+      testSubmission = await prismaClient.testSubmission.create({
+        data: {
+          test_id,
+          user_id,
+        },
+        select: { id: true },
+      });
+    }
+
+    const sid = testSubmission.id;
+
+    const questionIds = answer.map((a) => a.question_id);
+
+    // Delete previous answers for only the submitted question IDs
+    await prismaClient.testSubmissionAnswer.deleteMany({
+      where: {
+        test_submission_id: sid,
+        question_id: { in: questionIds },
+      },
+    });
+
+    //Add new answers
+    await prismaClient.testSubmissionAnswer.createMany({
+      data: answer.map((a) => ({
+        test_submission_id: sid,
+        question_id: a.question_id,
+        selected_option_id: a.selected_option_id,
+      })),
+    });
+
+    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Submission Saved Succesfully!", testSubmission.id));
+  } catch (error) {
+    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+  }
+};
+
+export const getUserScore = async (req: AuthenticatedRequest, res: Response, testId: string, studentId: string): Promise<void> => {
+  try {
+    if (!testId || !studentId) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test Id and User Id required in URL params", null));
+      return;
+    }
+    if (req.user!.role_name === STUDENT_ROLE && studentId !== req.user!.user_id) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("You can't get score of other users!", null));
+      return;
+    }
+
+    const testSubmission = await prismaClient.testSubmission.findFirst({
+      where: { test_id: testId, user_id: studentId },
+      select: {
+        answers: {
+          select: { selected_option_id: true, question_id: true }
+        },
+        test: {
+          select: {
+            testQuestions: {
+              select: {
+                id: true,
+                marks: true,
+                options: {
+                  select: { is_correct: true, id: true, }
+                }
+              }
+            }
+          }
+        },
+      }
+    });
+
+    if (!testSubmission) {
+      res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("No submission of the student found.", null));
+      return;
+    }
+
+    let score = 0;
+
+    // map of correct answers
+    const correctMap = new Map<string, Set<string>>();
+    for (const question of testSubmission.test.testQuestions) {
+      const correctSet = new Set<string>();
+      for (const opt of question.options) {
+        if (opt.is_correct)
+          correctSet.add(opt.id);
+      }
+      correctMap.set(question.id, correctSet);
+    }
+
+    // map of the student’s selections
+    const answerMap = new Map<string, Set<string>>();
+    for (const studentAnswer of testSubmission.answers) {
+      const qid = studentAnswer.question_id;
+      const oid = studentAnswer.selected_option_id;
+
+      if (!answerMap.has(qid)) {
+        answerMap.set(qid, new Set());
+      }
+
+      answerMap.get(qid)!.add(oid);
+    }
+
+    //  Compute the score 
+    for (const question of testSubmission.test.testQuestions) {
+      const correctAnswer = correctMap.get(question.id)!;
+      const studentAnswer = answerMap.get(question.id);
+
+      if (studentAnswer && setsAreEqual(correctAnswer, studentAnswer)) {
+        score += question.marks;
+      }
+    }
+
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Score calculated Succesfully!", score));
+  } catch (error) {
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+  }
+};
+
+function setsAreEqual<T>(a: Set<T>, b: Set<T>): boolean {
+  if (a.size !== b.size) return false;
+  for (const val of a) {
+    if (!b.has(val)) return false;
+  }
+  return true;
+}

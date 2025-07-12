@@ -1,7 +1,8 @@
 import express, { Request, Response } from 'express';
-import { createQuestion, createTest, deleteTest, getQuestions, getTests, updateQuestion, updateTest, deleteQuestion, getSubmissions, getSubjectTests } from '../controllers/testController';
+import { createQuestion, createTest, deleteTest, getQuestions, getTests, updateQuestion, updateTest, deleteQuestion, getSubmissions, getSubjectTests, saveStudentSubmissions, getUserScore } from '../controllers/testController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
+import { TestSubmissionReqBody } from '../models/test_submission_req_body';
 
 const router = express.Router();
 
@@ -59,6 +60,15 @@ router.get('/test/:test_id/submissions', authMiddleware, authorizeRoles([PROFESS
   return getSubmissions(req, res, test_id as string);
 });
 
+router.post('/test/save', authMiddleware, authorizeRoles([PROFESSOR_ROLE, STUDENT_ROLE]), (req: Request, res: Response): Promise<void> => {
+  const testSubmission: TestSubmissionReqBody = req.body;
+  return saveStudentSubmissions(req, res, testSubmission);
+});
+
+router.get('/test/score', authMiddleware, authorizeRoles([PROFESSOR_ROLE, STUDENT_ROLE]), (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const { test_id, user_id } = req.query;
+  return getUserScore(req, res, test_id as string, user_id as string);
+});
 
 
 export default router;
