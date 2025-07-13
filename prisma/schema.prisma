@@ -304,11 +304,12 @@ model QuestionOption {
 }
 
 model TestSubmission {
-  id         String    @id @default(uuid()) @db.Uuid
-  test_id    String    @db.Uuid
-  user_id    String    @db.Uuid
-  created_at DateTime  @default(now()) @db.Timestamptz()
-  updated_at DateTime? @updatedAt @db.Timestamptz()
+  id           String    @id @default(uuid()) @db.Uuid
+  test_id      String    @db.Uuid
+  user_id      String    @db.Uuid
+  is_submitted Boolean   @default(false)
+  created_at   DateTime  @default(now()) @db.Timestamptz()
+  updated_at   DateTime? @updatedAt @db.Timestamptz()
 
   test    Test                   @relation(fields: [test_id], references: [id], onDelete: Cascade)
   user    User                   @relation(fields: [user_id], references: [id], onDelete: Cascade)
