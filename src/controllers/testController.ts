@@ -31,15 +31,20 @@ export const getTests = async (req: Request, res: Response, professor_id: string
 };
 
 // Get test using subject_id
-export const getSubjectTests = async (req: Request, res: Response, subject_id: string): Promise<void> => {
+export const getSubjectTests = async (req: Request, res: Response, subject_id: string, user_id: string): Promise<void> => {
   try {
-    if (!subject_id) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Subject Id required", null));
+    if (!subject_id || !user_id) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Subject Id and user id required", null));
       return;
     }
 
     const tests = await prismaClient.test.findMany({
-      where: { subject_id: subject_id }
+      where: {
+        subject_id: subject_id,
+        // testSubmissions: {
+        //   none: { user_id: user_id },
+        // },
+      },
     });
 
     if (tests.length == 0) {
@@ -96,12 +101,24 @@ export const updateTest = async (req: Request, res: Response, testId: string): P
       return;
     }
     const reqBody: TestRequestBody = req.body;
+    const start_time = reqBody.start_time;
+    const startTime = start_time ? new Date(start_time) : new Date();
+
+    if (start_time && isNaN(startTime.getTime())) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Invalid start_time format.", null));
+      return;
+    }
+    if (start_time && startTime.getTime() < Date.now()) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Start time cannot be in the past.", null));
+      return;
+    }
+
     await prismaClient.test.update({
       where: { id: testId },
       data: {
         title: reqBody.title ?? undefined,
         subject_id: reqBody.subject_id ?? undefined,
-        test_timestamp: reqBody.start_time ? new Date(reqBody.start_time) : undefined,
+        test_timestamp: reqBody.start_time ? startTime : undefined,
         total_time: reqBody.test_duration ?? undefined,
       }
     });
@@ -294,7 +311,7 @@ export const getSubmissions = async (req: Request, res: Response, testId: string
 export const saveStudentSubmissions = async (req: Request, res: Response, testSubmissionReqBody: TestSubmissionReqBody): Promise<void> => {
   try {
     const { test_id, user_id, answer } = testSubmissionReqBody;
-    if (!test_id || !user_id || !answer) {
+    if (!test_id || !user_id || !Array.isArray(answer) || answer.length === 0) {
       res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Invalid request body", null));
       return;
     }
@@ -313,6 +330,15 @@ export const saveStudentSubmissions = async (req: Request, res: Response, testSu
         select: { id: true },
       });
     }
+
+    // let testSubmission = await prismaClient.testSubmission.upsert({
+    //   where: {
+    //     test_id_user_id: { test_id, user_id }
+    //   },
+    //   select: { id: true },
+    //   create: { test_id, user_id },
+    //   update: {}
+    // });
 
     const sid = testSubmission.id;
 
@@ -334,6 +360,22 @@ export const saveStudentSubmissions = async (req: Request, res: Response, testSu
         selected_option_id: a.selected_option_id,
       })),
     });
+    // // NOTE: if transaction does not work remove this
+    // await prismaClient.$transaction([
+    //   prismaClient.testSubmissionAnswer.deleteMany({
+    //     where: {
+    //       test_submission_id: sid,
+    //       question_id: { in: questionIds },
+    //     },
+    //   }),
+    //   prismaClient.testSubmissionAnswer.createMany({
+    //     data: answer.map((a) => ({
+    //       test_submission_id: sid,
+    //       question_id: a.question_id,
+    //       selected_option_id: a.selected_option_id,
+    //     })),
+    //   }),
+    // ]);
 
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Submission Saved Succesfully!", testSubmission.id));
   } catch (error) {

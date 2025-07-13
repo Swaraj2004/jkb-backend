@@ -8,8 +8,8 @@ const router = express.Router();
 
 // For Test GET,POST,PUT,DELETE
 router.get('/subject/tests', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE, STUDENT_ROLE]), (req: Request, res: Response): Promise<void> => {
-  const { subject_id } = req.query;
-  return getSubjectTests(req, res, subject_id as string);
+  const { subject_id, user_id } = req.query;
+  return getSubjectTests(req, res, subject_id as string, user_id as string);
 });
 
 router.get('/professor/tests', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
