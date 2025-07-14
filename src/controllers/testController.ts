@@ -41,6 +41,7 @@ export const getSubjectTests = async (req: Request, res: Response, subject_id: s
     const tests = await prismaClient.test.findMany({
       where: {
         subject_id: subject_id,
+        conducted: false,
         testSubmissions: {
           none: { user_id: user_id, is_submitted: true },
         },
@@ -120,6 +121,8 @@ export const updateTest = async (req: Request, res: Response, testId: string): P
         subject_id: reqBody.subject_id ?? undefined,
         test_timestamp: reqBody.start_time ? startTime : undefined,
         total_time: reqBody.test_duration ?? undefined,
+        test_toggle: reqBody.test_toggle ?? undefined,
+        conducted: reqBody.conducted ?? undefined,
       }
     });
 
@@ -140,7 +143,9 @@ export const startTest = async (req: Request, res: Response, testId: string): Pr
       data: {
         test_toggle: true,
         test_timestamp: new Date(),
-      }
+        conducted: false,
+      },
+      select: { id: true }
     });
 
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Started Succesfully!", 1));
@@ -297,12 +302,12 @@ export const getSubmissions = async (req: Request, res: Response, testId: string
       return;
     }
 
-    const testSubmission = await prismaClient.testSubmission.findMany({
+    const testSubmissions = await prismaClient.testSubmission.findMany({
       where: { test_id: testId },
       // select:{},
     });
 
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Test Submission Found Succesfully!", testSubmission));
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Test Submission Found Succesfully!", testSubmissions));
   } catch (error) {
     res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
   }
@@ -315,73 +320,120 @@ export const saveStudentSubmissions = async (req: Request, res: Response, testSu
       res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Invalid request body", null));
       return;
     }
+    // take test_id, user_id from frontend
+    // if they not have then they send test_id and user_id
+    // i have to save the submission if 
+    //    - test_toggle = true and conducted = false
+    //    - test_timestamp + total_time > Date.now()
+    // else  send the respective response
 
-    let testSubmission = await prismaClient.testSubmission.findFirst({
-      where: { test_id, user_id },
-      select: { id: true },
+    let test = await prismaClient.test.findUnique({
+      where: { id: test_id },
+      select: {
+        conducted: true,
+        test_toggle: true,
+        test_timestamp: true,
+        total_time: true,
+        testSubmissions: {
+          where: { user_id },
+          select: { id: true, is_submitted: true }
+        }
+      }
     });
 
-    if (!testSubmission) {
+    if (!test) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test with given test_id does not exist.", null));
+      return;
+    }
+    if (!test.test_timestamp) {
+      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("The test_timestamp is missing.", null));
+      return;
+    }
+    const now = Date.now();
+    const startTime = test.test_timestamp.getTime();
+    const endTime = startTime + test.total_time * 60 * 1000;
+    if (!test.test_toggle || startTime > now) {
+      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Test is not started", null));
+      return;
+    }
+    if (test.conducted) {
+      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Test is conducted and is over.", null));
+      return;
+    }
+    if (endTime < now) {
+      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Test is ended, time is over.", null));
+      return;
+    }
+
+    // technically this should never occur replace with logger when implementing logs
+    if (test.testSubmissions.length > 1) {
+      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("User cannot have multiple testSubmission.", null));
+      return;
+    }
+
+    let testSubmission: { id: string; is_submitted: boolean; } | null = null;
+
+    if (test.testSubmissions.length === 0) {
       testSubmission = await prismaClient.testSubmission.create({
         data: {
           test_id,
           user_id,
         },
-        select: { id: true },
+        select: { id: true, is_submitted: true },
       });
+    } else {
+      testSubmission = test.testSubmissions[0]; // as the length of the testSubmission is 1
+
+      if (testSubmission.is_submitted) {
+        res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Submission is already finalized.", null));
+        return;
+      }
     }
-
-    // let testSubmission = await prismaClient.testSubmission.upsert({
-    //   where: {
-    //     test_id_user_id: { test_id, user_id }
-    //   },
-    //   select: { id: true },
-    //   create: { test_id, user_id },
-    //   update: {}
-    // });
-
-    const sid = testSubmission.id;
 
     const questionIds = answer.map((a): string => a.question_id);
 
-    // Delete previous answers for only the submitted question IDs
-    await prismaClient.testSubmissionAnswer.deleteMany({
-      where: {
-        test_submission_id: sid,
-        question_id: { in: questionIds },
-      },
-    });
-
-    //Add new answers
-    await prismaClient.testSubmissionAnswer.createMany({
-      data: answer.map((a) => ({
-        test_submission_id: sid,
-        question_id: a.question_id,
-        selected_option_id: a.selected_option_id,
-      })),
-    });
-    // // NOTE: if transaction does not work remove this
-    // await prismaClient.$transaction([
-    //   prismaClient.testSubmissionAnswer.deleteMany({
-    //     where: {
-    //       test_submission_id: sid,
-    //       question_id: { in: questionIds },
-    //     },
-    //   }),
-    //   prismaClient.testSubmissionAnswer.createMany({
-    //     data: answer.map((a) => ({
-    //       test_submission_id: sid,
-    //       question_id: a.question_id,
-    //       selected_option_id: a.selected_option_id,
-    //     })),
-    //   }),
-    // ]);
+    // NOTE: if transaction does not work remove this
+    await prismaClient.$transaction([
+      // Delete previous answers for only the submitted question IDs
+      prismaClient.testSubmissionAnswer.deleteMany({
+        where: {
+          test_submission_id: testSubmission.id,
+          question_id: { in: questionIds },
+        },
+      }),
+      //Add new answers
+      prismaClient.testSubmissionAnswer.createMany({
+        data: answer.map((a) => ({
+          test_submission_id: testSubmission.id,
+          question_id: a.question_id,
+          selected_option_id: a.selected_option_id,
+        })),
+      }),
+    ]);
 
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Submission Saved Succesfully!", testSubmission.id));
   } catch (error) {
     res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
   }
 };
+
+export const endTestSubmission = async (req: Request, res: Response, test_submission_id: string): Promise<void> => {
+  if (!test_submission_id) {
+    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test Submission Id required.", null));
+    return;
+  }
+  try {
+    await prismaClient.testSubmission.update({
+      where: { id: test_submission_id },
+      data: { is_submitted: true }
+    });
+
+    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Submission Ended Succesfully!", 1));
+  } catch (error) {
+    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+  }
+};
+
 
 export const getUserScore = async (req: AuthenticatedRequest, res: Response, testId: string, studentId: string): Promise<void> => {
   try {

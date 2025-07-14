@@ -3,4 +3,6 @@ export interface TestRequestBody {
   subject_id: string;
   start_time: string;
   test_duration: number;
+  test_toggle: boolean;
+  conducted: boolean;
 }

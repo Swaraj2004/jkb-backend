@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { createQuestion, createTest, deleteTest, getQuestions, getTests, updateQuestion, updateTest, deleteQuestion, getSubmissions, getSubjectTests, saveStudentSubmissions, getUserScore, endTest, startTest } from '../controllers/testController';
+import { createQuestion, createTest, deleteTest, getQuestions, getTests, updateQuestion, updateTest, deleteQuestion, getSubmissions, getSubjectTests, saveStudentSubmissions, getUserScore, endTest, startTest, endTestSubmission } from '../controllers/testController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { ADMIN_ROLE, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
 import { TestSubmissionReqBody } from '../models/test_submission_req_body';
@@ -22,58 +22,55 @@ router.post('/professor/test', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFE
   return createTest(req, res, professorId);
 });
 
-router.put('/professor/test', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
-  const { test_id } = req.query;
-  return updateTest(req, res, test_id as string);
+router.put('/professor/test/:test_id', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
+  return updateTest(req, res, req.params.test_id);
 });
 
-router.put('/professor/test/start', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
-  const { test_id } = req.query;
-  return startTest(req, res, test_id as string);
+router.put('/professor/test/start/:test_id', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
+  return startTest(req, res, req.params.test_id);
 });
 
-router.put('/professor/test/end', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
-  const { test_id } = req.query;
-  return endTest(req, res, test_id as string);
+router.put('/professor/test/end/:test_id', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
+  return endTest(req, res, req.params.test_id);
 });
 
-router.delete('/professor/tests', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
-  const { test_id } = req.query;
-  return deleteTest(req, res, test_id as string);
+router.delete('/professor/tests/:test_id', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
+  return deleteTest(req, res, req.params.test_id);
 });
 
 
 // For Questions GET,POST,PUT,DELETE
-router.get('/test/questions', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE, STUDENT_ROLE]), (req: Request, res: Response): Promise<void> => {
-  const { test_id } = req.query;
-  return getQuestions(req, res, test_id as string);
+router.get('/test/:test_id/questions', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE, STUDENT_ROLE]), (req: Request, res: Response): Promise<void> => {
+  return getQuestions(req, res, req.params.test_id);
 });
 
 router.post('/test/questions', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
   return createQuestion(req, res);
 });
 
-router.put('/test/questions', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
-  const { question_id } = req.query;
-  return updateQuestion(req, res, question_id as string);
+router.put('/test/questions/:question_id', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
+  return updateQuestion(req, res, req.params.question_id);
 });
 
-router.delete('/test/questions', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
-  const { question_id } = req.query;
-  return deleteQuestion(req, res, question_id as string);
+router.delete('/test/questions/:question_id', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
+  return deleteQuestion(req, res, req.params.question_id);
 });
 
 
 // For Test Submissions : GET,POST,PUT
 router.get('/test/:test_id/submissions', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
-  const { test_id } = req.params;
-  return getSubmissions(req, res, test_id as string);
+  return getSubmissions(req, res, req.params.test_id);
 });
 
 router.post('/test/save', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE, STUDENT_ROLE]), (req: Request, res: Response): Promise<void> => {
   const testSubmission: TestSubmissionReqBody = req.body;
   return saveStudentSubmissions(req, res, testSubmission);
 });
+
+router.post('/test/submit/:test_submission_id', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE, STUDENT_ROLE]), (req: Request, res: Response): Promise<void> => {
+  return endTestSubmission(req, res, req.params.test_submission_id);
+});
+
 
 router.get('/test/score', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE, STUDENT_ROLE]), (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const { test_id, user_id } = req.query;

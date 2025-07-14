@@ -11,6 +11,9 @@
 - Create a `test/` folder (not `tests/`) to organize all backend test files using **Vitest**.
   This will include **unit tests**, **integration tests**, and **API route tests** for your Express backend.
 
+## 📝 Logging Enhancement with Winston
+
+To enable scalable and structured logging across Express app, integrate **Winston**, a powerful and flexible logging library.
 
 ## 🚀 Future Improvement: Support Multiple Test Submissions per Student
 
