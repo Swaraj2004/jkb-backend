@@ -41,9 +41,9 @@ export const getSubjectTests = async (req: Request, res: Response, subject_id: s
     const tests = await prismaClient.test.findMany({
       where: {
         subject_id: subject_id,
-        // testSubmissions: {
-        //   none: { user_id: user_id },
-        // },
+        testSubmissions: {
+          none: { user_id: user_id, is_submitted: true },
+        },
       },
     });
 

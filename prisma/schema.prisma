@@ -257,16 +257,17 @@ model StudentPackage {
 }
 
 model Test {
-  id             String    @id @default(uuid()) @db.Uuid
-  user_id        String    @db.Uuid     // professor_id
-  subject_id     String    @db.Uuid
-  title          String
-  test_toggle    Boolean   @default(false)
-  conducted      Boolean   @default(false)
-  test_timestamp DateTime? @db.Timestamptz()
-  total_time     Int       @default(30)       // time in minutes
-  created_at     DateTime  @default(now()) @db.Timestamptz()
-  updated_at     DateTime? @updatedAt @db.Timestamptz()
+  id                         String    @id @default(uuid()) @db.Uuid
+  user_id                    String    @db.Uuid // professor_id
+  subject_id                 String    @db.Uuid
+  title                      String
+  test_toggle                Boolean   @default(false)
+  conducted                  Boolean   @default(false)
+  // allow_multiple_submissions Boolean   @default(false) // for mulitple test_submission in future
+  test_timestamp             DateTime? @db.Timestamptz()
+  total_time                 Int       @default(30) // time in minutes
+  created_at                 DateTime  @default(now()) @db.Timestamptz()
+  updated_at                 DateTime? @updatedAt @db.Timestamptz()
 
   professor       User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
   subject         Subject          @relation(fields: [subject_id], references: [id], onDelete: Cascade)
