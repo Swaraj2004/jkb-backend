@@ -121,7 +121,7 @@ export const updateTest = async (req: Request, res: Response, testId: string): P
         subject_id: reqBody.subject_id ?? undefined,
         test_timestamp: reqBody.start_time ? startTime : undefined,
         total_time: reqBody.test_duration ?? undefined,
-        test_toggle: reqBody.test_toggle ?? undefined,
+        test_toggle: reqBody.start_time ? true : reqBody.test_toggle ?? undefined,
         conducted: reqBody.conducted ?? undefined,
       }
     });
@@ -241,17 +241,16 @@ export const createQuestion = async (req: Request, res: Response): Promise<void>
         test_id: reqBody.test_id,
         question_text: reqBody.question_text,
         marks: marks,
-      }
-    });
-
-    reqBody.options.forEach(async (option): Promise<void> => {
-      await prismaClient.questionOption.create({
-        data: {
-          question_id: question.id,
-          option_text: option.option_text,
-          is_correct: option.is_correct
+        options: {
+          createMany: {
+            data: reqBody.options.map((option) => ({
+              option_text: option.option_text,
+              is_correct: option.is_correct,
+            })),
+          },
         }
-      });
+      },
+      select: { id: true }
     });
 
     res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Question and Its Options Created Succesfully!", question.id));
@@ -261,32 +260,63 @@ export const createQuestion = async (req: Request, res: Response): Promise<void>
 };
 
 export const updateQuestion = async (req: Request, res: Response, questionId: string): Promise<void> => {
-  // TODO: Implement logic
+  if (!questionId) {
+    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Question Id required", null));
+    return;
+  }
   try {
+    const reqBody: Question = req.body;
 
+    let marks: number | undefined = undefined;
+    if (reqBody.question_marks) {
+      marks = parseInt(reqBody.question_marks);
+      if (isNaN(marks)) {
+        res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Question Marks should be a Number", null));
+        return;
+      }
+    }
+
+    if (!reqBody.options || reqBody.options.length === 0) {
+      await prismaClient.testQuestion.update({
+        where: { id: questionId },
+        data: {
+          question_text: reqBody.question_text ?? undefined,
+          marks,
+        }
+      });
+    } else {
+      await prismaClient.testQuestion.update({
+        where: { id: questionId },
+        data: {
+          question_text: reqBody.question_text ?? undefined,
+          marks: marks,
+          options: {
+            deleteMany: {},  // first delete all the options before so as to avoid repetition
+            createMany: {
+              data: reqBody.options.map((option) => ({
+                option_text: option.option_text,
+                is_correct: option.is_correct,
+              })),
+            }
+          }
+        }
+      });
+    }
+
+    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Question updated successfully!", 1));
   } catch (error) {
     res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
   }
 };
 
 export const deleteQuestion = async (req: Request, res: Response, questionId: string): Promise<void> => {
+  if (!questionId) {
+    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Question Id required", null));
+    return;
+  }
   try {
-    if (!questionId) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Question Id required", null));
-      return;
-    }
-
-    const question = await prismaClient.testQuestion.delete({
-      where: { id: questionId },
-      include: { options: true }    // as in schema it is configured onDelete:Cascade it will delete all options related to it also
-    });
-    if (!question) {
-      res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Question not found!", null));
-      return;
-    }
-    // await prismaClient.questionOption.deleteMany({
-    //   where: { question_id: question.id },
-    // });
+    // questionOptions will be deleted via onDetele:Cascade
+    await prismaClient.testQuestion.delete({ where: { id: questionId }, });
 
     res.status(STATUS_CODES.DELETE_SUCCESS).json(successJson("Question and Related options deleted Succesfully!", null));
   } catch (error) {
@@ -353,7 +383,7 @@ export const saveStudentSubmissions = async (req: Request, res: Response, testSu
     const startTime = test.test_timestamp.getTime();
     const endTime = startTime + test.total_time * 60 * 1000;
     if (!test.test_toggle || startTime > now) {
-      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Test is not started", null));
+      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Test is not started or maybe its completed", null));
       return;
     }
     if (test.conducted) {
