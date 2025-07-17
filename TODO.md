@@ -19,6 +19,13 @@ To enable scalable and structured logging across Express app, integrate **Winsto
 
 To allow multiple `TestSubmission` entries for the same student in a given test (e.g., for retries or re-attempts), implement the following strategy:
 
+### ✅ TODO: Get Student Submissions for Test
+
+- **Route**: `GET /test/:test_id/submissions`
+- **Access**: Admin, Professor
+- **File**: routes/testRoutes.ts
+- **Description**: Fetch student-selected options and correct options for the given test.
+
 ### First edit the schema.prisma file and uncomment the necessary field and perform migrations
 
 - **New Endpoint Behavior**:  

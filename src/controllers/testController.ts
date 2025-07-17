@@ -423,6 +423,7 @@ export const saveStudentSubmissions = async (req: Request, res: Response, testSu
     const questionIds = answer.map((a): string => a.question_id);
 
     // NOTE: if transaction does not work remove this
+    // TODO: find a way to improve below implementation using prisma docs
     await prismaClient.$transaction([
       // Delete previous answers for only the submitted question IDs
       prismaClient.testSubmissionAnswer.deleteMany({
