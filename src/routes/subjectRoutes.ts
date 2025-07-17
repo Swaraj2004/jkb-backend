@@ -183,7 +183,7 @@ router.delete('/subjects/:subject_id', authMiddleware, authorizeRoles(), async (
  *       202:
  *         description: The updated subject object
  */
-router.put('/subjects', authMiddleware, authorizeRoles(), async (req: Request, res: Response): Promise<void> => {
+router.put('/subjects', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
   return updateSubject(req, res);
 });
 
