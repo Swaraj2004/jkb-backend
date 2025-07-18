@@ -1,56 +1,73 @@
 # 📝 TODOs for `jkb-backend`
 
-## 🧹 Code Quality Improvements (For New Contributors)
+---
 
-- Replace `userRole.create` with `userRole.connect` to avoid unintended role creation.
-- Add uniqueness check for email to prevent duplicate users.
-- Insert `assert` statements where appropriate to ensure safe assumptions in logic.
+## 1️⃣ 🧹 Code Quality Improvements (For New Contributors)
 
-## 🧪 Testing / Project Structure Enhancements
+1.1. Replace `userRole.create` with `userRole.connect` to avoid unintended role creation.
 
-- Create a `test/` folder (not `tests/`) to organize all backend test files using **Vitest**.
-  This will include **unit tests**, **integration tests**, and **API route tests** for your Express backend.
+1.2. Add uniqueness check for email to prevent duplicate users.
 
-## 📝 Logging Enhancement with Winston
-
-To enable scalable and structured logging across Express app, integrate **Winston**, a powerful and flexible logging library.
-
-## 🚀 Future Improvement: Support Multiple Test Submissions per Student
-
-To allow multiple `TestSubmission` entries for the same student in a given test (e.g., for retries or re-attempts), implement the following strategy:
-
-### ✅ TODO: Get Student Submissions for Test
-
-- **Route**: `GET /test/:test_id/submissions`
-- **Access**: Admin, Professor
-- **File**: routes/testRoutes.ts
-- **Description**: Fetch student-selected options and correct options for the given test.
-
-### First edit the schema.prisma file and uncomment the necessary field and perform migrations
-
-- **New Endpoint Behavior**:  
-  Create an endpoint that manages test submissions based on the student's current state:
-
-  - ✅ If a `TestSubmission` already exists for the student and test **with `is_submitted = false`**, return that submission's ID. This allows the student to **resume** their in-progress test.
-  
-  - ➕ If **no such in-progress submission exists**, create a **new `TestSubmission`** record for this attempt and return its ID. This allows the student to **start a fresh attempt**.
-
-This setup ensures students can continue incomplete tests while still supporting multiple attempts in the future.
+1.3. Insert `assert` statements where appropriate to ensure safe assumptions in logic.
 
 ---
 
-### ⚠️ Potential Considerations & Edge Cases
+## 2️⃣ 🧪 Testing / Project Structure Enhancements
+
+2.1. Create a `test/` folder (not `tests/`) to organize all backend test files using **Vitest**.  
+&emsp;→ This should include **unit tests**, **integration tests**, and **API route tests** for your Express backend.
+
+---
+
+## 3️⃣ 📝 Logging Enhancement with Winston
+
+3.1. Integrate **Winston**, a powerful and flexible logging library, to enable scalable and structured logging across the Express app.
+
+---
+
+## 4️⃣ 🚀 Future Improvement: Support Multiple Test Submissions per Student
+
+4.1. Allow multiple `TestSubmission` entries for the same student in a given test (e.g., for retries or re-attempts).
+
+4.2. Edit `schema.prisma` to remove any unique constraints on `(user_id, test_id)` if supporting multiple attempts.
+
+4.3. Perform necessary **Prisma migrations**.
+
+---
+
+### ✅ 4.4. TODO: Get Student Submissions for Test
+
+- **Route**: `GET /test/:test_id/submissions`  
+- **Access**: Admin, Professor  
+- **File**: `routes/testRoutes.ts`  
+- **Description**: Fetch student-selected options and correct options for the given test.
+
+#### ➕ New Endpoint Behavior:
+
+- If a `TestSubmission` already exists with `is_submitted = false`, return that submission's ID.  
+  → Enables resuming in-progress submissions.
+
+- If no such submission exists, create a new `TestSubmission` and return its ID.  
+  → Enables starting a fresh attempt.
+
+---
+
+### ⚠️ 4.5. Potential Considerations & Edge Cases
 
 - **Stale In-Progress Submissions**  
-  Users might abandon a test mid-way, leaving behind submissions with `is_submitted = false`. This can clutter your database over time.  
-  👉 Consider implementing a **time-to-live (TTL)** mechanism or **background cleanup job** that deletes or archives abandoned submissions after a set period (e.g., 24 hours of inactivity).
+  👉 Implement TTL or background cleanup for abandoned `is_submitted = false` submissions.
 
 - **Unbounded Growth**  
-  Allowing unlimited attempts can lead to unbounded records.  
-  👉 Consider adding a **maximum attempt limit**, auto-archiving old submissions, or tracking attempt numbers per user.
+  👉 Add attempt limit, or archive older submissions.
 
 - **UX Clarity**  
-  Students should always know whether they’re resuming an old test or starting a new one.  
-  👉 Show appropriate status messages and time left if resuming an in-progress submission.
+  👉 Notify users whether they are resuming or starting fresh.
+
+---
+
+## 5️⃣ 🧭 Further Improvements
+
+5.1. Read about `@db.Money` in Prisma & PostgreSQL docs — decide if it's the best fit or switch to `@db.Decimal(10, 2)` for more flexibility and precision.
+
 
 ---
