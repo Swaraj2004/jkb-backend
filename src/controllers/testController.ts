@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { errorJson, successJson } from '../utils/common_funcs';
 import { STATUS_CODES, STUDENT_ROLE } from '../utils/consts';
 import { prismaClient } from '../utils/database';
-import { TestRequestBody } from '../models/test_req_body';
+import { TestRequestBody, TestStatus } from '../models/test_req_body';
 import { Question } from '../models/testQuestion_req_body';
 import { TestSubmissionReqBody } from '../models/test_submission_req_body';
 import { AuthenticatedRequest } from '../middlewares/authMiddleware';
@@ -83,7 +83,6 @@ export const createTest = async (req: Request, res: Response, professorId: strin
         user_id: professorId,
         subject_id: subject_id,
         title: title,
-        test_toggle: start_time ? false : true,
         test_timestamp: startTime,
         total_time: test_duration ?? undefined,
       }
@@ -102,6 +101,10 @@ export const updateTest = async (req: Request, res: Response, testId: string): P
       return;
     }
     const reqBody: TestRequestBody = req.body;
+    if (reqBody.test_status && !Object.values(TestStatus).includes(reqBody.test_status)) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Send valid test_status.", null));
+      return;
+    }
     const start_time = reqBody.start_time;
     const startTime = start_time ? new Date(start_time) : new Date();
 
@@ -121,7 +124,7 @@ export const updateTest = async (req: Request, res: Response, testId: string): P
         subject_id: reqBody.subject_id ?? undefined,
         test_timestamp: reqBody.start_time ? startTime : undefined,
         total_time: reqBody.test_duration ?? undefined,
-        test_toggle: reqBody.start_time ? true : reqBody.test_toggle ?? undefined,
+        test_status: reqBody.test_status ?? undefined,
         conducted: reqBody.conducted ?? undefined,
       }
     });
@@ -141,7 +144,7 @@ export const startTest = async (req: Request, res: Response, testId: string): Pr
     await prismaClient.test.update({
       where: { id: testId },
       data: {
-        test_toggle: true,
+        test_status: TestStatus.InProgress,
         test_timestamp: new Date(),
         conducted: false,
       },
@@ -163,7 +166,7 @@ export const endTest = async (req: Request, res: Response, testId: string): Prom
     await prismaClient.test.update({
       where: { id: testId },
       data: {
-        test_toggle: false,
+        test_status: TestStatus.Completed,
         conducted: true
       }
     });
@@ -353,7 +356,7 @@ export const saveStudentSubmissions = async (req: Request, res: Response, testSu
     // take test_id, user_id from frontend
     // if they not have then they send test_id and user_id
     // i have to save the submission if 
-    //    - test_toggle = true and conducted = false
+    //    - if test_status !== TestStatus.InProgress 
     //    - test_timestamp + total_time > Date.now()
     // else  send the respective response
 
@@ -361,7 +364,7 @@ export const saveStudentSubmissions = async (req: Request, res: Response, testSu
       where: { id: test_id },
       select: {
         conducted: true,
-        test_toggle: true,
+        test_status: true,
         test_timestamp: true,
         total_time: true,
         testSubmissions: {
@@ -375,6 +378,7 @@ export const saveStudentSubmissions = async (req: Request, res: Response, testSu
       res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test with given test_id does not exist.", null));
       return;
     }
+    // WARN: below condition should never occur logically
     if (!test.test_timestamp) {
       res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("The test_timestamp is missing.", null));
       return;
@@ -382,7 +386,7 @@ export const saveStudentSubmissions = async (req: Request, res: Response, testSu
     const now = Date.now();
     const startTime = test.test_timestamp.getTime();
     const endTime = startTime + test.total_time * 60 * 1000;
-    if (!test.test_toggle || startTime > now) {
+    if (test.test_status !== TestStatus.InProgress || startTime > now) {
       res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Test is not started or maybe its completed", null));
       return;
     }

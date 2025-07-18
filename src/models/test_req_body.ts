@@ -3,6 +3,12 @@ export interface TestRequestBody {
   subject_id: string;
   start_time: string;
   test_duration: number;
-  test_toggle: boolean;
+  test_status: TestStatus;
   conducted: boolean;
+}
+
+export enum TestStatus {
+  Scheduled = "Scheduled",
+  InProgress = "InProgress",
+  Completed = "Completed",
 }
