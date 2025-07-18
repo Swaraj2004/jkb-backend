@@ -262,7 +262,6 @@ model Test {
   subject_id                 String     @db.Uuid
   title                      String
   test_status                TestStatus @default(Scheduled)
-  conducted                  Boolean    @default(false)
   // allow_multiple_submissions Boolean    @default(false) // for mulitple test_submission in future
   test_timestamp             DateTime?  @db.Timestamptz()
   total_time                 Int        @default(30) // time in minutes
