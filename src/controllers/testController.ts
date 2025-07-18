@@ -41,7 +41,7 @@ export const getSubjectTests = async (req: Request, res: Response, subject_id: s
     const tests = await prismaClient.test.findMany({
       where: {
         subject_id: subject_id,
-        conducted: false,
+        test_status: TestStatus.Completed,
         testSubmissions: {
           none: { user_id: user_id, is_submitted: true },
         },
@@ -125,7 +125,6 @@ export const updateTest = async (req: Request, res: Response, testId: string): P
         test_timestamp: reqBody.start_time ? startTime : undefined,
         total_time: reqBody.test_duration ?? undefined,
         test_status: reqBody.test_status ?? undefined,
-        conducted: reqBody.conducted ?? undefined,
       }
     });
 
@@ -146,7 +145,6 @@ export const startTest = async (req: Request, res: Response, testId: string): Pr
       data: {
         test_status: TestStatus.InProgress,
         test_timestamp: new Date(),
-        conducted: false,
       },
       select: { id: true }
     });
@@ -165,10 +163,7 @@ export const endTest = async (req: Request, res: Response, testId: string): Prom
     }
     await prismaClient.test.update({
       where: { id: testId },
-      data: {
-        test_status: TestStatus.Completed,
-        conducted: true
-      }
+      data: { test_status: TestStatus.Completed, }
     });
 
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Ended Succesfully!", 1));
@@ -363,7 +358,6 @@ export const saveStudentSubmissions = async (req: Request, res: Response, testSu
     let test = await prismaClient.test.findUnique({
       where: { id: test_id },
       select: {
-        conducted: true,
         test_status: true,
         test_timestamp: true,
         total_time: true,
@@ -386,16 +380,16 @@ export const saveStudentSubmissions = async (req: Request, res: Response, testSu
     const now = Date.now();
     const startTime = test.test_timestamp.getTime();
     const endTime = startTime + test.total_time * 60 * 1000;
-    if (test.test_status !== TestStatus.InProgress || startTime > now) {
-      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Test is not started or maybe its completed", null));
-      return;
-    }
-    if (test.conducted) {
-      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Test is conducted and is over.", null));
+    if (startTime > now) {
+      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Test has not started yet.", null));
       return;
     }
     if (endTime < now) {
       res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Test is ended, time is over.", null));
+      return;
+    }
+    if (test.test_status !== TestStatus.InProgress) {
+      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Test is not in progress.", null));
       return;
     }
 
@@ -458,31 +452,8 @@ export const endTestSubmission = async (req: Request, res: Response, test_submis
     return;
   }
   try {
-    await prismaClient.testSubmission.update({
-      where: { id: test_submission_id },
-      data: { is_submitted: true }
-    });
-
-    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Submission Ended Succesfully!", 1));
-  } catch (error) {
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
-  }
-};
-
-
-export const getUserScore = async (req: AuthenticatedRequest, res: Response, testId: string, studentId: string): Promise<void> => {
-  try {
-    if (!testId || !studentId) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test Id and User Id required in URL params", null));
-      return;
-    }
-    if (req.user!.role_name === STUDENT_ROLE && studentId !== req.user!.user_id) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("You can't get score of other users!", null));
-      return;
-    }
-
     const testSubmission = await prismaClient.testSubmission.findFirst({
-      where: { test_id: testId, user_id: studentId },
+      where: { id: test_submission_id },
       select: {
         answers: {
           select: { selected_option_id: true, question_id: true }
@@ -544,7 +515,45 @@ export const getUserScore = async (req: AuthenticatedRequest, res: Response, tes
       }
     }
 
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Score calculated Succesfully!", score));
+    await prismaClient.testSubmission.update({
+      where: { id: test_submission_id },
+      data: { is_submitted: true, score: score }
+    });
+
+    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Submission Ended Succesfully!", 1));
+  } catch (error) {
+    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+  }
+};
+
+
+export const getUserScore = async (req: AuthenticatedRequest, res: Response, test_submission_id: string, studentId?: string): Promise<void> => {
+  try {
+    if (!test_submission_id) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test Submission Id required in URL params", null));
+      return;
+    }
+    const user = req.user!;
+    const role = user.role_name;
+
+    if (role === STUDENT_ROLE) {
+      if (!studentId || studentId !== user.user_id) {
+        res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Students can only view their own scores.", null));
+        return;
+      }
+    }
+
+    const testSubmission = await prismaClient.testSubmission.findUnique({
+      where: { id: test_submission_id },
+      select: { score: true },
+    });
+
+    if (!testSubmission) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test submission not found.", null));
+      return;
+    }
+
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Score calculated Succesfully!", testSubmission.score));
   } catch (error) {
     res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
   }

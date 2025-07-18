@@ -73,8 +73,8 @@ router.post('/test/submit/:test_submission_id', authMiddleware, authorizeRoles([
 
 
 router.get('/test/score', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE, STUDENT_ROLE]), (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const { test_id, user_id } = req.query;
-  return getUserScore(req, res, test_id as string, user_id as string);
+  const { test_submission_id, user_id } = req.query;
+  return getUserScore(req, res, test_submission_id as string, user_id as string);
 });
 
 
