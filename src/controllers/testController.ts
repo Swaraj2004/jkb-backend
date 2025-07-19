@@ -41,11 +41,15 @@ export const getSubjectTests = async (req: Request, res: Response, subject_id: s
     const tests = await prismaClient.test.findMany({
       where: {
         subject_id: subject_id,
-        test_status: TestStatus.Completed,
-        testSubmissions: {
-          none: { user_id: user_id, is_submitted: true },
-        },
+        test_status: { not: TestStatus.Scheduled },
       },
+      select: {
+        id: true, title: true, test_status: true,
+        testSubmissions: {
+          where: { user_id: user_id, is_submitted: true },
+          select: { score: true, }
+        }
+      }
     });
 
     if (tests.length == 0) {
@@ -332,7 +336,14 @@ export const getSubmissions = async (req: Request, res: Response, testId: string
 
     const testSubmissions = await prismaClient.testSubmission.findMany({
       where: { test_id: testId },
-      // select:{},
+      select: {
+        id: true,
+        user_id: true,
+        score: true,
+        user: {
+          select: { full_name: true, }
+        },
+      },
     });
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Test Submission Found Succesfully!", testSubmissions));
