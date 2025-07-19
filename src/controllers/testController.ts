@@ -15,9 +15,7 @@ export const getTests = async (req: Request, res: Response, professor_id: string
       return;
     }
 
-    const tests = await prismaClient.test.findMany({
-      where: { user_id: professor_id }
-    });
+    const tests = await prismaClient.test.findMany({ where: { user_id: professor_id } });
 
     if (tests.length === 0) {
       res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("No Test found related to the professor_id", null));
@@ -44,7 +42,7 @@ export const getSubjectTests = async (req: Request, res: Response, subject_id: s
         test_status: { not: TestStatus.Scheduled },
       },
       select: {
-        id: true, title: true, test_status: true,
+        id: true, title: true, test_status: true, test_timestamp: true, total_time: true,
         testSubmissions: {
           where: { user_id: user_id, is_submitted: true },
           select: { score: true, }
