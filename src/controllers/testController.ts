@@ -44,8 +44,8 @@ export const getSubjectTests = async (req: Request, res: Response, subject_id: s
       select: {
         id: true, title: true, test_status: true, test_timestamp: true, total_time: true,
         testSubmissions: {
-          where: { user_id: user_id, is_submitted: true },
-          select: { score: true, }
+          where: { user_id: user_id, },
+          select: { score: true, is_submitted: true }
         }
       }
     });
