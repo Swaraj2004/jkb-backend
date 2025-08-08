@@ -353,7 +353,7 @@ export const getSubmissions = async (req: Request, res: Response, testId: string
 export const saveStudentSubmissions = async (req: Request, res: Response, testSubmissionReqBody: TestSubmissionReqBody): Promise<void> => {
   try {
     const { test_id, user_id, answer } = testSubmissionReqBody;
-    if (!test_id || !user_id || !Array.isArray(answer) || answer.length === 0) {
+    if (!test_id || !user_id || !Array.isArray(answer)) {
       res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Invalid request body", null));
       return;
     }
