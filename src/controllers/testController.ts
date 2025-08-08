@@ -196,7 +196,7 @@ export const getQuestions = async (req: Request, res: Response, testId: string):
       return;
     }
 
-    const questionOptions = await prismaClient.testQuestion.findMany({
+    let questionOptions = await prismaClient.testQuestion.findMany({
       where: { test_id: testId },
       select: {
         id: true,
@@ -207,16 +207,25 @@ export const getQuestions = async (req: Request, res: Response, testId: string):
             id: true,
             option_text: true,
           }
-        }
+        },
+        _count: { select: { options: { where: { is_correct: true } } } }
       }
     });
-    if (!questionOptions) {
+    if (!questionOptions || questionOptions.length === 0) {
       res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Question Not found", null));
       return;
     }
     // console.log(questionOptions, testId);
+    const payload = questionOptions.map((q) => {
+      // console.log(q);
+      const multiple_choice = (q._count?.options ?? 0) > 1;
+      // remove _count from returned object
+      // using destructuring to avoid mutating original q
+      const { _count, ...rest } = q;
+      return { ...rest, multiple_choice };
+    });
 
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Quesion and Options fetched Succesfully!", questionOptions));
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Quesion and Options fetched Succesfully!", payload));
   } catch (error) {
     res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
   }
