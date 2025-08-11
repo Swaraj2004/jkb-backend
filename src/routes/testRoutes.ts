@@ -17,7 +17,7 @@ router.get('/professor/tests', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFE
   return getTests(req, res, professor_id as string);
 });
 
-router.get('/professor/test/status/:test_id', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
+router.get('/professor/test/status/:test_id', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE, STUDENT_ROLE]), (req: Request, res: Response): Promise<void> => {
   const { test_id } = req.params;
   return getTestStatus(req, res, test_id);
 });
