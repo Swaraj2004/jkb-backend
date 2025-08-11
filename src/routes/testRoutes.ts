@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { createQuestion, createTest, deleteTest, getQuestions, getTests, updateQuestion, updateTest, deleteQuestion, getSubmissions, getSubjectTests, saveStudentSubmissions, getUserScore, endTest, startTest, endTestSubmission } from '../controllers/testController';
+import { createQuestion, createTest, deleteTest, getQuestions, getTests, updateQuestion, updateTest, deleteQuestion, getSubmissions, getSubjectTests, saveStudentSubmissions, getUserScore, endTest, startTest, endTestSubmission, getTestStatus } from '../controllers/testController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { ADMIN_ROLE, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
 import { TestSubmissionReqBody } from '../models/test_submission_req_body';
@@ -15,6 +15,11 @@ router.get('/subject/tests', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESS
 router.get('/professor/tests', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
   const { professor_id } = req.query;
   return getTests(req, res, professor_id as string);
+});
+
+router.get('/professor/test/status/:test_id', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: Request, res: Response): Promise<void> => {
+  const { test_id } = req.params;
+  return getTestStatus(req, res, test_id);
 });
 
 router.post('/professor/test', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]), (req: AuthenticatedRequest, res: Response): Promise<void> => {

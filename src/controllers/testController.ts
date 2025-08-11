@@ -24,7 +24,29 @@ export const getTests = async (req: Request, res: Response, professor_id: string
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Test fetched Succesfully!", tests));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", null));
+  }
+};
+
+export const getTestStatus = async (req: Request, res: Response, test_id: string): Promise<void> => {
+  try {
+    if (!test_id) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test Id required", null));
+      return;
+    }
+
+    const testStatus = await prismaClient.test.findUnique({
+      where: { id: test_id },
+      select: { test_status: true }
+    });
+    if (!testStatus) {
+      res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Test not found", null));
+      return;
+    }
+
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Test Status fetched Succesfully!", testStatus.test_status));
+  } catch (error) {
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", null));
   }
 };
 
@@ -57,7 +79,7 @@ export const getSubjectTests = async (req: Request, res: Response, subject_id: s
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Test fetched Succesfully!", tests));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", null));
   }
 };
 
@@ -92,7 +114,7 @@ export const createTest = async (req: Request, res: Response, professorId: strin
 
     res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Test created Succesfully", test.id));
   } catch (error) {
-    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Internal Server Error", null));
   }
 };
 
@@ -132,7 +154,7 @@ export const updateTest = async (req: Request, res: Response, testId: string): P
 
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Updated Succesfully!", 1));
   } catch (error) {
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", null));
   }
 };
 
@@ -153,7 +175,7 @@ export const startTest = async (req: Request, res: Response, testId: string): Pr
 
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Started Succesfully!", 1));
   } catch (error) {
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", null));
   }
 };
 
@@ -170,7 +192,7 @@ export const endTest = async (req: Request, res: Response, testId: string): Prom
 
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Ended Succesfully!", 1));
   } catch (error) {
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", null));
   }
 };
 
@@ -184,7 +206,7 @@ export const deleteTest = async (req: Request, res: Response, testId: string): P
 
     res.status(STATUS_CODES.DELETE_SUCCESS).json(successJson("Test Deleted Succesfully!", 1));
   } catch (error) {
-    res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Internal Server Error", null));
   }
 };
 
@@ -227,7 +249,7 @@ export const getQuestions = async (req: Request, res: Response, testId: string):
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Quesion and Options fetched Succesfully!", payload));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", null));
   }
 };
 
@@ -264,7 +286,7 @@ export const createQuestion = async (req: Request, res: Response): Promise<void>
 
     res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Question and Its Options Created Succesfully!", question.id));
   } catch (error) {
-    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Internal Server Error", null));
   }
 };
 
@@ -314,7 +336,7 @@ export const updateQuestion = async (req: Request, res: Response, questionId: st
 
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Question updated successfully!", 1));
   } catch (error) {
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", null));
   }
 };
 
@@ -329,7 +351,7 @@ export const deleteQuestion = async (req: Request, res: Response, questionId: st
 
     res.status(STATUS_CODES.DELETE_SUCCESS).json(successJson("Question and Related options deleted Succesfully!", null));
   } catch (error) {
-    res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Internal Server Error", null));
   }
 };
 
@@ -355,7 +377,7 @@ export const getSubmissions = async (req: Request, res: Response, testId: string
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Test Submission Found Succesfully!", testSubmissions));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", null));
   }
 };
 
@@ -460,7 +482,7 @@ export const saveStudentSubmissions = async (req: Request, res: Response, testSu
 
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Submission Saved Succesfully!", testSubmission.id));
   } catch (error) {
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", null));
   }
 };
 
@@ -540,7 +562,7 @@ export const endTestSubmission = async (req: Request, res: Response, test_submis
 
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Submission Ended Succesfully!", 1));
   } catch (error) {
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", null));
   }
 };
 
@@ -573,7 +595,7 @@ export const getUserScore = async (req: AuthenticatedRequest, res: Response, tes
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Score calculated Succesfully!", testSubmission.score));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", null));
   }
 };
 
