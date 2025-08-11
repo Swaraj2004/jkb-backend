@@ -37,7 +37,7 @@ export async function updateCoursePackage(req: Request, res: Response): Promise<
 
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson('CoursePackage Updated Successfully!', 1));
   } catch (error: any) {
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson('Server Error', error));
+    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", null));
   }
 }
 
@@ -48,7 +48,7 @@ export async function deleteCoursePackage(req: Request, res: Response, course_pa
     });
     res.status(STATUS_CODES.DELETE_SUCCESS).send(successJson('CoursePackage deleted Successfully!', 1));
   } catch (error: any) {
-    res.status(STATUS_CODES.DELETE_FAILURE).json({ error: error.message });
+    res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Internal Server Error", null));
   }
 }
 
@@ -78,7 +78,7 @@ export async function createCoursePackage(req: Request, res: Response): Promise<
 
     res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson('CoursePackage created successfully!', newPackage.id));
   } catch (error: any) {
-    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson('Server Error', error));
+    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson('Server Error', null));
   }
 }
 
@@ -168,7 +168,7 @@ export async function getSubjectPackageUsers(req: Request, res: Response): Promi
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson('Record fetched successfully', users));
   } catch (error: any) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson('Server Error', error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson('Server Error', null));
   }
 }
 
@@ -185,7 +185,7 @@ export async function getAllCoursePackages(req: Request, res: Response): Promise
     });
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson('Course Packages Fetched Successfully!', coursePackages));
   } catch (error: any) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson('Server error', error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson('Server error', null));
   }
 }
 export async function getAllCoursePackagesIdName(req: Request, res: Response): Promise<void> {
@@ -195,7 +195,7 @@ export async function getAllCoursePackagesIdName(req: Request, res: Response): P
     });
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson('Course Packages Fetched Successfully!', coursePackages));
   } catch (error: any) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson('Server error', error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson('Server error', null));
   }
 }
 
@@ -211,7 +211,7 @@ export async function getCoursePackageById(req: Request, res: Response, course_p
     }
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson('Course Package Fetched Successfully!', coursePackage));
   } catch (error: any) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson('Server error', error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson('Server error', null));
   }
 }
 
@@ -237,6 +237,6 @@ export async function getProfessors(req: Request, res: Response): Promise<void> 
     }
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson('Professors Fetched Successfully!', professors));
   } catch (error: any) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson('Server error', error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson('Server error', null));
   }
 }

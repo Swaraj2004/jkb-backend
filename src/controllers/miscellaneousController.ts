@@ -275,7 +275,7 @@ export async function getBranchEnquiry(req: Request, res: Response, reqLimit: st
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Branch Enquiry Fetched Successfully!", branchEnquiries));
   } catch (err) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Branch Enquiry fetch Unsuccessful!", err));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Branch Enquiry fetch Unsuccessful!", null));
   }
 }
 

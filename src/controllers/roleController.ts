@@ -15,7 +15,7 @@ export async function getRolesById(req: Request, res: Response, roleId: string):
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Role fetched successfully", role));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Server error", error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Server error", null));
   }
 }
 
@@ -24,7 +24,7 @@ export async function getAllRoles(req: Request, res: Response): Promise<void> {
     const roles = await prismaClient.role.findMany();
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Roles fetched successfully", roles));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Server error", error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Server error", null));
   }
 }
 
@@ -35,7 +35,7 @@ export async function createRole(req: Request, res: Response): Promise<void> {
 
     res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Role created successfully", newRole.id));
   } catch (error) {
-    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Server error", error));
+    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Server error", null));
   }
 }
 
@@ -57,7 +57,7 @@ export async function deleteRole(req: Request, res: Response, roleId: string): P
 
     res.status(STATUS_CODES.DELETE_SUCCESS).send(successJson("Role Deleted Successfully!", 1));
   } catch (error) {
-    res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Server error", error));
+    res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Server error", null));
   }
 }
 
@@ -75,7 +75,7 @@ export async function updateRole(req: Request, res: Response): Promise<void> {
     if (error instanceof PrismaClientKnownRequestError && error.code === "P2025") {
       res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Role not found", error.message));
     } else {
-      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Server Error", error));
+      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Server Error", null));
     }
   }
 }

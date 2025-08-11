@@ -19,7 +19,7 @@ export async function getPaymentById(req: Request, res: Response, paymentId: str
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Payment fetched successfully", payment));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal server error", null));
   }
 }
 
@@ -53,7 +53,7 @@ export async function getAllPayments(req: Request, res: Response, start_date: st
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Payments fetched successfully", payments));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal server error", null));
   }
 }
 
@@ -76,7 +76,7 @@ export async function getStudentPayments(req: Request, res: Response, userId: st
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Payment fetched successfully", payment));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal server error", null));
   }
 }
 
@@ -181,7 +181,7 @@ export async function createPayment(req: AuthenticatedRequest, res: Response): P
 
     res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Payment created successfully", payment.id));
   } catch (error) {
-    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Internal server error", null));
   }
 }
 
@@ -239,7 +239,7 @@ export async function createPayment(req: AuthenticatedRequest, res: Response): P
 //
 //     res.status(STATUS_CODES.DELETE_SUCCESS).json(successJson("Payment deleted successfully", 1));
 //   } catch (error) {
-//     res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
+//     res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Internal server error", null));
 //   }
 // }
 
@@ -314,6 +314,6 @@ export async function editPayment(req: AuthenticatedRequest, res: Response): Pro
 
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Payment updated successfully", 1));
   } catch (error) {
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal server error", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal server error", null));
   }
 }

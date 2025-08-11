@@ -47,7 +47,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
 
     res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Record inserted Successfully", newUser.id));
   } catch (error) {
-    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Failed to create user", error instanceof Error ? error.message : "Unknown Error"));
+    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Failed to create user", null));
   }
 };
 
@@ -83,7 +83,7 @@ export const createStudent = async (req: Request, res: Response): Promise<void> 
 
     res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Record inserted Successfully", newUser.id));
   } catch (error) {
-    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Failed to create user", error instanceof Error ? error.message : "Unknown Error"));
+    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Failed to create user", null));
   }
 };
 
@@ -160,7 +160,7 @@ export const createUserAndStudent = async (req: Request, res: Response): Promise
 
     res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Record inserted Successfully", newUser.id));
   } catch (error) {
-    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Failed to create user", error instanceof Error ? error.message : "Unknown Error"));
+    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Failed to create user", null));
   }
 };
 
@@ -189,7 +189,7 @@ export const getUserById = async (req: Request, res: Response, id: string): Prom
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Users fetched successfully", user));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch users", error instanceof Error ? error.message : "Unknown Error"));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch users", null));
   }
 };
 
@@ -266,7 +266,7 @@ export const getUsers = async (req: Request, res: Response, year: string): Promi
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Users fetched successfully", users));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch users", error instanceof Error ? error.message : "Unknown Error"));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch users", null));
   }
 };
 
@@ -280,7 +280,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
     });
     res.status(STATUS_CODES.DELETE_SUCCESS).json(successJson("Record deleted Successfully", 1));
   } catch (error) {
-    res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Failed to create user", error instanceof Error ? error.message : "Unknown Error"));
+    res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Failed to create user", null));
   }
 };
 
@@ -306,6 +306,6 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
     })
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Record Updated Successfully", 1));
   } catch (error) {
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Failed to update user", error instanceof Error ? error.message : "Unknown Error"));
+    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Failed to update user", null));
   }
 }

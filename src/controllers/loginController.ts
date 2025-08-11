@@ -7,7 +7,7 @@ import { prismaClient } from '../utils/database';
 import { TokenPayload } from '../utils/jwt_payload';
 import { createAccessToken } from '../utils/jwt_token';
 
-export async function login(req: Request, res: Response) {
+export async function login(req: Request, res: Response): Promise<void> {
   try {
     const { email, password } = req.body;
 
@@ -74,11 +74,11 @@ export async function login(req: Request, res: Response) {
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(result);
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to login user", error instanceof Error ? error.message : "Unknown error"));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to login user", null));
   }
 }
 
-export async function checkLoginStatus(req: Request, res: Response, userId: string) {
+export async function checkLoginStatus(req: Request, res: Response, userId: string): Promise<void> {
   try {
     const userLoginDetail = await prismaClient.user.findFirst({
       where: { id: userId },
@@ -107,6 +107,6 @@ export async function checkLoginStatus(req: Request, res: Response, userId: stri
       time_left: timeLeft
     });
   } catch (error) {
-    res.send(STATUS_CODES.UPDATE_FAILURE).json(errorJson('Server Error', error));
+    res.send(STATUS_CODES.UPDATE_FAILURE).json(errorJson('Server Error', null));
   }
 }

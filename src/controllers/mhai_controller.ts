@@ -46,7 +46,7 @@ export async function predictCollegesByScore(req: Request, res: Response): Promi
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Colleges Fetched Successfully", colleges));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Error occured in fetching the colleges", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Error occured in fetching the colleges", null));
   }
 }
 
@@ -77,6 +77,6 @@ export async function predictCollegesByLocation(req: Request, res: Response): Pr
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Colleges Fetched Successfully", colleges));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Error occured in fetching the colleges", error instanceof Error ? error.message : error));
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Error occured in fetching the colleges", null));
   }
 }

@@ -107,7 +107,7 @@ export async function createStudentDetails(req: Request, res: Response): Promise
 
     res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Record Inserted Successfully", newStudentDetail.id));
   } catch (error) {
-    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson('Error creating student record', error));
+    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson('Error creating student record', null));
   }
 }
 
@@ -300,7 +300,7 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
     });
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Record Updated Successfully", 1));
   } catch (error) {
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Error updating student record", error));
+    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Error updating student record", null));
   }
 }
 
@@ -313,7 +313,7 @@ export async function deleteStudentDetails(req: Request, res: Response): Promise
     });
     res.status(STATUS_CODES.DELETE_SUCCESS).json(successJson("Record Deleted Successfully", deletedStudent.id));
   } catch (error) {
-    res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Error deleting student record", error));
+    res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Error deleting student record", null));
   }
 }
 
@@ -323,7 +323,7 @@ export async function getAllStudentDetails(req: Request, res: Response): Promise
     const studentDetails: StudentDetail[] = await prismaClient.studentDetail.findMany();
     res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Records fetched successfully", studentDetails));
   } catch (error) {
-    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Error fetching student records", error));
+    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Error fetching student records", null));
   }
 }
 
@@ -339,6 +339,6 @@ export async function getStudentDetailById(req: Request, res: Response, studentI
     }
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Record fetched successfully", studentDetail));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Error fetching student record", error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Error fetching student record", null));
   }
 }

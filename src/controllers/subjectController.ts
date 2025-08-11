@@ -20,7 +20,7 @@ export async function getSubjects(req: Request, res: Response): Promise<void> {
     });
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Subjects fetched successfully", subjects));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch subjects", error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch subjects", null));
   }
 }
 
@@ -50,7 +50,7 @@ export async function getSubjectById(req: Request, res: Response): Promise<void>
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Subject fetched successfully", subject));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch subject", error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch subject", null));
   }
 }
 
@@ -88,7 +88,7 @@ export async function createSubject(req: Request, res: Response): Promise<void> 
 
     res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Subject created successfully", subjectId));
   } catch (error) {
-    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Failed to create subject", error));
+    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Failed to create subject", null));
   }
 }
 
@@ -133,7 +133,7 @@ export async function updateSubject(req: Request, res: Response): Promise<void> 
 
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Subject updated successfully", 1));
   } catch (error) {
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Failed to update subject", error));
+    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Failed to update subject", null));
   }
 }
 
@@ -145,7 +145,7 @@ export async function deleteSubject(req: Request, res: Response): Promise<void> 
 
     res.status(STATUS_CODES.DELETE_SUCCESS).json(successJson("Subject deleted successfully", 1));
   } catch (error) {
-    res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Failed to delete subject", error));
+    res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Failed to delete subject", null));
   }
 }
 
@@ -217,7 +217,7 @@ export async function getSubjectUsers(req: Request, res: Response): Promise<void
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Subject users fetched successfully", subjectUsers));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch subject users", error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch subject users", null));
   }
 }
 
@@ -245,7 +245,7 @@ export async function getSubjectAttendance(req: Request, res: Response): Promise
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Subject attendance fetched successfully", attendanceRecords));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch subject attendance", error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch subject attendance", null));
   }
 }
 
@@ -269,6 +269,6 @@ export async function getStudentSubjects(req: Request, res: Response): Promise<v
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Student subjects fetched successfully", studentSubjects));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch student subjects", error));
+    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch student subjects", null));
   }
 }
