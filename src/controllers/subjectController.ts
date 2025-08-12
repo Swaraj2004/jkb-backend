@@ -97,7 +97,7 @@ export async function updateSubject(req: Request, res: Response): Promise<void> 
   try {
     const { id, ...rest } = req.body;
     const subjectReqBody: SubjectRequestBody = rest;
-    console.log(subjectReqBody, '\t', id);
+    // console.log(subjectReqBody, '\t', id);
 
     if (!id || !subjectReqBody.name || !subjectReqBody.subject_fees) {
       res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("ID, Name, and Subject Fees are required", null));

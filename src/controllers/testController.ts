@@ -6,6 +6,7 @@ import { TestRequestBody, TestStatus } from '../models/test_req_body';
 import { Question } from '../models/testQuestion_req_body';
 import { TestSubmissionReqBody } from '../models/test_submission_req_body';
 import { AuthenticatedRequest } from '../middlewares/authMiddleware';
+import redisClient from '../utils/redisClient';
 
 // ====== Tests ======
 export const getTests = async (req: Request, res: Response, professor_id: string): Promise<void> => {
@@ -29,22 +30,62 @@ export const getTests = async (req: Request, res: Response, professor_id: string
 };
 
 export const getTestStatus = async (req: Request, res: Response, test_id: string): Promise<void> => {
-  try {
-    if (!test_id) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test Id required", null));
-      return;
-    }
+  if (!test_id) {
+    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test Id required", null));
+    return;
+  }
 
-    const testStatus = await prismaClient.test.findUnique({
+  try {
+    if (redisClient.isReady) {
+      const testStatus = await redisClient.get(test_id);
+      // const keys = await redisClient.keys("*");
+      // const values = await redisClient.mGet(keys);
+      // const keyValuePairs = keys.map((key, index) => ({
+      //   key,
+      //   value: values[index]
+      // }));
+      // console.log("Redis Data:", keyValuePairs);
+      if (testStatus) {
+        res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Test Status fetched successfully!", testStatus));
+        return;
+      }
+    } else {
+      // logger.log("redis operations failed");
+    }
+  } catch (redisError) {
+    // logger.log("redis client error");
+  }
+
+  try {
+    const test = await prismaClient.test.findUnique({
       where: { id: test_id },
-      select: { test_status: true }
+      select: { test_status: true, test_timestamp: true, total_time: true }
     });
-    if (!testStatus) {
+    if (!test) {
       res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Test not found", null));
       return;
     }
 
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Test Status fetched Succesfully!", testStatus.test_status));
+    const testStartTime = test.test_timestamp ? new Date(test.test_timestamp).getTime() : Date.now();
+
+    if ((testStartTime + test.total_time * 60 * 1000) < Date.now()) {
+      await prismaClient.test.update({
+        where: { id: test_id },
+        data: { test_status: TestStatus.Completed }
+      });
+      // NOTE: I have set the expiry time of the completed to 5 min for some req after test is Ended
+      await redisClient.set(test_id, TestStatus.Completed, { EX: 5 * 60 });
+      res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Test Status fetched Succesfully!", TestStatus.Completed));
+      return;
+    }
+    // console.log("Data from db:", test);
+
+    try {
+      if (redisClient.isReady)
+        await redisClient.set(test_id, test.test_status, { EX: (test.total_time || 30) * 60 });  // expiriy expects in seconds
+    } catch (redisErr) { }
+
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Test Status fetched Succesfully!", test.test_status));
   } catch (error) {
     res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", null));
   }
@@ -164,14 +205,29 @@ export const startTest = async (req: Request, res: Response, testId: string): Pr
       res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test Id required", null));
       return;
     }
-    await prismaClient.test.update({
+
+    const test = await prismaClient.test.update({
       where: { id: testId },
       data: {
         test_status: TestStatus.InProgress,
         test_timestamp: new Date(),
       },
-      select: { id: true }
+      select: { id: true, test_status: true, total_time: true }
     });
+
+    try {
+      //  NOTE: Redis Notes
+      // To check if the the client is connected and ready to send commands, use client.isReady which returns a boolean.client.isOpen is also available. 
+      // This returns true when the client’s underlying socket is open, and false when it isn’t(for example when the client is still 
+      // connecting or reconnecting after a network error).
+      if (redisClient.isReady) {
+        await redisClient.set(test.id, test.test_status, { EX: (test.total_time || 30) * 60 });  // expiriy expects in seconds
+      } else {
+        // logger.log("redis operations failed");
+      }
+    } catch (redisErr) {
+      // logger.log("redis operations failed");
+    }
 
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Started Succesfully!", 1));
   } catch (error) {
