@@ -161,11 +161,23 @@ export async function getSubjectUsers(req: Request, res: Response): Promise<void
       const subjectUsers = await prismaClient.user.findMany({
         where: {
           studentDetail: {
-            studentSubjects: {
-              some: {
-                subject_id: subject_id as string,
-              },
-            },
+            is: {
+              OR: [
+                // either enrolled in the subject or the pacakge containing that subject
+                { studentSubjects: { some: { subject_id: subject_id as string } } },
+                {
+                  studentPackages: {
+                    some: {
+                      package: {
+                        packageSubjects: {
+                          some: { subject_id: subject_id as string }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
           },
         },
         select: {
