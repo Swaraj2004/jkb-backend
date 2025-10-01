@@ -1,3 +1,5 @@
+import { PackageYear, SubjectYear } from "./student_detail_req_body";
+
 export interface UserStudentRequestBody {
   full_name?: string;
   email: string;
@@ -23,8 +25,8 @@ export interface UserStudentRequestBody {
     semester?: string;
     status?: string;
     remark?: string;
-    packages: string[]; // Array of UUIDs
-    subjects: string[]; // Array of UUIDs
+    packages: PackageYear[]; // Array of UUIDs
+    subjects: SubjectYear[]; // Array of UUIDs
     enrolled?: boolean;
   };
 }

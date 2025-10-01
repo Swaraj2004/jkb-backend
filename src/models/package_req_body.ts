@@ -1,5 +1,6 @@
 export interface PackageRequestBody {
-    package_name: string;
-    subjects: string[]; // UUIDs as strings
-    package_fees: number;
+  package_name: string;
+  subjects: string[]; // UUIDs as strings
+  year: number;
+  package_fees: number;
 }

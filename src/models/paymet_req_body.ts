@@ -2,6 +2,7 @@
 export interface PaymentBody {
   mode: string;           // futher improvement can be done by making this of fix enum type
   amount: number;
+  fee_id: string;
   pending: number;
   is_gst: boolean;
   status: string;
@@ -11,4 +12,14 @@ export interface PaymentBody {
   receipt_number?: string;
   subjects: string[];
   packages: string[];
+}
+
+export interface Fee {
+  id: string;
+  student_id: string;
+  student_fees: number;
+  total_fees: number;
+  year: number;
+  created_at: Date;
+  updated_at?: Date | null;
 }
