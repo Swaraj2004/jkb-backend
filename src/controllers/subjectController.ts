@@ -2,7 +2,9 @@ import { Request, Response } from 'express';
 import { errorJson, successJson } from '../utils/common_funcs';
 import { prismaClient } from '../utils/database';
 import { STATUS_CODES } from '../utils/consts';
-import { SubjectRequestBody } from '../models/subject_req_body';
+import { StudentSubjectPackageBody, SubjectRequestBody } from '../models/subject_req_body';
+import { Decimal } from '@prisma/client/runtime/library';
+import { getTotalAmout } from './studentDetailsController';
 
 // Get all subjects
 export async function getSubjects(req: Request, res: Response): Promise<void> {
@@ -54,6 +56,117 @@ export async function getSubjectById(req: Request, res: Response): Promise<void>
   }
 }
 
+export async function createStudentSubjectStudentPackages(req: Request, res: Response): Promise<void> {
+  try {
+    const reqBody: StudentSubjectPackageBody[] = req.body;
+
+    if (!Array.isArray(reqBody) || reqBody.length === 0) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Request body must be a non-empty array", null));
+      return;
+    }
+
+    for (const item of reqBody) {
+      const { student_id, year, packageIds, subjectIds } = item;
+
+      const studentDetail = await prismaClient.studentDetail.findUnique({
+        where: { id: student_id },
+        select: {
+          id: true,
+          fees: {
+            where: { year },
+            select: {
+              id: true,
+              student_fees: true,
+              total_fees: true,
+              payments: { select: { amount: true } },
+            },
+          },
+        },
+      });
+
+      if (!studentDetail) {
+        res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Student Detail with given student_id does not exist!", null));
+        return;
+      }
+
+      // 2) Ensure a Fee row exists for (student, year) — create if missing
+      let feeRecord = studentDetail.fees?.[0];
+      if (!feeRecord) {
+        feeRecord = await prismaClient.fee.create({
+          data: {
+            student_id,
+            student_fees: new Decimal(0),
+            total_fees: new Decimal(0),
+            year,
+          },
+          select: { id: true, student_fees: true, total_fees: true, payments: true },
+        });
+      }
+
+      // 3) Delete existing studentPackage/studentSubject rows for this student+year (scope by year)
+      await prismaClient.studentPackage.deleteMany({
+        where: { student_id, year },
+      });
+      await prismaClient.studentSubject.deleteMany({
+        where: { student_id, year },
+      });
+
+      // 4) Create new package & subject rows
+      if (Array.isArray(packageIds) && packageIds.length > 0) {
+        await prismaClient.studentPackage.createMany({
+          data: packageIds.map(pkgId => ({
+            student_id,
+            package_id: pkgId,
+            year,
+          })),
+        });
+      }
+
+      if (Array.isArray(subjectIds) && subjectIds.length > 0) {
+        await prismaClient.studentSubject.createMany({
+          data: subjectIds.map(subjectId => ({
+            student_id,
+            subject_id: subjectId,
+            year,
+          })),
+        });
+      }
+
+      // 5) Fetch package & subject meta (so caller can see what was attached)
+      const packages = packageIds && packageIds.length > 0
+        ? await prismaClient.package.findMany({ where: { id: { in: packageIds } }, select: { id: true, package_name: true } })
+        : [];
+      const subjects = subjectIds && subjectIds.length > 0
+        ? await prismaClient.subject.findMany({ where: { id: { in: subjectIds } }, select: { id: true, name: true } })
+        : [];
+
+      // 6) Calculate total fees for these packageIds + subjectIds
+      const totalAmount = await getTotalAmout(packageIds ?? [], subjectIds ?? [], prismaClient);
+
+      if (totalAmount < feeRecord.student_fees) {
+        res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("totalAmount cannot be less than student_fees", null));
+        return;
+      }
+
+      await prismaClient.studentDetail.update({
+        where: { id: studentDetail.id },
+        data: {
+          total_fees: totalAmount,
+          fees: {
+            update: {
+              where: { id: feeRecord.id },
+              data: { total_fees: totalAmount }
+            }
+          }
+        }
+      })
+    }
+
+    res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Student Subject & Packages created successfully!", 1));
+  } catch (error) {
+    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Failed to create Student Subject & Packages", null));
+  }
+}
 
 // Create a new subject
 export async function createSubject(req: Request, res: Response): Promise<void> {
