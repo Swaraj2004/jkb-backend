@@ -4,7 +4,7 @@ export interface StudentDetailReqBodyModel {
   college_name: string;
   diploma_score: number;
   jee_score: number;
-  packages: PackageYear[]; // Array of UUIDs
+  packages: string[]; // Array of UUIDs
   parent_contact: string;
   pending_fees: number;
   student_fees: number;
@@ -14,10 +14,11 @@ export interface StudentDetailReqBodyModel {
   semester: string;
   status: string;
   student_id: string;
-  subjects: SubjectYear[]; // Array of UUIDs
+  subjects: string[]; // Array of UUIDs
   total_fees: number;
   university_name: string;
   xii_score: number;
+  fee_year: number;
   enrolled: boolean;
 }
 

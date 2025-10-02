@@ -52,58 +52,91 @@ export async function createStudentDetails(req: Request, res: Response): Promise
     const packageIds = Array.isArray(body.packages) ? body.packages : [];
     const subjectIds = Array.isArray(body.subjects) ? body.subjects : [];
 
+    // const packageIds = packageYear.map(pkg => pkg.packageId);
+    // const subjectIds = subjectYear.map(sub => sub.subjectId);
+
     let totalAmount = await getTotalAmout(packageIds, subjectIds, prismaClient);
     // console.log(totalAmount);
+    const finalAmount = new Decimal(totalAmount);
 
     const createRecord = {
       user_id: body.student_id, // Assign from request body
       created_at: new Date(),
       updated_at: new Date(),
-      parent_contact: body.parent_contact || null,
-      branch_id: body.branch_id || null,
-      diploma_score: body.diploma_score || null,
-      xii_score: body.xii_score || null,
-      cet_score: body.cet_score || null,
-      jee_score: body.jee_score || null,
-      college_name: body.college_name || null,
-      referred_by: body.referred_by || null,
-      student_fees: new Decimal(totalAmount),
-      total_fees: new Decimal(totalAmount),
-      pending_fees: new Decimal(totalAmount),
-      jkb_centre: body.jkb_centre || null,
-      semester: body.semester || null,
-      university_name: body.university_name || null,
-      status: body.status || null,
-      remark: body.remark || null,
-      enrolled: body.enrolled || false,
+      parent_contact: body.parent_contact ?? null,
+      branch_id: body.branch_id ?? null,
+      diploma_score: body.diploma_score ?? null,
+      xii_score: body.xii_score ?? null,
+      cet_score: body.cet_score ?? null,
+      jee_score: body.jee_score ?? null,
+      college_name: body.college_name ?? null,
+      referred_by: body.referred_by ?? null,
+      student_fees: finalAmount,
+      total_fees: finalAmount,
+      pending_fees: finalAmount,
+      jkb_centre: body.jkb_centre ?? null,
+      semester: body.semester ?? null,
+      university_name: body.university_name ?? null,
+      status: body.status ?? null,
+      remark: body.remark ?? null,
+      enrolled: body.enrolled ?? false,
     };
 
+    const feeYear = body.fee_year ?? new Date().getFullYear();
+
     const newStudentDetail: StudentDetail = await prismaClient.studentDetail.create({
-      data: createRecord
+      data: {
+        ...createRecord,
+        fees: {
+          create: {
+            year: body.fee_year ?? new Date().getFullYear(),
+            student_fees: finalAmount,
+            total_fees: finalAmount,
+          }
+        },
+        studentSubjects: {
+          createMany: {
+            data: subjectIds.map((subject) => ({
+              subject_id: subject,
+              year: feeYear
+            }))
+          }
+        },
+        studentPackages: {
+          createMany: {
+            data: packageIds.map((pkgId) => ({
+              package_id: pkgId,
+              year: feeYear
+            }))
+          }
+        }
+      }
     });
 
-    // OPTIMIZE: use create many in above querry
-    if (subjectIds.length > 0) {
-      const subjectData = subjectIds.map((subjectId: string) => ({
-        student_id: newStudentDetail.id,
-        subject_id: subjectId,
-      }));
-
-      await prismaClient.studentSubject.createMany({
-        data: subjectData,
-      });
-    }
-
-    if (packageIds.length > 0) {
-      const packageData = packageIds.map((packageId: string) => ({
-        student_id: newStudentDetail.id,
-        package_id: packageId,
-      }));
-
-      await prismaClient.studentPackage.createMany({
-        data: packageData,
-      });
-    }
+    // // PREVIOUSLY:
+    // if (subjectIds.length > 0) {
+    //   const subjectData = subjectYear.map((subject) => ({
+    //     student_id: newStudentDetail.id,
+    //     subject_id: subject.subjectId,
+    //     year: subject.year ?? new Date().getFullYear()
+    //   }));
+    //
+    //   await prismaClient.studentSubject.createMany({
+    //     data: subjectData,
+    //   });
+    // }
+    //
+    // if (packageIds.length > 0) {
+    //   const packageData = packageYear.map((pkg) => ({
+    //     student_id: newStudentDetail.id,
+    //     package_id: pkg.packageId,
+    //     year: pkg.year ?? new Date().getFullYear()
+    //   }));
+    //
+    //   await prismaClient.studentPackage.createMany({
+    //     data: packageData,
+    //   });
+    // }
 
     res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Record Inserted Successfully", newStudentDetail.id));
   } catch (error) {
@@ -125,35 +158,45 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
     const packageIds = Array.isArray(body.packages) ? body.packages : [];
     const subjectIds = Array.isArray(body.subjects) ? body.subjects : [];
 
+    // const packageIds = packageYear.map(pkg => pkg.packageId);
+    // const subjectIds = subjectYear.map(sub => sub.subjectId);
+
     const studentDetails = await prismaClient.studentDetail.findUnique({
       where: { user_id: studentId },
       select: {
-        student_fees: true,
-        user: {
+        id: true,
+        fees: {
+          where: { year: body.fee_year },   // NOTE: there will be only one fee for a particular year due to the constraints
           select: {
-            payments: {
-              select: { amount: true, packagePayments: true, subjectPayments: true }
-            }
+            id: true,
+            student_fees: true,
+            packagePayments: true,
+            subjectPayments: true,
+            payments: true
           }
-        }
+        },
       }
     });
+    // console.log('here ', studentDetails?.fees);
 
-    if (!studentDetails) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Student Detail does not exist!", null));
+    if (!studentDetails || (studentDetails.fees?.length ?? 0) === 0) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Student Detail does not exist, or fees for the Student do not exist!", null));
       return;
     }
 
-    for (const payment of studentDetails!.user.payments) {
-      for (const packagePayment of payment.packagePayments) {
-        // If the package_id is NOT in packageIds → error
-        if (!packageIds.includes(packagePayment.package_id)) {
+    const feeRecord = studentDetails.fees[0];
+
+    for (const fee of studentDetails.fees) {
+      for (const pkgPay of fee.packagePayments ?? []) {
+        // if packagePayments contains a package not present in the incoming packageIds -> error
+        if (!packageIds.includes(pkgPay.package_id)) {
           res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("You cannot delete a package that already has a payment.", null));
           return;
         }
       }
-      for (const subjectPayment of payment.subjectPayments) {
-        if (!subjectIds.includes(subjectPayment.subject_id)) {
+
+      for (const subjPay of fee.subjectPayments ?? []) {
+        if (!subjectIds.includes(subjPay.subject_id)) {
           res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("You cannot delete a subject that already has a payment.", null));
           return;
         }
@@ -161,10 +204,10 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
     }
 
     let amountPaid = new Decimal(0);
-    studentDetails!.user.payments.forEach(payment => {
-      if (payment.amount)
-        amountPaid = amountPaid.plus(payment.amount);
-    });
+    for (const p of feeRecord.payments ?? []) {
+      if (p.amount != null)
+        amountPaid = amountPaid.plus(p.amount);
+    }
 
     if (student_fees !== null && student_fees !== undefined && student_fees > 0) {
       // const paymentCount = await prismaClient.payment.count({
@@ -184,7 +227,7 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
 
     const totalAmount = await getTotalAmout(packageIds, subjectIds, prismaClient);
     // IMPORTANT: student_fees cannot be greater than totalAmount
-    if (studentDetails!.student_fees!.gt(totalAmount) || (student_fees !== null && student_fees !== undefined && student_fees > totalAmount.toNumber())) {
+    if (feeRecord.student_fees!.gt(totalAmount) || (student_fees !== null && student_fees !== undefined && student_fees > totalAmount.toNumber())) {
       res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("student_fees cannot be greater than the total_fees!", null));
       return;
     }
@@ -198,7 +241,7 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
       jee_score: body.jee_score || undefined,
       college_name: body.college_name || undefined,
       referred_by: body.referred_by || undefined,
-      total_fees: new Decimal(totalAmount),
+      total_fees: totalAmount,
       // pending_fees: new Decimal(pending_fees),
       university_name: body.university_name || undefined,
       status: body.status || undefined,
@@ -214,11 +257,23 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
       updateData.pending_fees = new Decimal(student_fees - amountPaid.toNumber());
     }
     await prismaClient.$transaction(async (prisma): Promise<void> => {
-      const updatedStudent: StudentDetail = await prisma.studentDetail.update({
+      const updatedStudent = await prisma.studentDetail.update({
         where: { user_id: studentId },
-        data: updateData
+        data: {
+          ...updateData,
+          fees: {
+            update: {
+              where: { id: feeRecord.id },
+              data: {
+                student_fees: updateData.student_fees ?? undefined,
+                total_fees: updateData.total_fees ?? undefined,
+              }
+            }
+          }
+        },
+        select: { id: true }
       });
-      // console.log(updatedStudent.id);
+      // console.log(`id - ${updatedStudent.id}`);
 
       // when student_fees is updated update the pending_fees in Payment
       // if there are previous transactions update their pending_fees and update them
@@ -228,20 +283,20 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
       }
 
       const prevPayments = await prisma.payment.findMany({
-        where: { user_id: studentId },
+        where: { user_id: studentId, fee_id: feeRecord.id },
         orderBy: { created_at: "asc" }
       });
 
-      if (prevPayments.length > 0) {
+      if (prevPayments.length > 0 && (updateData.student_fees !== undefined)) {
         let paymentTillNow = new Decimal(0);
-        const paymentUpdates = [];
+        const paymentUpdates: Promise<any>[] = [];
 
         for (let i = 0; i < prevPayments.length; i++) {
           const currentPayment = prevPayments[i];
 
           paymentTillNow = paymentTillNow.plus(currentPayment.amount || new Decimal(0));
 
-          const newPending = (updatedStudent.student_fees || new Decimal(0)).minus(paymentTillNow);
+          const newPending = (updateData.student_fees || new Decimal(0)).minus(paymentTillNow);
 
           paymentUpdates.push(
             prisma.payment.update({
@@ -267,11 +322,14 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
         where: { student_id: updatedStudent.id },
       });
 
+      const feeYear = body.fee_year ?? new Date().getFullYear();
+
       if (packageIds.length > 0) {
         //    b. Create new package records. 
-        const packageData = packageIds.map((packageId: string) => ({
+        const packageData = packageIds.map((pkgId) => ({
           student_id: updatedStudent.id,
-          package_id: packageId,
+          package_id: pkgId,
+          year: feeYear
         }));
 
         if (packageData.length > 0) {
@@ -285,9 +343,10 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
       if (subjectIds.length > 0) {
         // console.log(studentSubjects);
         //    b. Create new subject records
-        const subjectData = subjectIds.map((subjectId: string) => ({
+        const subjectData = subjectIds.map((subjectId) => ({
           student_id: updatedStudent.id,
           subject_id: subjectId,
+          year: feeYear
         }));
 
         if (subjectData.length > 0) {

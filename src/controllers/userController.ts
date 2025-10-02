@@ -104,7 +104,10 @@ export const createUserAndStudent = async (req: Request, res: Response): Promise
     const packageIds = Array.isArray(user.studentDetail.packages) ? user.studentDetail.packages : [];
     const subjectIds = Array.isArray(user.studentDetail.subjects) ? user.studentDetail.subjects : [];
 
-    let totalAmount = await getTotalAmout(packageIds, subjectIds, prismaClient);
+    // const packageIds = packageYear.map(pkg => pkg.packageId);
+    // const subjectIds = subjectYear.map(sub => sub.subjectId);
+
+    const totalAmount = await getTotalAmout(packageIds, subjectIds, prismaClient);
 
     // Using transaction to ensure both user and role assignment happen together
     const newUser = await prismaClient.user.create({
@@ -129,9 +132,9 @@ export const createUserAndStudent = async (req: Request, res: Response): Promise
             jee_score: user.studentDetail.jee_score,
             college_name: user.studentDetail.college_name,
             referred_by: user.studentDetail.referred_by,
-            student_fees: new Decimal(totalAmount),
-            total_fees: new Decimal(totalAmount),
-            pending_fees: new Decimal(totalAmount),
+            student_fees: totalAmount,
+            total_fees: totalAmount,
+            pending_fees: totalAmount,
             university_name: user.studentDetail.university_name,
             jkb_centre: user.studentDetail.jkb_centre,
             semester: user.studentDetail.semester,
@@ -140,14 +143,21 @@ export const createUserAndStudent = async (req: Request, res: Response): Promise
             enrolled: user.studentDetail.enrolled,
             studentSubjects: {
               createMany: {
-                data: subjectIds.map(subjectId => ({ subject_id: subjectId }))
+                data: subjectIds.map(subjectId => ({ subject_id: subjectId, year: user.studentDetail.fee_year ?? new Date().getFullYear() }))
               }
             },
             studentPackages: {
               createMany: {
-                data: packageIds.map(packageId => ({ package_id: packageId }))
+                data: packageIds.map(packageId => ({ package_id: packageId, year: user.studentDetail.fee_year ?? new Date().getFullYear() }))
               }
             },
+            fees: {
+              create: {
+                year: user.studentDetail.fee_year,
+                student_fees: totalAmount,
+                total_fees: totalAmount,
+              }
+            }
           },
         },
       }
