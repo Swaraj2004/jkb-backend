@@ -143,8 +143,10 @@ model Fee {
   created_at   DateTime  @default(now()) @db.Timestamptz()
   updated_at   DateTime? @updatedAt @db.Timestamptz()
 
-  student  StudentDetail @relation(fields: [student_id], references: [id])
-  payments Payment[]
+  student         StudentDetail    @relation(fields: [student_id], references: [id])
+  payments        Payment[]
+  subjectPayments SubjectPayment[]
+  packagePayments PackagePayment[]
 
   @@unique([year, student_id])
 }
@@ -175,10 +177,12 @@ model Payment {
 model SubjectPayment {
   subject_id String   @db.Uuid
   payment_id String   @db.Uuid
+  fee_id     String?  @db.Uuid
   created_at DateTime @default(now()) @db.Timestamptz()
 
   subject Subject @relation(fields: [subject_id], references: [id], onDelete: Cascade)
   payment Payment @relation(fields: [payment_id], references: [id], onDelete: Cascade)
+  fee     Fee?    @relation(fields: [fee_id], references: [id])
 
   @@id([subject_id, payment_id])
 }
@@ -186,10 +190,12 @@ model SubjectPayment {
 model PackagePayment {
   payment_id String   @db.Uuid
   package_id String   @db.Uuid
+  fee_id     String?  @db.Uuid
   created_at DateTime @default(now()) @db.Timestamptz()
 
   package Package @relation(fields: [package_id], references: [id], onDelete: Cascade)
   payment Payment @relation(fields: [payment_id], references: [id], onDelete: Cascade)
+  fee     Fee?    @relation(fields: [fee_id], references: [id])
 
   @@id([package_id, payment_id])
 }
