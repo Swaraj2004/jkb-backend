@@ -57,25 +57,43 @@ export async function getAllPayments(req: Request, res: Response, start_date: st
   }
 }
 
-export async function getStudentPayments(req: Request, res: Response, userId: string): Promise<void> {
-  if (!userId || userId.trim().length === 0) {
-    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Student Id Required", null));
+export async function getStudentPayments(req: Request, res: Response, userId: string, year: string): Promise<void> {
+  if (!userId || userId.trim().length === 0 || !year) {
+    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Student Id & year required Required", null));
     return;
   }
   try {
-    const payment = await prismaClient.payment.findMany({
-      where: { user_id: userId },
-      include: {
-        student: {
-          select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true, },
-        },
-        subjectPayments: { select: { subject: { select: { name: true, id: true, subject_fees: true } } } },
-        packagePayments: { select: { package: { select: { package_name: true, id: true, package_fees: true } } } }
+    const numYear = parseInt(year);
+    if (isNaN(numYear)) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("year is NaN", null));
+      return;
+    }
+    const fee = await prismaClient.fee.findUnique({
+      where: {
+        year_student_id: {
+          student_id: userId,
+          year: numYear
+        }
+      },
+      select: {
+        id: true,
+        student_fees: true,
+        total_fees: true,
+        payments: {
+          select: {
+            student: {
+              select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true, },
+            },
+            subjectPayments: { select: { subject: { select: { name: true, id: true, subject_fees: true } } } },
+            packagePayments: { select: { package: { select: { package_name: true, id: true, package_fees: true } } } }
+          }
+        }
       }
     });
 
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Payment fetched successfully", payment));
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Payment fetched successfully", fee));
   } catch (error) {
+    // console.error(error);
     res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal server error", null));
   }
 }

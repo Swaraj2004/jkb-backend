@@ -90,6 +90,11 @@ export const createStudent = async (req: Request, res: Response): Promise<void> 
 export const createUserAndStudent = async (req: Request, res: Response): Promise<void> => {
   try {
     const user: UserStudentRequestBody = req.body;
+    if (!user.studentDetail) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("studentDetail is required", null));
+      return;
+    }
+
     user.password = await hash(user.password, SALT);      // Hash the password
 
     const studentRole = await prismaClient.role.findUnique({
@@ -103,6 +108,7 @@ export const createUserAndStudent = async (req: Request, res: Response): Promise
 
     const packageIds = Array.isArray(user.studentDetail.packages) ? user.studentDetail.packages : [];
     const subjectIds = Array.isArray(user.studentDetail.subjects) ? user.studentDetail.subjects : [];
+    const feeYear = user.studentDetail.fee_year ?? new Date().getFullYear();
 
     // const packageIds = packageYear.map(pkg => pkg.packageId);
     // const subjectIds = subjectYear.map(sub => sub.subjectId);
@@ -124,36 +130,36 @@ export const createUserAndStudent = async (req: Request, res: Response): Promise
         },
         studentDetail: {
           create: {
-            parent_contact: user.studentDetail.parent_contact,
-            branch_id: user.studentDetail.branch_id,
-            diploma_score: user.studentDetail.diploma_score,
-            xii_score: user.studentDetail.xii_score,
-            cet_score: user.studentDetail.cet_score,
-            jee_score: user.studentDetail.jee_score,
-            college_name: user.studentDetail.college_name,
-            referred_by: user.studentDetail.referred_by,
+            parent_contact: user.studentDetail.parent_contact ?? undefined,
+            branch_id: user.studentDetail.branch_id ?? undefined,
+            diploma_score: user.studentDetail.diploma_score ?? undefined,
+            xii_score: user.studentDetail.xii_score ?? undefined,
+            cet_score: user.studentDetail.cet_score ?? undefined,
+            jee_score: user.studentDetail.jee_score ?? undefined,
+            college_name: user.studentDetail.college_name ?? undefined,
+            referred_by: user.studentDetail.referred_by ?? undefined,
             student_fees: totalAmount,
             total_fees: totalAmount,
             pending_fees: totalAmount,
-            university_name: user.studentDetail.university_name,
-            jkb_centre: user.studentDetail.jkb_centre,
-            semester: user.studentDetail.semester,
-            status: user.studentDetail.status,
-            remark: user.studentDetail.remark,
-            enrolled: user.studentDetail.enrolled,
+            university_name: user.studentDetail.university_name ?? undefined,
+            jkb_centre: user.studentDetail.jkb_centre ?? undefined,
+            semester: user.studentDetail.semester ?? undefined,
+            status: user.studentDetail.status ?? undefined,
+            remark: user.studentDetail.remark ?? undefined,
+            enrolled: user.studentDetail.enrolled ?? undefined,
             studentSubjects: {
               createMany: {
-                data: subjectIds.map(subjectId => ({ subject_id: subjectId, year: user.studentDetail.fee_year ?? new Date().getFullYear() }))
+                data: subjectIds.map(subjectId => ({ subject_id: subjectId, year: feeYear }))
               }
             },
             studentPackages: {
               createMany: {
-                data: packageIds.map(packageId => ({ package_id: packageId, year: user.studentDetail.fee_year ?? new Date().getFullYear() }))
+                data: packageIds.map(packageId => ({ package_id: packageId, year: feeYear }))
               }
             },
             fees: {
               create: {
-                year: user.studentDetail.fee_year,
+                year: feeYear,
                 student_fees: totalAmount,
                 total_fees: totalAmount,
               }
@@ -170,6 +176,7 @@ export const createUserAndStudent = async (req: Request, res: Response): Promise
 
     res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Record inserted Successfully", newUser.id));
   } catch (error) {
+    // console.error("create user error:", error);
     res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Failed to create user", null));
   }
 };
@@ -184,10 +191,10 @@ export const getUserById = async (req: Request, res: Response, id: string): Prom
           include: {
             branch: true,
             studentPackages: {
-              select: { package: true }
+              select: { package: true, year: true, }
             },
             studentSubjects: {
-              select: { subject: true }
+              select: { subject: true, year: true }
             }
           }
         },
@@ -283,14 +290,15 @@ export const getUsers = async (req: Request, res: Response, year: string): Promi
 export const deleteUser = async (req: Request, res: Response): Promise<void> => {
   const userId = req.params.user_id;
   try {
-    const deletedUser = await prismaClient.user.delete({
-      where: {
-        id: userId
-      }
+    const user = await prismaClient.user.delete({
+      where: { id: userId },
     });
+
     res.status(STATUS_CODES.DELETE_SUCCESS).json(successJson("Record deleted Successfully", 1));
   } catch (error) {
-    res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Failed to create user", null));
+    // console.error(error);
+    // NOTE: handle error when id does not exist
+    res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Failed to delete user", null));
   }
 };
 

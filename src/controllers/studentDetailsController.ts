@@ -313,16 +313,14 @@ export async function editStudentDetails(req: AuthenticatedRequest, res: Respons
       }
 
       // OPTIMIZE: think a way to optimize below things
-
+      const feeYear = body.fee_year ?? new Date().getFullYear();
       // first delete all packages and subjects
       await prisma.studentPackage.deleteMany({
-        where: { student_id: updatedStudent.id },
+        where: { student_id: updatedStudent.id, year: feeYear },
       });
       await prisma.studentSubject.deleteMany({
-        where: { student_id: updatedStudent.id },
+        where: { student_id: updatedStudent.id, year: feeYear },
       });
-
-      const feeYear = body.fee_year ?? new Date().getFullYear();
 
       if (packageIds.length > 0) {
         //    b. Create new package records. 

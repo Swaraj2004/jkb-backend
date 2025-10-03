@@ -83,11 +83,12 @@ router.get('/admin/payments', authMiddleware, authorizeRoles([ADMIN_ROLE]), asyn
  */
 router.get('/admin/student-payments/:user_id', authMiddleware, authorizeRoles([ADMIN_ROLE, STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const userId = req.params.user_id;
+  const year = req.query.year as string;
   if (req.user!.role_name == STUDENT_ROLE && userId != req.user!.user_id) {
     res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Can't see other Students Payments", null));
     return;
   }
-  return getStudentPayments(req, res, userId);
+  return getStudentPayments(req, res, userId, year);
 });
 
 /**
@@ -172,7 +173,8 @@ router.put('/admin/payments', authMiddleware, authorizeRoles([ADMIN_ROLE]), asyn
 router.get('/student/payments', authMiddleware, authorizeRoles([ADMIN_ROLE, STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   // TODO: here other student can see any student details fix this
   const studentId = req.query.student_id as string;
-  return getStudentPayments(req, res, studentId);
+  const year = req.query.year as string;
+  return getStudentPayments(req, res, studentId, year);
 });
 
 export default router;
