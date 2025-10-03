@@ -81,6 +81,17 @@ export async function getStudentPayments(req: Request, res: Response, userId: st
         total_fees: true,
         payments: {
           select: {
+            id: true,
+            fee_id: true,
+            receipt_number: true,
+            amount: true,
+            mode: true,
+            status: true,
+            is_gst: true,
+            user_id: true,
+            remark: true,
+            pending: true,
+            created_by: true,
             student: {
               select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true, },
             },

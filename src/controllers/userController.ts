@@ -190,6 +190,7 @@ export const getUserById = async (req: Request, res: Response, id: string): Prom
         studentDetail: {
           include: {
             branch: true,
+            fees: true,
             studentPackages: {
               select: { package: true, year: true, }
             },
@@ -206,6 +207,7 @@ export const getUserById = async (req: Request, res: Response, id: string): Prom
 
     res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Users fetched successfully", user));
   } catch (error) {
+    // console.error(error);
     res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Failed to fetch users", null));
   }
 };
