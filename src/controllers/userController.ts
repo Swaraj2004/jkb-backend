@@ -269,6 +269,10 @@ export const getUsers = async (req: Request, res: Response, year: string): Promi
         studentDetail: {
           include: {
             branch: true,
+            fees: {
+              orderBy: { year: 'desc' },
+              take: 1,
+            },
             studentPackages: {
               select: { package: true }
             },

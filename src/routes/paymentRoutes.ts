@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { createPayment, editPayment, getAllPayments, getPaymentById, getStudentPayments } from '../controllers/paymentController';
+import { createPayment, editPayment, editStudentFees, getAllPayments, getPaymentById, getStudentPayments } from '../controllers/paymentController';
 import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { STUDENT_ROLE, STATUS_CODES, ADMIN_ROLE } from '../utils/consts';
 import { errorJson } from '../utils/common_funcs';
@@ -175,6 +175,26 @@ router.get('/student/payments', authMiddleware, authorizeRoles([ADMIN_ROLE, STUD
   const studentId = req.query.student_id as string;
   const year = req.query.year as string;
   return getStudentPayments(req, res, studentId, year);
+});
+
+/**
+ * @swagger
+ * /api/v3/admin/student-fees:
+ *   put:
+ *     tags: [Payment Management]
+ *     summary: Update a payment
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdatePayment'
+ *     responses:
+ *       202:
+ *         description: The updated payment object
+ */
+router.put('/admin/student-fees', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  return editStudentFees(req, res);
 });
 
 export default router;

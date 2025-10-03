@@ -7,6 +7,8 @@ export interface PaymentBody {
   is_gst: boolean;
   status: string;
   student_id: string;
+  user_id: string;
+  year: number;
   staff_id: string;
   remark?: string;
   receipt_number?: string;
@@ -23,3 +25,5 @@ export interface Fee {
   created_at: Date;
   updated_at?: Date | null;
 }
+
+// payment will be created for Fee for a given year

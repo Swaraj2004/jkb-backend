@@ -92,6 +92,7 @@ export async function getStudentPayments(req: Request, res: Response, userId: st
             remark: true,
             pending: true,
             created_by: true,
+            created_at: true,
             student: {
               select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true, },
             },
@@ -344,5 +345,67 @@ export async function editPayment(req: AuthenticatedRequest, res: Response): Pro
     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Payment updated successfully", 1));
   } catch (error) {
     res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal server error", null));
+  }
+}
+
+export const editStudentFees = async (req: Request, res: Response): Promise<void> => {
+  const { student_id, year, student_fees } = req.body;
+
+  if (!student_id || !year) {
+    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("studentDetail id and year required", null));
+    return;
+  }
+  try {
+    const numYear = parseInt(year);
+    const studentFees = parseInt(student_fees);
+    if (isNaN(numYear) || isNaN(studentFees)) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("year or student_fees is NaN", null));
+      return;
+    }
+
+    const fee = await prismaClient.fee.findUnique({
+      where: {
+        year_student_id: {
+          year: numYear,
+          student_id: student_id
+        }
+      },
+      select: {
+        id: true,
+        payments: true,
+        student_fees: true,
+        total_fees: true,
+      }
+    });
+
+    if (!fee) {
+      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("year is NaN", null));
+      return;
+    }
+
+    const studentFeesDecimal = new Decimal(studentFees);
+
+    if (studentFeesDecimal.greaterThan(fee.total_fees)) {
+      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("student_fees cannot be greater than than total_fees.", null));
+      return;
+    }
+
+    let feesPaid: Decimal = new Decimal(0);
+    for (const payment of fee.payments)
+      feesPaid = feesPaid.plus(payment.amount ?? new Decimal(0));
+
+    if (studentFeesDecimal.lessThan(feesPaid)) {
+      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("student_fees cannot be less than the fees aldready paid.", null));
+      return;
+    }
+
+    await prismaClient.fee.update({
+      where: { id: fee.id },
+      data: { student_fees: studentFeesDecimal }
+    })
+
+    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Student Fees edited Successfully!", 1));
+  } catch (error) {
+    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Edit student fees failed", null));
   }
 }

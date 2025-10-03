@@ -298,7 +298,11 @@ export async function getSubjectUsers(req: Request, res: Response): Promise<void
           studentDetail: {
             include: {
               studentPackages: true,
-              studentSubjects: true
+              studentSubjects: true,
+              // fees: {
+              //   orderBy: { year: 'desc' },
+              //   take: 1,
+              // },
             }
           },
           userRole: {
@@ -322,6 +326,7 @@ export async function getSubjectUsers(req: Request, res: Response): Promise<void
                 gte: new Date(`${numericYear}-04-15T00:00:00.000Z`), // Start of the given year
                 lt: new Date(`${numericYear + 1}-04-15T00:00:00.000Z`), // Start of the next year
               },
+              // year:year,
             },
           },
         },
