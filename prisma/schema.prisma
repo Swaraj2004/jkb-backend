@@ -143,7 +143,7 @@ model Fee {
   created_at   DateTime  @default(now()) @db.Timestamptz()
   updated_at   DateTime? @updatedAt @db.Timestamptz()
 
-  student         StudentDetail    @relation(fields: [student_id], references: [id])
+  student         StudentDetail    @relation(fields: [student_id], references: [id], onDelete: Cascade)
   payments        Payment[]
   subjectPayments SubjectPayment[]
   packagePayments PackagePayment[]
