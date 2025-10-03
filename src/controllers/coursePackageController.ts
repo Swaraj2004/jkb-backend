@@ -119,39 +119,58 @@ export async function getSubjectPackageUsers(req: Request, res: Response): Promi
     }
 
     // Build filter for StudentDetail.
-    let filter: any = {
-      studentPackages: {
-        some: {
-          package_id: subject_package_id as string
-        } // Assuming 'packages' is a string[] field.
-      },
-    };
+    // let filter: any = {
+    //   studentPackages: {
+    //     some: {
+    //       package_id: subject_package_id as string
+    //
+    //     } // Assuming 'packages' is a string[] field.
+    //   },
+    // };
+    //
+    // if (year) {
+    //   const y = parseInt(year as string);
+    //   if (isNaN(y)) {
+    //     res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('Invalid year', null));
+    //     return;
+    //   }
+    //   // Filter by createdAt between the start and end of the year. (1st april to next year 31 march)
+    //   const startDate = new Date(y, 3, 15);
+    //   const endDate = new Date(y + 1, 3, 14, 23, 59, 59, 999);
+    //   filter.created_at = {
+    //     gte: startDate,
+    //     lte: endDate,
+    //   };
+    // }
 
-    if (year) {
-      const y = parseInt(year as string);
-      if (isNaN(y)) {
-        res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('Invalid year', null));
-        return;
-      }
-      // Filter by createdAt between the start and end of the year. (1st april to next year 31 march)
-      const startDate = new Date(y, 3, 15);
-      const endDate = new Date(y + 1, 3, 14, 23, 59, 59, 999);
-      filter.created_at = {
-        gte: startDate,
-        lte: endDate,
-      };
+    const numericYear = year ? parseInt(year as string) : undefined;
+
+    if (numericYear && isNaN(numericYear)) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('year is NaN', null));
+      return;
     }
 
     // console.log(filter);
     const users = await prismaClient.user.findMany({
       where: {
-        studentDetail: filter,
+        studentDetail: {
+          studentPackages: {
+            some: {
+              package_id: subject_package_id as string,
+              year: numericYear
+            }
+          }
+        },
       },
       select: {
         email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true,
         studentDetail: {
           include: {
             branch: true,
+            fees: {
+              orderBy: { year: 'desc' },
+              take: 1,
+            },
             studentPackages: {
               select: { package: true }
             },

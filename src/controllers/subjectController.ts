@@ -267,7 +267,7 @@ export async function getSubjectUsers(req: Request, res: Response): Promise<void
   try {
     const { subject_id, year } = req.query;
     if (!subject_id) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('Subject Id or year absent', null));
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('Subject Id is absent', null));
       return;
     }
     if (!year) {
@@ -299,10 +299,10 @@ export async function getSubjectUsers(req: Request, res: Response): Promise<void
             include: {
               studentPackages: true,
               studentSubjects: true,
-              // fees: {
-              //   orderBy: { year: 'desc' },
-              //   take: 1,
-              // },
+              fees: {
+                orderBy: { year: 'desc' },
+                take: 1,
+              },
             }
           },
           userRole: {
@@ -316,25 +316,51 @@ export async function getSubjectUsers(req: Request, res: Response): Promise<void
     }
 
     const numericYear = parseInt(year as string, 10);
+    if (isNaN(numericYear)) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('year must be a valid number', null));
+      return;
+    }
     const subjectUsers = await prismaClient.user.findMany({
       where: {
         studentDetail: {
-          studentSubjects: {
-            some: {
-              subject_id: subject_id as string,
-              created_at: {
-                gte: new Date(`${numericYear}-04-15T00:00:00.000Z`), // Start of the given year
-                lt: new Date(`${numericYear + 1}-04-15T00:00:00.000Z`), // Start of the next year
-              },
-              // year:year,
-            },
-          },
+          // studentSubjects: {
+          // some: {
+          //   subject_id: subject_id as string,
+          //   year: numericYear,
+          //   // created_at: {
+          //   //   gte: new Date(`${numericYear}-04-15T00:00:00.000Z`), // Start of the given year
+          //   //   lt: new Date(`${numericYear + 1}-04-15T00:00:00.000Z`), // Start of the next year
+          //   // },
+          // },
+          // },
+          is: {
+            OR: [
+              // either enrolled in the subject or the pacakge containing that subject
+              { studentSubjects: { some: { subject_id: subject_id as string, year: numericYear } } },
+              {
+                studentPackages: {
+                  some: {
+                    year: numericYear,
+                    package: {
+                      packageSubjects: {
+                        some: { subject_id: subject_id as string }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
         },
       },
       select: {
         email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true,
         studentDetail: {
           include: {
+            fees: {
+              orderBy: { year: 'desc' },
+              take: 1,
+            },
             studentPackages: true,
             studentSubjects: true
           }

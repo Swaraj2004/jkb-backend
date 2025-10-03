@@ -190,7 +190,32 @@ export const getUserById = async (req: Request, res: Response, id: string): Prom
         studentDetail: {
           include: {
             branch: true,
-            fees: true,
+            fees: {
+              select: {
+                id: true,
+                student_fees: true,
+                total_fees: true,
+                year: true,
+                payments: {
+                  select: {
+                    id: true,
+                    fee_id: true,
+                    receipt_number: true,
+                    amount: true,
+                    mode: true,
+                    status: true,
+                    is_gst: true,
+                    user_id: true,
+                    remark: true,
+                    // pending: true,     // IMPORTANT: remove this column if not necessary in the future
+                    created_by: true,
+                    created_at: true,
+                    // subjectPayments: { select: { subject: { select: { name: true, id: true, subject_fees: true } } } },
+                    // packagePayments: { select: { package: { select: { package_name: true, id: true, package_fees: true } } } }
+                  }
+                }
+              }
+            },
             studentPackages: {
               select: { package: true, year: true, }
             },
