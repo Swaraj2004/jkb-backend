@@ -257,7 +257,7 @@ model StudentSubject {
   student StudentDetail @relation(fields: [student_id], references: [id], onDelete: Cascade)
   subject Subject       @relation(fields: [subject_id], references: [id], onDelete: Cascade)
 
-  @@id([student_id, subject_id])
+  @@id([student_id, subject_id, year])
 }
 
 model StudentPackage {
@@ -269,7 +269,7 @@ model StudentPackage {
   student StudentDetail @relation(fields: [student_id], references: [id], onDelete: Cascade)
   package Package       @relation(fields: [package_id], references: [id], onDelete: Cascade)
 
-  @@id([student_id, package_id])
+  @@id([student_id, package_id, year])
 }
 
 model Test {
