@@ -8,6 +8,6 @@ export interface SubjectRequestBody {
 export interface StudentSubjectPackageBody {
   year: number;
   student_id: string;
-  subjectIds: string[];
-  packageIds: string[];
+  subject_ids: string[];
+  package_ids: string[];
 }
