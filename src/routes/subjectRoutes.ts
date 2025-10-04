@@ -163,7 +163,7 @@ router.post('/subjects', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (re
  *       201:
  *         description: The created subject and student package object
  */
-router.post('/subject-package', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
+router.put('/subject-package', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
   return createStudentSubjectStudentPackages(req, res);
 });
 
