@@ -89,21 +89,8 @@ export async function createStudentSubjectStudentPackages(req: Request, res: Res
         return;
       }
 
-      // 2) Ensure a Fee row exists for (student, year) — create if missing
-      let feeRecord = studentDetail.fees?.[0];
-      if (!feeRecord) {
-        feeRecord = await prismaClient.fee.create({
-          data: {
-            student_id,
-            student_fees: new Decimal(0),
-            total_fees: new Decimal(0),
-            year,
-          },
-          select: { id: true, student_fees: true, total_fees: true, payments: true },
-        });
-      }
-
-      // 3) Delete existing studentPackage/studentSubject rows for this student+year (scope by year)
+      // 1) Delete existing studentPackage/studentSubject rows for this student+year (scope by year)
+      // OPTIMIZE: see if prisma allows transaction with superbase to maintain atomicity
       await prismaClient.studentPackage.deleteMany({
         where: { student_id, year },
       });
@@ -111,7 +98,7 @@ export async function createStudentSubjectStudentPackages(req: Request, res: Res
         where: { student_id, year },
       });
 
-      // 4) Create new package & subject rows
+      // 2) Create new package & subject rows
       if (Array.isArray(packageIds) && packageIds.length > 0) {
         await prismaClient.studentPackage.createMany({
           data: packageIds.map(pkgId => ({
@@ -132,18 +119,11 @@ export async function createStudentSubjectStudentPackages(req: Request, res: Res
         });
       }
 
-      // 5) Fetch package & subject meta (so caller can see what was attached)
-      const packages = packageIds && packageIds.length > 0
-        ? await prismaClient.package.findMany({ where: { id: { in: packageIds } }, select: { id: true, package_name: true } })
-        : [];
-      const subjects = subjectIds && subjectIds.length > 0
-        ? await prismaClient.subject.findMany({ where: { id: { in: subjectIds } }, select: { id: true, name: true } })
-        : [];
-
-      // 6) Calculate total fees for these packageIds + subjectIds
+      // 3) Calculate total fees for these packageIds + subjectIds
       const totalAmount = await getTotalAmout(packageIds ?? [], subjectIds ?? [], prismaClient);
 
-      if (totalAmount < feeRecord.student_fees) {
+      const feeRecord = studentDetail.fees?.[0];
+      if (feeRecord && totalAmount.lessThan(feeRecord.student_fees)) {
         res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("totalAmount cannot be less than student_fees", null));
         return;
       }
@@ -153,9 +133,19 @@ export async function createStudentSubjectStudentPackages(req: Request, res: Res
         data: {
           total_fees: totalAmount,
           fees: {
-            update: {
-              where: { id: feeRecord.id },
-              data: { total_fees: totalAmount }
+            upsert: {             // NOTE: create if absent, update if present
+              where: {
+                year_student_id: {
+                  year,
+                  student_id
+                }
+              },
+              update: { total_fees: totalAmount },
+              create: {
+                student_fees: totalAmount,
+                total_fees: totalAmount,
+                year,
+              }
             }
           }
         }
@@ -164,6 +154,7 @@ export async function createStudentSubjectStudentPackages(req: Request, res: Res
 
     res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Student Subject & Packages created successfully!", 1));
   } catch (error) {
+    // console.error(error);
     res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Failed to create Student Subject & Packages", null));
   }
 }

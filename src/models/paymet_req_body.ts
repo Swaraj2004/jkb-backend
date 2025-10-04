@@ -6,14 +6,14 @@ export interface PaymentBody {
   pending: number;
   is_gst: boolean;
   status: string;
-  student_id: string;
   user_id: string;
+  student_id: string;
   year: number;
   staff_id: string;
   remark?: string;
   receipt_number?: string;
-  subjects: string[];
-  packages: string[];
+  // subjects: string[];
+  // packages: string[];
 }
 
 export interface Fee {

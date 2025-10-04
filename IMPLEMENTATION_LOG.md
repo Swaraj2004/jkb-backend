@@ -35,4 +35,4 @@ Reduce database load and improve response time for frequent `GET /professor/test
 
 ## Fee
 
-1. so the fee Entry in the table is `created` during creation of the StudentDetails
+1. so the fee Entry in the table is `created` during creation of the StudentDetails and /api/v3/admin/subject-package
