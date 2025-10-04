@@ -155,8 +155,8 @@ export async function createPayment(req: AuthenticatedRequest, res: Response): P
 
     // 3. Generate receipt number
     const today = new Date();
-    // const currentYear = today.getFullYear();
-    const currentYear = paymentBody.year;
+    const currentYear = today.getFullYear();
+    // const currentYear = paymentBody.year;
     const prefix = paymentBody.is_gst ? "G" : "NG";
 
     // Find last payment of this type in current year
