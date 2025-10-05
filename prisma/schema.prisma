@@ -168,7 +168,7 @@ model Payment {
 
   student        User?           @relation(fields: [user_id], references: [id], onDelete: SetNull)
   createdBy      User?           @relation("PaymentCreatedBy", fields: [created_by], references: [id])
-  fee            Fee?            @relation(fields: [fee_id], references: [id])
+  fee            Fee?            @relation(fields: [fee_id], references: [id], onDelete: SetNull)
   
   subjectPayments SubjectPayment[]
   packagePayments PackagePayment[]
@@ -182,7 +182,7 @@ model SubjectPayment {
 
   subject Subject @relation(fields: [subject_id], references: [id], onDelete: Cascade)
   payment Payment @relation(fields: [payment_id], references: [id], onDelete: Cascade)
-  fee     Fee?    @relation(fields: [fee_id], references: [id])
+  fee     Fee?    @relation(fields: [fee_id], references: [id], onDelete: SetNull)
 
   @@id([subject_id, payment_id])
 }
@@ -195,7 +195,7 @@ model PackagePayment {
 
   package Package @relation(fields: [package_id], references: [id], onDelete: Cascade)
   payment Payment @relation(fields: [payment_id], references: [id], onDelete: Cascade)
-  fee     Fee?    @relation(fields: [fee_id], references: [id])
+  fee     Fee?    @relation(fields: [fee_id], references: [id], onDelete: SetNull)
 
   @@id([package_id, payment_id])
 }
