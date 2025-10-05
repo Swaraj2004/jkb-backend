@@ -428,3 +428,75 @@ export const editStudentFees = async (req: Request, res: Response): Promise<void
     res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Edit student fees failed", null));
   }
 }
+
+// // NOTE: this was just made to fix the Fee table
+// interface FeeBody {
+//   student_id: string;
+//   student_fees: Decimal;
+//   total_fees: Decimal;
+//   year: number;
+// }
+// export const fixFeeTable = async (req: Request, res: Response): Promise<void> => {
+//   try {
+//     // 1. get all studentDetails
+//     const studentDetails = await prismaClient.studentDetail.findMany({
+//       select: {
+//         id: true,
+//         student_fees: true,
+//         studentPackages: {
+//           select: {
+//             year: true,
+//             package: { select: { package_fees: true } }
+//           }
+//         },
+//         studentSubjects: {
+//           select: {
+//             year: true,
+//             subject: { select: { subject_fees: true } }
+//           }
+//         },
+//         user_id: true,
+//         user: {
+//           select: { payments: true }
+//         }
+//       }
+//     });
+//
+//     // 2. create fees for each studentDetails
+//     for (const studentDetail of studentDetails) {
+//       let fee: FeeBody = {
+//         student_id: studentDetail.id,
+//         student_fees: studentDetail.student_fees ?? new Decimal(0),
+//         total_fees: new Decimal(0),
+//         year: 2025
+//       }
+//
+//       if (studentDetail.studentPackages.length !== 0 || studentDetail.studentSubjects.length !== 0) {
+//         let totalAmount = new Decimal(0);
+//         for (const studentPackage of studentDetail.studentPackages) {
+//           totalAmount = totalAmount.plus(studentPackage.package.package_fees);
+//           fee.year = Math.min(fee.year, studentPackage.year);
+//         }
+//         for (const studentSubject of studentDetail.studentSubjects) {
+//           totalAmount = totalAmount.plus(studentSubject.subject.subject_fees);
+//           fee.year = Math.min(fee.year, studentSubject.year);
+//         }
+//
+//         fee.total_fees = totalAmount;
+//       }
+//
+//       const createdFee = await prismaClient.fee.create({ data: fee });
+//
+//       if (studentDetail.user.payments?.length) {
+//         await prismaClient.payment.updateMany({
+//           where: { id: { in: studentDetail.user.payments.map(p => p.id) } },
+//           data: { fee_id: createdFee.id }
+//         });
+//       }
+//     }
+//
+//     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Fee table fixed Successfully!", 1));
+//   } catch (error) {
+//     res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("failed to fix Fee table", error));
+//   }
+// }

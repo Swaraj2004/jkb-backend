@@ -197,4 +197,9 @@ router.put('/admin/student-fees', authMiddleware, authorizeRoles([ADMIN_ROLE]), 
   return editStudentFees(req, res);
 });
 
+// // NOTE: this route is only to be run at backend dont make it public and was made to fix the fee Table
+// router.post('/feeHelper', authMiddleware, authorizeRoles([]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+//   return fixFeeTable(req, res);
+// });
+
 export default router;
