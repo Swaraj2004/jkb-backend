@@ -4,6 +4,7 @@ import { prismaClient } from '../utils/database';
 import { PROFESSOR_ROLE, STATUS_CODES } from '../utils/consts';
 import { PackageRequestBody } from '../models/package_req_body';
 
+// TODO: fix this as the total_fees and student_fees is not updated also sync in payments
 export async function updateCoursePackage(req: Request, res: Response): Promise<void> {
   try {
     const { id, ...rest } = req.body;
