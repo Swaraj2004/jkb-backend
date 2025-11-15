@@ -30,3 +30,9 @@ Reduce database load and improve response time for frequent `GET /professor/test
 - Redis acts as a fast lookup layer; DB remains the source of truth.  
 - If Redis is down or cache miss occurs, system falls back to DB query.  
 - Namespace keys (e.g., `test:status:<id>`) could improve clarity.
+
+---
+
+## Fee
+
+1. so the fee Entry in the table is `created` during creation of the StudentDetails and /api/v3/admin/subject-package

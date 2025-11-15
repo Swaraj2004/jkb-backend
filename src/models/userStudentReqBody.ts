@@ -25,6 +25,7 @@ export interface UserStudentRequestBody {
     remark?: string;
     packages: string[]; // Array of UUIDs
     subjects: string[]; // Array of UUIDs
+    fee_year: number;
     enrolled?: boolean;
   };
 }

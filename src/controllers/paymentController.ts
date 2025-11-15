@@ -57,25 +57,55 @@ export async function getAllPayments(req: Request, res: Response, start_date: st
   }
 }
 
-export async function getStudentPayments(req: Request, res: Response, userId: string): Promise<void> {
-  if (!userId || userId.trim().length === 0) {
-    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Student Id Required", null));
+export async function getStudentPayments(req: Request, res: Response, userId: string, year: string): Promise<void> {
+  if (!userId || userId.trim().length === 0 || !year) {
+    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Student Id & year required Required", null));
     return;
   }
   try {
-    const payment = await prismaClient.payment.findMany({
-      where: { user_id: userId },
-      include: {
-        student: {
-          select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true, },
-        },
-        subjectPayments: { select: { subject: { select: { name: true, id: true, subject_fees: true } } } },
-        packagePayments: { select: { package: { select: { package_name: true, id: true, package_fees: true } } } }
+    const numYear = parseInt(year);
+    if (isNaN(numYear)) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("year is NaN", null));
+      return;
+    }
+    const fee = await prismaClient.fee.findUnique({
+      where: {
+        year_student_id: {
+          student_id: userId,
+          year: numYear
+        }
+      },
+      select: {
+        id: true,
+        student_fees: true,
+        total_fees: true,
+        payments: {
+          select: {
+            id: true,
+            fee_id: true,
+            receipt_number: true,
+            amount: true,
+            mode: true,
+            status: true,
+            is_gst: true,
+            user_id: true,
+            remark: true,
+            pending: true,
+            created_by: true,
+            created_at: true,
+            student: {
+              select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true, },
+            },
+            subjectPayments: { select: { subject: { select: { name: true, id: true, subject_fees: true } } } },
+            packagePayments: { select: { package: { select: { package_name: true, id: true, package_fees: true } } } }
+          }
+        }
       }
     });
 
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Payment fetched successfully", payment));
+    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Payment fetched successfully", fee));
   } catch (error) {
+    // console.error(error);
     res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal server error", null));
   }
 }
@@ -84,22 +114,49 @@ export async function createPayment(req: AuthenticatedRequest, res: Response): P
   try {
     const paymentBody: PaymentBody = req.body;
 
-    // 1. Find the student
-    const student = await prismaClient.studentDetail.findUnique({
-      where: {
-        user_id: paymentBody.student_id     // IMPORTANT: paymentBody.student_id is actually user_id
-      },
-      select: { pending_fees: true }
-    });
-
-    if (!student) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Student not found", null));
+    if (!paymentBody.student_id || !paymentBody.user_id || !paymentBody.year || !paymentBody.amount) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("user_id, student_id, amount and year required", null));
       return;
     }
 
-    // 2. Generate receipt number
+    // 1. Find the fee
+    const fee = await prismaClient.fee.findUnique({
+      where: {
+        year_student_id: {
+          year: paymentBody.year,
+          student_id: paymentBody.student_id,
+        },
+      },
+      select: {
+        id: true,
+        student_fees: true,
+        total_fees: true,
+        payments: true,
+      }
+    });
+
+    // NOTE: the fee is created in the endpoint: /api/v3/admin/subject-package
+    if (!fee) {
+      res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("first select student Package or Subjects for the year and student_id selected.", null));
+      return;
+    }
+
+    // 2. Validate payment amount
+    let feesPaid = new Decimal(0);
+    for (const payment of fee.payments)
+      feesPaid = feesPaid.plus(payment.amount ?? new Decimal(0));
+
+    const currentAmount = new Decimal(paymentBody.amount);
+    if (currentAmount.plus(feesPaid).greaterThan(fee.student_fees)) {
+      // NOTE: in future instead of returning null we can return the amount limit that can be set by student_fees - amountPaid
+      res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("amount cannot be greaterThan than (student_fees - previously Paid Payments).", null));
+      return;
+    }
+
+    // 3. Generate receipt number
     const today = new Date();
     const currentYear = today.getFullYear();
+    // const currentYear = paymentBody.year;
     const prefix = paymentBody.is_gst ? "G" : "NG";
 
     // Find last payment of this type in current year
@@ -130,46 +187,38 @@ export async function createPayment(req: AuthenticatedRequest, res: Response): P
       receiptNumber = `${prefix}${currentYear}${nextYear}0001`;
     }
 
-    // 3. Validate payment amount
-    const pendingFees = new Decimal(student.pending_fees || 0);
-    const amountPaid = new Decimal(paymentBody.amount);
-
-    if (pendingFees.lessThan(amountPaid)) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Amount paid cannot be greater than pending fees", null));
-      return;
-    }
-
-    const newPendingFees = pendingFees.minus(amountPaid);
+    const newPendingFees = fee.student_fees.minus(feesPaid.plus(currentAmount)); // imp
 
     const payment = await prismaClient.$transaction(async (tx) => {
       // Create payment record
       const newPayment = await tx.payment.create({
         data: {
           receipt_number: receiptNumber,
-          amount: amountPaid,
-          status: paymentBody.status,
-          mode: paymentBody.mode,
-          remark: paymentBody.remark,
+          amount: currentAmount,
+          status: paymentBody.status ?? undefined,
+          mode: paymentBody.mode ?? undefined,
+          remark: paymentBody.remark ?? undefined,
           is_gst: paymentBody.is_gst,
           pending: newPendingFees,
-          user_id: paymentBody.student_id,
+          user_id: paymentBody.user_id,
+          fee_id: fee.id,
           created_by: paymentBody.staff_id == null ? req.user?.user_id : paymentBody.staff_id, // review this i am adding staff_id from body to created_by col
-          subjectPayments: {
-            create: paymentBody.subjects.map((subjectId: string) => ({
-              subject: { connect: { id: subjectId } }
-            }))
-          },
-          packagePayments: {
-            create: paymentBody.packages.map((packageId: string) => ({
-              package: { connect: { id: packageId } }
-            }))
-          }
+          // subjectPayments: {
+          //   create: paymentBody.subjects.map((subjectId: string) => ({
+          //     subject: { connect: { id: subjectId } }
+          //   }))
+          // },
+          // packagePayments: {
+          //   create: paymentBody.packages.map((packageId: string) => ({
+          //     package: { connect: { id: packageId } }
+          //   }))
+          // }
         },
       });
 
       // Update student record
       await tx.studentDetail.update({
-        where: { user_id: paymentBody.student_id },
+        where: { user_id: paymentBody.user_id },
         data: {
           pending_fees: newPendingFees,
           enrolled: true              // important handle it in post,delete
@@ -317,3 +366,137 @@ export async function editPayment(req: AuthenticatedRequest, res: Response): Pro
     res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal server error", null));
   }
 }
+
+export const editStudentFees = async (req: Request, res: Response): Promise<void> => {
+  const { student_id, year, student_fees } = req.body;
+
+  if (!student_id || !year) {
+    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("studentDetail id and year required", null));
+    return;
+  }
+  try {
+    const numYear = parseInt(year);
+    const studentFees = parseInt(student_fees);
+    if (isNaN(numYear) || isNaN(studentFees)) {
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("year or student_fees is NaN", null));
+      return;
+    }
+
+    const fee = await prismaClient.fee.findUnique({
+      where: {
+        year_student_id: {
+          year: numYear,
+          student_id: student_id
+        }
+      },
+      select: {
+        id: true,
+        payments: true,
+        student_fees: true,
+        total_fees: true,
+      }
+    });
+
+    if (!fee) {
+      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("year is NaN", null));
+      return;
+    }
+
+    const studentFeesDecimal = new Decimal(studentFees);
+
+    if (studentFeesDecimal.greaterThan(fee.total_fees)) {
+      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("student_fees cannot be greater than than total_fees.", null));
+      return;
+    }
+
+    let feesPaid: Decimal = new Decimal(0);
+    for (const payment of fee.payments)
+      feesPaid = feesPaid.plus(payment.amount ?? new Decimal(0));
+
+    if (studentFeesDecimal.lessThan(feesPaid)) {
+      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("student_fees cannot be less than the fees aldready paid.", null));
+      return;
+    }
+
+    await prismaClient.fee.update({
+      where: { id: fee.id },
+      data: { student_fees: studentFeesDecimal }
+    })
+
+    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Student Fees edited Successfully!", 1));
+  } catch (error) {
+    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Edit student fees failed", null));
+  }
+}
+
+// // NOTE: this was just made to fix the Fee table
+// interface FeeBody {
+//   student_id: string;
+//   student_fees: Decimal;
+//   total_fees: Decimal;
+//   year: number;
+// }
+// export const fixFeeTable = async (req: Request, res: Response): Promise<void> => {
+//   try {
+//     // 1. get all studentDetails
+//     const studentDetails = await prismaClient.studentDetail.findMany({
+//       select: {
+//         id: true,
+//         student_fees: true,
+//         studentPackages: {
+//           select: {
+//             year: true,
+//             package: { select: { package_fees: true } }
+//           }
+//         },
+//         studentSubjects: {
+//           select: {
+//             year: true,
+//             subject: { select: { subject_fees: true } }
+//           }
+//         },
+//         user_id: true,
+//         user: {
+//           select: { payments: true }
+//         }
+//       }
+//     });
+//
+//     // 2. create fees for each studentDetails
+//     for (const studentDetail of studentDetails) {
+//       let fee: FeeBody = {
+//         student_id: studentDetail.id,
+//         student_fees: studentDetail.student_fees ?? new Decimal(0),
+//         total_fees: new Decimal(0),
+//         year: 2025
+//       }
+//
+//       if (studentDetail.studentPackages.length !== 0 || studentDetail.studentSubjects.length !== 0) {
+//         let totalAmount = new Decimal(0);
+//         for (const studentPackage of studentDetail.studentPackages) {
+//           totalAmount = totalAmount.plus(studentPackage.package.package_fees);
+//           fee.year = Math.min(fee.year, studentPackage.year);
+//         }
+//         for (const studentSubject of studentDetail.studentSubjects) {
+//           totalAmount = totalAmount.plus(studentSubject.subject.subject_fees);
+//           fee.year = Math.min(fee.year, studentSubject.year);
+//         }
+//
+//         fee.total_fees = totalAmount;
+//       }
+//
+//       const createdFee = await prismaClient.fee.create({ data: fee });
+//
+//       if (studentDetail.user.payments?.length) {
+//         await prismaClient.payment.updateMany({
+//           where: { id: { in: studentDetail.user.payments.map(p => p.id) } },
+//           data: { fee_id: createdFee.id }
+//         });
+//       }
+//     }
+//
+//     res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Fee table fixed Successfully!", 1));
+//   } catch (error) {
+//     res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("failed to fix Fee table", error));
+//   }
+// }

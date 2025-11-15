@@ -8,6 +8,7 @@ import {
   getSubjectUsers,
   getSubjectAttendance,
   getStudentSubjects,
+  createStudentSubjectStudentPackages,
 } from '../controllers/subjectController';
 import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { ADMIN_ROLE, STUDENT_ROLE } from '../utils/consts';
@@ -144,6 +145,26 @@ router.get('/student-subjects/:student_id', authMiddleware, authorizeRoles([ADMI
  */
 router.post('/subjects', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
   return createSubject(req, res);
+});
+
+/**
+ * @swagger
+ * /api/v3/admin/subject-package:
+ *   post:
+ *     tags: [Subject Management]
+ *     summary: Create a new subject and student package mapping
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Subject'
+ *     responses:
+ *       201:
+ *         description: The created subject and student package object
+ */
+router.put('/subject-package', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
+  return createStudentSubjectStudentPackages(req, res);
 });
 
 /**

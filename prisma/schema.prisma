@@ -131,20 +131,29 @@ model StudentDetail {
   studentSubjects StudentSubject[]
   studentPackages StudentPackage[]
   attendance      Attendance[]
+  fees            Fee[]
 }
-// model Fees{
-//     user_id
-//     student_fees
-//     total_fees
-//     pending_fees
-//     year
-//student_fees < total_fees always and always greater than prev paid fees
-//
-//     payments[]
-// }
+
+model Fee {
+  id           String    @id @default(uuid()) @db.Uuid
+  student_id   String    @db.Uuid
+  student_fees Decimal   @default(0)
+  total_fees   Decimal   @default(0)
+  year         Int
+  created_at   DateTime  @default(now()) @db.Timestamptz()
+  updated_at   DateTime? @updatedAt @db.Timestamptz()
+
+  student         StudentDetail    @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  payments        Payment[]
+  subjectPayments SubjectPayment[]
+  packagePayments PackagePayment[]
+
+  @@unique([year, student_id])
+}
 
 model Payment {
   id             String    @id @default(uuid()) @db.Uuid
+  fee_id         String?   @db.Uuid
   receipt_number String?   @unique
   amount         Decimal?
   mode           String?
@@ -159,6 +168,7 @@ model Payment {
 
   student        User?           @relation(fields: [user_id], references: [id], onDelete: SetNull)
   createdBy      User?           @relation("PaymentCreatedBy", fields: [created_by], references: [id])
+  fee            Fee?            @relation(fields: [fee_id], references: [id], onDelete: SetNull)
   
   subjectPayments SubjectPayment[]
   packagePayments PackagePayment[]
@@ -167,10 +177,12 @@ model Payment {
 model SubjectPayment {
   subject_id String   @db.Uuid
   payment_id String   @db.Uuid
+  fee_id     String?  @db.Uuid
   created_at DateTime @default(now()) @db.Timestamptz()
 
   subject Subject @relation(fields: [subject_id], references: [id], onDelete: Cascade)
   payment Payment @relation(fields: [payment_id], references: [id], onDelete: Cascade)
+  fee     Fee?    @relation(fields: [fee_id], references: [id], onDelete: SetNull)
 
   @@id([subject_id, payment_id])
 }
@@ -178,10 +190,12 @@ model SubjectPayment {
 model PackagePayment {
   payment_id String   @db.Uuid
   package_id String   @db.Uuid
+  fee_id     String?  @db.Uuid
   created_at DateTime @default(now()) @db.Timestamptz()
 
   package Package @relation(fields: [package_id], references: [id], onDelete: Cascade)
   payment Payment @relation(fields: [payment_id], references: [id], onDelete: Cascade)
+  fee     Fee?    @relation(fields: [fee_id], references: [id], onDelete: SetNull)
 
   @@id([package_id, payment_id])
 }
@@ -237,23 +251,25 @@ model PackageSubject {
 model StudentSubject {
   student_id String   @db.Uuid
   subject_id String   @db.Uuid
+  year       Int
   created_at DateTime @default(now()) @db.Timestamptz()
 
   student StudentDetail @relation(fields: [student_id], references: [id], onDelete: Cascade)
   subject Subject       @relation(fields: [subject_id], references: [id], onDelete: Cascade)
 
-  @@id([student_id, subject_id])
+  @@id([student_id, subject_id, year])
 }
 
 model StudentPackage {
   student_id String   @db.Uuid
   package_id String   @db.Uuid
+  year       Int
   created_at DateTime @default(now()) @db.Timestamptz()
 
   student StudentDetail @relation(fields: [student_id], references: [id], onDelete: Cascade)
   package Package       @relation(fields: [package_id], references: [id], onDelete: Cascade)
 
-  @@id([student_id, package_id])
+  @@id([student_id, package_id, year])
 }
 
 model Test {
