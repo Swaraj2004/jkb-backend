@@ -116,6 +116,38 @@ export async function createStudentSubjectStudentPackages(
         return;
       }
 
+      // if studentDetail has a payment related to it then do not update the subjects or packages
+      // TODO: ask sir about what to do
+      if (studentDetail.fees[0].payments.length > 0) {
+        res
+          .status(STATUS_CODES.UPDATE_FAILURE)
+          .json(
+            errorJson('Student has a payment related to it in this year.', null)
+          );
+        return;
+      }
+
+      // 3) Calculate total fees for these packageIds + subjectIds
+      const totalAmount = await getTotalAmout(
+        package_ids ?? [],
+        subject_ids ?? [],
+        prismaClient
+      );
+
+      const feeRecord = studentDetail.fees?.[0];
+      // NOTE:
+      // the below code is to check the student fees with totalFees
+      // but now we dont let this happen if student has a payment related
+      //
+      // if (feeRecord && totalAmount.lessThan(feeRecord.student_fees)) {
+      //   res
+      //     .status(STATUS_CODES.CREATE_FAILURE)
+      //     .json(
+      //       errorJson('totalAmount cannot be less than student_fees', null)
+      //     );
+      //   return;
+      // }
+
       // 1) Delete existing studentPackage/studentSubject rows for this student+year (scope by year)
       // OPTIMIZE: see if prisma allows transaction with superbase to maintain atomicity
       await prismaClient.studentPackage.deleteMany({
@@ -146,27 +178,11 @@ export async function createStudentSubjectStudentPackages(
         });
       }
 
-      // 3) Calculate total fees for these packageIds + subjectIds
-      const totalAmount = await getTotalAmout(
-        package_ids ?? [],
-        subject_ids ?? [],
-        prismaClient
-      );
-
-      const feeRecord = studentDetail.fees?.[0];
-      if (feeRecord && totalAmount.lessThan(feeRecord.student_fees)) {
-        res
-          .status(STATUS_CODES.CREATE_FAILURE)
-          .json(
-            errorJson('totalAmount cannot be less than student_fees', null)
-          );
-        return;
-      }
-
       await prismaClient.studentDetail.update({
         where: { id: studentDetail.id },
         data: {
           total_fees: totalAmount,
+          student_fees: 0, // IMPORTANT: make student fees 0 on updating subjects and packages
           fees: {
             upsert: {
               // NOTE: create if absent, update if present
@@ -176,7 +192,10 @@ export async function createStudentSubjectStudentPackages(
                   student_id,
                 },
               },
-              update: { total_fees: totalAmount },
+              update: {
+                total_fees: totalAmount,
+                student_fees: 0, // here also
+              },
               create: {
                 student_fees: totalAmount,
                 total_fees: totalAmount,
