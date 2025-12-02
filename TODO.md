@@ -12,6 +12,12 @@
 
 ---
 
+## 2️⃣ Swagger docs
+
+Complete swagger docs for each api endpoint
+
+---
+
 ## 2️⃣ 🧪 Testing / Project Structure Enhancements
 
 2.1. Create a `test/` folder (not `tests/`) to organize all backend test files using **Vitest**.  
@@ -37,9 +43,9 @@
 
 ### ✅ 4.4. TODO: Get Student Submissions for Test
 
-- **Route**: `GET /test/:test_id/submissions`  
-- **Access**: Admin, Professor  
-- **File**: `routes/testRoutes.ts`  
+- **Route**: `GET /test/:test_id/submissions`
+- **Access**: Admin, Professor
+- **File**: `routes/testRoutes.ts`
 - **Description**: Fetch student-selected options and correct options for the given test.
 
 #### ➕ New Endpoint Behavior:
@@ -69,7 +75,6 @@
 
 5.1. Read about `@db.Money` in Prisma & PostgreSQL docs — decide if it's the best fit or switch to `@db.Decimal(10, 2)` for more flexibility and precision.
 
-
 ---
 
 ## 6️⃣ ⚡ Caching Improvements
@@ -77,3 +82,4 @@
 6.1. Implement Redis caching for `subject`, `package`, and `user_role` queries — reduce repeated DB lookups on frequently accessed endpoints.
 
 6.4. Set appropriate TTL (e.g., 1 hour) on cached values to ensure data freshness and avoid stale results.
+

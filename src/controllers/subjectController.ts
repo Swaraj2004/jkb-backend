@@ -118,7 +118,7 @@ export async function createStudentSubjectStudentPackages(
 
       // if studentDetail has a payment related to it then do not update the subjects or packages
       // TODO: ask sir about what to do
-      if (studentDetail.fees[0].payments.length > 0) {
+      if (studentDetail.fees?.[0]?.payments?.length > 0) {
         res
           .status(STATUS_CODES.UPDATE_FAILURE)
           .json(
