@@ -82,4 +82,3 @@ Complete swagger docs for each api endpoint
 6.1. Implement Redis caching for `subject`, `package`, and `user_role` queries — reduce repeated DB lookups on frequently accessed endpoints.
 
 6.4. Set appropriate TTL (e.g., 1 hour) on cached values to ensure data freshness and avoid stale results.
-

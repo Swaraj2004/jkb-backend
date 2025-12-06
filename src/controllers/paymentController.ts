@@ -6,33 +6,59 @@ import { PaymentBody } from '../models/paymet_req_body';
 import { AuthenticatedRequest } from '../middlewares/authMiddleware';
 import { STATUS_CODES } from '../utils/consts';
 
-export async function getPaymentById(req: Request, res: Response, paymentId: string): Promise<void> {
+export async function getPaymentById(
+  req: Request,
+  res: Response,
+  paymentId: string
+): Promise<void> {
   try {
     const payment = await prismaClient.payment.findUnique({
       where: { id: paymentId },
       include: {
         student: {
-          select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true },      // NOTE: not sending here student packages and subjects
-        }
-      }
+          select: {
+            email: true,
+            full_name: true,
+            phone: true,
+            location: true,
+            id: true,
+            lastlogin: true,
+            created_at: true,
+            studentDetail: true,
+          }, // NOTE: not sending here student packages and subjects
+        },
+      },
     });
 
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Payment fetched successfully", payment));
+    res
+      .status(STATUS_CODES.SELECT_SUCCESS)
+      .json(successJson('Payment fetched successfully', payment));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal server error", null));
+    res
+      .status(STATUS_CODES.SELECT_FAILURE)
+      .json(errorJson('Internal server error', null));
   }
 }
 
-export async function getAllPayments(req: Request, res: Response, start_date: string, end_date: string): Promise<void> {
+export async function getAllPayments(
+  req: Request,
+  res: Response,
+  start_date: string,
+  end_date: string
+): Promise<void> {
   if (!start_date || !end_date) {
-    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Start date and end date are required", null));
+    res
+      .status(STATUS_CODES.BAD_REQUEST)
+      .json(errorJson('Start date and end date are required', null));
     return;
   }
   const startDate = new Date(`${start_date}T00:00:00.000Z`);
   const endDate = new Date(`${end_date}T23:59:59.999Z`);
 
   if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Invalid date format", null));
+    res
+      .status(STATUS_CODES.BAD_REQUEST)
+      .json(errorJson('Invalid date format', null));
     return;
   }
 
@@ -41,39 +67,59 @@ export async function getAllPayments(req: Request, res: Response, start_date: st
       where: {
         created_at: {
           gte: startDate,
-          lte: endDate
-        }
+          lte: endDate,
+        },
       },
       include: {
         student: {
-          select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true },
-        }
-      }
+          select: {
+            email: true,
+            full_name: true,
+            phone: true,
+            location: true,
+            id: true,
+            lastlogin: true,
+            created_at: true,
+            studentDetail: true,
+          },
+        },
+      },
     });
 
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Payments fetched successfully", payments));
+    res
+      .status(STATUS_CODES.SELECT_SUCCESS)
+      .json(successJson('Payments fetched successfully', payments));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal server error", null));
+    res
+      .status(STATUS_CODES.SELECT_FAILURE)
+      .json(errorJson('Internal server error', null));
   }
 }
 
-export async function getStudentPayments(req: Request, res: Response, userId: string, year: string): Promise<void> {
+export async function getStudentPayments(
+  req: Request,
+  res: Response,
+  userId: string,
+  year: string
+): Promise<void> {
   if (!userId || userId.trim().length === 0 || !year) {
-    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Student Id & year required Required", null));
+    res
+      .status(STATUS_CODES.BAD_REQUEST)
+      .json(errorJson('Student Id & year required Required', null));
     return;
   }
   try {
     const numYear = parseInt(year);
     if (isNaN(numYear)) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("year is NaN", null));
+      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('year is NaN', null));
       return;
     }
     const fee = await prismaClient.fee.findUnique({
       where: {
         year_student_id: {
           student_id: userId,
-          year: numYear
-        }
+          year: numYear,
+        },
       },
       select: {
         id: true,
@@ -94,28 +140,63 @@ export async function getStudentPayments(req: Request, res: Response, userId: st
             created_by: true,
             created_at: true,
             student: {
-              select: { email: true, full_name: true, phone: true, location: true, id: true, lastlogin: true, created_at: true, studentDetail: true, },
+              select: {
+                email: true,
+                full_name: true,
+                phone: true,
+                location: true,
+                id: true,
+                lastlogin: true,
+                created_at: true,
+                studentDetail: true,
+              },
             },
-            subjectPayments: { select: { subject: { select: { name: true, id: true, subject_fees: true } } } },
-            packagePayments: { select: { package: { select: { package_name: true, id: true, package_fees: true } } } }
-          }
-        }
-      }
+            subjectPayments: {
+              select: {
+                subject: {
+                  select: { name: true, id: true, subject_fees: true },
+                },
+              },
+            },
+            packagePayments: {
+              select: {
+                package: {
+                  select: { package_name: true, id: true, package_fees: true },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Payment fetched successfully", fee));
+    res
+      .status(STATUS_CODES.SELECT_SUCCESS)
+      .json(successJson('Payment fetched successfully', fee));
   } catch (error) {
     // console.error(error);
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal server error", null));
+    res
+      .status(STATUS_CODES.SELECT_FAILURE)
+      .json(errorJson('Internal server error', null));
   }
 }
 
-export async function createPayment(req: AuthenticatedRequest, res: Response): Promise<void> {
+export async function createPayment(
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> {
   try {
     const paymentBody: PaymentBody = req.body;
 
-    if (!paymentBody.student_id || !paymentBody.user_id || !paymentBody.year || !paymentBody.amount) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("user_id, student_id, amount and year required", null));
+    if (
+      !paymentBody.student_id ||
+      !paymentBody.user_id ||
+      !paymentBody.year ||
+      !paymentBody.amount
+    ) {
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('user_id, student_id, amount and year required', null));
       return;
     }
 
@@ -132,12 +213,19 @@ export async function createPayment(req: AuthenticatedRequest, res: Response): P
         student_fees: true,
         total_fees: true,
         payments: true,
-      }
+      },
     });
 
     // NOTE: the fee is created in the endpoint: /api/v3/admin/subject-package
     if (!fee) {
-      res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("first select student Package or Subjects for the year and student_id selected.", null));
+      res
+        .status(STATUS_CODES.CREATE_FAILURE)
+        .json(
+          errorJson(
+            'first select student Package or Subjects for the year and student_id selected.',
+            null
+          )
+        );
       return;
     }
 
@@ -149,7 +237,14 @@ export async function createPayment(req: AuthenticatedRequest, res: Response): P
     const currentAmount = new Decimal(paymentBody.amount);
     if (currentAmount.plus(feesPaid).greaterThan(fee.student_fees)) {
       // NOTE: in future instead of returning null we can return the amount limit that can be set by student_fees - amountPaid
-      res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("amount cannot be greaterThan than (student_fees - previously Paid Payments).", null));
+      res
+        .status(STATUS_CODES.CREATE_FAILURE)
+        .json(
+          errorJson(
+            'amount cannot be greaterThan than (student_fees - previously Paid Payments).',
+            null
+          )
+        );
       return;
     }
 
@@ -157,24 +252,33 @@ export async function createPayment(req: AuthenticatedRequest, res: Response): P
     const today = new Date();
     const currentYear = today.getFullYear();
     // const currentYear = paymentBody.year;
-    const prefix = paymentBody.is_gst ? "G" : "NG";
+    const prefix = paymentBody.is_gst ? 'G' : 'NG';
 
     // Find last payment of this type in current year
-    const startOfFinancialYear = today >= new Date(currentYear, 3, 15) // 3 = April, 15th April
-      ? new Date(currentYear, 3, 15)
-      : new Date(currentYear - 1, 3, 15);
+    const startOfFinancialYear =
+      today >= new Date(currentYear, 3, 15) // 3 = April, 15th April
+        ? new Date(currentYear, 3, 15)
+        : new Date(currentYear - 1, 3, 15);
 
-    const endOfFinancialYear = new Date(startOfFinancialYear.getFullYear() + 1, 3, 14, 23, 59, 59, 999); // next year 14 April
+    const endOfFinancialYear = new Date(
+      startOfFinancialYear.getFullYear() + 1,
+      3,
+      14,
+      23,
+      59,
+      59,
+      999
+    ); // next year 14 April
 
-    const nextYear = (startOfFinancialYear.getFullYear() + 1) % 100;       // to get last 2 nums of the year eg - 2025 -> 26
+    const nextYear = (startOfFinancialYear.getFullYear() + 1) % 100; // to get last 2 nums of the year eg - 2025 -> 26
 
     const lastPayment = await prismaClient.payment.findFirst({
       where: {
         is_gst: paymentBody.is_gst,
         created_at: {
           gte: startOfFinancialYear,
-          lt: endOfFinancialYear
-        }
+          lt: endOfFinancialYear,
+        },
       },
       orderBy: { created_at: 'desc' },
     });
@@ -202,7 +306,10 @@ export async function createPayment(req: AuthenticatedRequest, res: Response): P
           pending: newPendingFees,
           user_id: paymentBody.user_id,
           fee_id: fee.id,
-          created_by: paymentBody.staff_id == null ? req.user?.user_id : paymentBody.staff_id, // review this i am adding staff_id from body to created_by col
+          created_by:
+            paymentBody.staff_id == null
+              ? req.user?.user_id
+              : paymentBody.staff_id, // review this i am adding staff_id from body to created_by col
           // subjectPayments: {
           //   create: paymentBody.subjects.map((subjectId: string) => ({
           //     subject: { connect: { id: subjectId } }
@@ -221,16 +328,20 @@ export async function createPayment(req: AuthenticatedRequest, res: Response): P
         where: { user_id: paymentBody.user_id },
         data: {
           pending_fees: newPendingFees,
-          enrolled: true              // important handle it in post,delete
-        }
+          enrolled: true, // important handle it in post,delete
+        },
       });
 
       return newPayment;
     });
 
-    res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Payment created successfully", payment.id));
+    res
+      .status(STATUS_CODES.CREATE_SUCCESS)
+      .json(successJson('Payment created successfully', payment.id));
   } catch (error) {
-    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Internal server error", null));
+    res
+      .status(STATUS_CODES.CREATE_FAILURE)
+      .json(errorJson('Internal server error', null));
   }
 }
 
@@ -293,47 +404,68 @@ export async function createPayment(req: AuthenticatedRequest, res: Response): P
 // }
 
 // WARN: Ravi sir did the student_fees caclulation here but I have done none
-export async function editPayment(req: AuthenticatedRequest, res: Response): Promise<void> {
+export async function editPayment(
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> {
   try {
     const { id, ...paymentData } = req.body as PaymentBody & { id: string };
 
     // 1. Get existing payment and student
     const existingPayment = await prismaClient.payment.findUnique({
       where: { id: id },
-      select: { amount: true, user_id: true }
+      select: { amount: true, user_id: true },
     });
 
     if (!existingPayment || !existingPayment.amount) {
-      res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Payment record not found or payment amount is null", null));
+      res
+        .status(STATUS_CODES.SELECT_FAILURE)
+        .json(
+          errorJson('Payment record not found or payment amount is null', null)
+        );
       return;
     }
 
     if (!existingPayment.user_id) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("User Id is null that is that user has been Deleted!", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(
+          errorJson('User Id is null that is that user has been Deleted!', null)
+        );
       return;
     }
 
     const student = await prismaClient.studentDetail.findUnique({
       where: { user_id: existingPayment.user_id },
-      select: { pending_fees: true }
+      select: { pending_fees: true },
     });
 
     if (!student) {
-      res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Student not found", null));
+      res
+        .status(STATUS_CODES.SELECT_FAILURE)
+        .json(errorJson('Student not found', null));
       return;
     }
     if (!student.pending_fees || student.pending_fees.lessThanOrEqualTo(0)) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Student has no pending fees to pay", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Student has no pending fees to pay', null));
       return;
     }
 
     // 2. Calculate adjusted pending fees
     const previousAmount = existingPayment.amount;
     const newAmount = new Decimal(paymentData.amount);
-    let pendingFees = student.pending_fees.plus(previousAmount).minus(newAmount);   // calculation
+    let pendingFees = student.pending_fees
+      .plus(previousAmount)
+      .minus(newAmount); // calculation
 
     if (pendingFees.lessThan(0)) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Amount paid cannot be greater than pending fees", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(
+          errorJson('Amount paid cannot be greater than pending fees', null)
+        );
       return;
     }
 
@@ -350,35 +482,49 @@ export async function editPayment(req: AuthenticatedRequest, res: Response): Pro
           pending: pendingFees,
           remark: paymentData.remark,
           // receipt_number should not be updated as it's generated
-          created_by: paymentData.staff_id == null ? req.user?.user_id : paymentData.staff_id
-        }
+          created_by:
+            paymentData.staff_id == null
+              ? req.user?.user_id
+              : paymentData.staff_id,
+        },
       });
 
       // Update student pending fees
       await tx.studentDetail.update({
         where: { user_id: existingPayment.user_id! },
-        data: { pending_fees: pendingFees }
+        data: { pending_fees: pendingFees },
       });
     });
 
-    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Payment updated successfully", 1));
+    res
+      .status(STATUS_CODES.UPDATE_SUCCESS)
+      .json(successJson('Payment updated successfully', 1));
   } catch (error) {
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal server error", null));
+    res
+      .status(STATUS_CODES.UPDATE_FAILURE)
+      .json(errorJson('Internal server error', null));
   }
 }
 
-export const editStudentFees = async (req: Request, res: Response): Promise<void> => {
+export const editStudentFees = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { student_id, year, student_fees } = req.body;
 
   if (!student_id || !year) {
-    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("studentDetail id and year required", null));
+    res
+      .status(STATUS_CODES.BAD_REQUEST)
+      .json(errorJson('studentDetail id and year required', null));
     return;
   }
   try {
     const numYear = parseInt(year);
     const studentFees = parseInt(student_fees);
     if (isNaN(numYear) || isNaN(studentFees)) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("year or student_fees is NaN", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('year or student_fees is NaN', null));
       return;
     }
 
@@ -386,26 +532,35 @@ export const editStudentFees = async (req: Request, res: Response): Promise<void
       where: {
         year_student_id: {
           year: numYear,
-          student_id: student_id
-        }
+          student_id: student_id,
+        },
       },
       select: {
         id: true,
         payments: true,
         student_fees: true,
         total_fees: true,
-      }
+      },
     });
 
     if (!fee) {
-      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("year is NaN", null));
+      res
+        .status(STATUS_CODES.UPDATE_FAILURE)
+        .json(errorJson('year is NaN', null));
       return;
     }
 
     const studentFeesDecimal = new Decimal(studentFees);
 
     if (studentFeesDecimal.greaterThan(fee.total_fees)) {
-      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("student_fees cannot be greater than than total_fees.", null));
+      res
+        .status(STATUS_CODES.UPDATE_FAILURE)
+        .json(
+          errorJson(
+            'student_fees cannot be greater than than total_fees.',
+            null
+          )
+        );
       return;
     }
 
@@ -414,20 +569,31 @@ export const editStudentFees = async (req: Request, res: Response): Promise<void
       feesPaid = feesPaid.plus(payment.amount ?? new Decimal(0));
 
     if (studentFeesDecimal.lessThan(feesPaid)) {
-      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("student_fees cannot be less than the fees aldready paid.", null));
+      res
+        .status(STATUS_CODES.UPDATE_FAILURE)
+        .json(
+          errorJson(
+            'student_fees cannot be less than the fees aldready paid.',
+            null
+          )
+        );
       return;
     }
 
     await prismaClient.fee.update({
       where: { id: fee.id },
-      data: { student_fees: studentFeesDecimal }
-    })
+      data: { student_fees: studentFeesDecimal },
+    });
 
-    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Student Fees edited Successfully!", 1));
+    res
+      .status(STATUS_CODES.UPDATE_SUCCESS)
+      .json(successJson('Student Fees edited Successfully!', 1));
   } catch (error) {
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Edit student fees failed", null));
+    res
+      .status(STATUS_CODES.UPDATE_FAILURE)
+      .json(errorJson('Edit student fees failed', null));
   }
-}
+};
 
 // // NOTE: this was just made to fix the Fee table
 // interface FeeBody {

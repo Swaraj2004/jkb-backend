@@ -1,6 +1,12 @@
 import express, { Request, Response } from 'express';
 import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
-import { createBranch, deleteBranch, editBranch, getAllBranchesIdName, getBranchById } from '../controllers/branchController';
+import {
+  createBranch,
+  deleteBranch,
+  editBranch,
+  getAllBranchesIdName,
+  getBranchById,
+} from '../controllers/branchController';
 import { ADMIN_ROLE } from '../utils/consts';
 
 const router = express.Router();
@@ -28,9 +34,12 @@ const router = express.Router();
  *       200:
  *         description: A single branch object
  */
-router.get('/:branch_id', async (req: Request, res: Response): Promise<void> => {
-  return getBranchById(req, res);
-});
+router.get(
+  '/:branch_id',
+  async (req: Request, res: Response): Promise<void> => {
+    return getBranchById(req, res);
+  }
+);
 
 // branches , packages, subjects and roles -> admin routes
 // return only id and name in normal get routes
@@ -67,9 +76,14 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
  *         description: The created branch object
  */
 // Create a new branch
-router.post('/', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
-  return createBranch(req, res);
-});
+router.post(
+  '/',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE]),
+  async (req: Request, res: Response): Promise<void> => {
+    return createBranch(req, res);
+  }
+);
 
 /**
  * @swagger
@@ -88,9 +102,14 @@ router.post('/', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Reque
  *       204:
  *         description: Branch deleted successfully
  */
-router.delete('/:branch_id', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
-  return deleteBranch(req, res);
-});
+router.delete(
+  '/:branch_id',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE]),
+  async (req: Request, res: Response): Promise<void> => {
+    return deleteBranch(req, res);
+  }
+);
 /**
  * @swagger
  * /api/v3/admin/branches:
@@ -108,8 +127,13 @@ router.delete('/:branch_id', authMiddleware, authorizeRoles([ADMIN_ROLE]), async
  *         description: The updated branch object
  */
 // Update a branch
-router.put('/:branch_id', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
-  return editBranch(req, res);
-});
+router.put(
+  '/:branch_id',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE]),
+  async (req: Request, res: Response): Promise<void> => {
+    return editBranch(req, res);
+  }
+);
 
 export default router;

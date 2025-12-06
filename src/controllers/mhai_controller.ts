@@ -4,7 +4,6 @@ import { successJson } from '../utils/common_funcs';
 import { PredictByScoreRequest } from '../models/mhai_req_body';
 import { prismaClient } from '../utils/database';
 
-
 // WARN: ask bhaiya about this whether to throw error or not
 // function checkScore(score: number): void {
 //   if (score < 0 || score > 100) {
@@ -12,7 +11,10 @@ import { prismaClient } from '../utils/database';
 //   }
 // }
 
-export async function predictCollegesByScore(req: Request, res: Response): Promise<void> {
+export async function predictCollegesByScore(
+  req: Request,
+  res: Response
+): Promise<void> {
   try {
     const reqBody: PredictByScoreRequest = req.body;
 
@@ -44,13 +46,20 @@ export async function predictCollegesByScore(req: Request, res: Response): Promi
       },
     });
 
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Colleges Fetched Successfully", colleges));
+    res
+      .status(STATUS_CODES.SELECT_SUCCESS)
+      .json(successJson('Colleges Fetched Successfully', colleges));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Error occured in fetching the colleges", null));
+    res
+      .status(STATUS_CODES.SELECT_SUCCESS)
+      .json(successJson('Error occured in fetching the colleges', null));
   }
 }
 
-export async function predictCollegesByLocation(req: Request, res: Response): Promise<void> {
+export async function predictCollegesByLocation(
+  req: Request,
+  res: Response
+): Promise<void> {
   try {
     const { district, year } = req.body;
 
@@ -63,20 +72,24 @@ export async function predictCollegesByLocation(req: Request, res: Response): Pr
       },
     });
 
-    const collegeCodes = distinctCodes.map(code => code.college_code);
+    const collegeCodes = distinctCodes.map((code) => code.college_code);
     const colleges = await prismaClient.mhAiCollege.findMany({
       where: {
         college_code: {
-          in: collegeCodes
+          in: collegeCodes,
         },
         location: district,
-        year: year
-      }
+        year: year,
+      },
     });
     // console.log(distinctCodes);
 
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Colleges Fetched Successfully", colleges));
+    res
+      .status(STATUS_CODES.SELECT_SUCCESS)
+      .json(successJson('Colleges Fetched Successfully', colleges));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Error occured in fetching the colleges", null));
+    res
+      .status(STATUS_CODES.SELECT_SUCCESS)
+      .json(successJson('Error occured in fetching the colleges', null));
   }
 }

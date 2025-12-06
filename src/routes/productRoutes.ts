@@ -1,9 +1,7 @@
-import express from "express";
-import { getProducts } from "../controllers/productController";
-
+import express from 'express';
+import { getProducts } from '../controllers/productController';
 
 const router = express.Router();
-
 
 /**
  * @swagger
@@ -14,6 +12,6 @@ const router = express.Router();
  *       200:
  *         description: A successful response
  */
-router.get("/", getProducts);
+router.get('/', getProducts);
 
 export default router;

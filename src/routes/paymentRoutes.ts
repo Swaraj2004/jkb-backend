@@ -1,11 +1,21 @@
 import express, { Request, Response } from 'express';
-import { createPayment, editPayment, editStudentFees, getAllPayments, getPaymentById, getStudentPayments } from '../controllers/paymentController';
-import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
+import {
+  createPayment,
+  editPayment,
+  editStudentFees,
+  getAllPayments,
+  getPaymentById,
+  getStudentPayments,
+} from '../controllers/paymentController';
+import {
+  AuthenticatedRequest,
+  authMiddleware,
+  authorizeRoles,
+} from '../middlewares/authMiddleware';
 import { STUDENT_ROLE, STATUS_CODES, ADMIN_ROLE } from '../utils/consts';
 import { errorJson } from '../utils/common_funcs';
 
 const router = express.Router();
-
 
 /**
  * @swagger
@@ -31,10 +41,15 @@ const router = express.Router();
  *       200:
  *         description: A single payment object
  */
-router.get('/admin/payments/:payment_id', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
-  const paymentId = req.params.payment_id;
-  return getPaymentById(req, res, paymentId);
-});
+router.get(
+  '/admin/payments/:payment_id',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE]),
+  async (req: Request, res: Response): Promise<void> => {
+    const paymentId = req.params.payment_id;
+    return getPaymentById(req, res, paymentId);
+  }
+);
 
 /**
  * @swagger
@@ -59,10 +74,15 @@ router.get('/admin/payments/:payment_id', authMiddleware, authorizeRoles([ADMIN_
  *       200:
  *         description: A list of payment objects
  */
-router.get('/admin/payments', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
-  const { start_date, end_date } = req.query;
-  return getAllPayments(req, res, start_date as string, end_date as string);
-});
+router.get(
+  '/admin/payments',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE]),
+  async (req: Request, res: Response): Promise<void> => {
+    const { start_date, end_date } = req.query;
+    return getAllPayments(req, res, start_date as string, end_date as string);
+  }
+);
 
 /**
  * @swagger
@@ -81,15 +101,22 @@ router.get('/admin/payments', authMiddleware, authorizeRoles([ADMIN_ROLE]), asyn
  *       200:
  *         description: A list of payment objects for the student
  */
-router.get('/admin/student-payments/:user_id', authMiddleware, authorizeRoles([ADMIN_ROLE, STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const userId = req.params.user_id;
-  const year = req.query.year as string;
-  if (req.user!.role_name == STUDENT_ROLE && userId != req.user!.user_id) {
-    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Can't see other Students Payments", null));
-    return;
+router.get(
+  '/admin/student-payments/:user_id',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE, STUDENT_ROLE]),
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const userId = req.params.user_id;
+    const year = req.query.year as string;
+    if (req.user!.role_name == STUDENT_ROLE && userId != req.user!.user_id) {
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson("Can't see other Students Payments", null));
+      return;
+    }
+    return getStudentPayments(req, res, userId, year);
   }
-  return getStudentPayments(req, res, userId, year);
-});
+);
 
 /**
  * @swagger
@@ -107,9 +134,14 @@ router.get('/admin/student-payments/:user_id', authMiddleware, authorizeRoles([A
  *       201:
  *         description: The created payment object
  */
-router.post('/admin/payments', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  return createPayment(req, res);
-});
+router.post(
+  '/admin/payments',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE]),
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    return createPayment(req, res);
+  }
+);
 
 /**
  * @swagger
@@ -149,9 +181,14 @@ router.post('/admin/payments', authMiddleware, authorizeRoles([ADMIN_ROLE]), asy
  *       202:
  *         description: The updated payment object
  */
-router.put('/admin/payments', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  return editPayment(req, res);
-});
+router.put(
+  '/admin/payments',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE]),
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    return editPayment(req, res);
+  }
+);
 
 /**
  * @swagger
@@ -170,12 +207,17 @@ router.put('/admin/payments', authMiddleware, authorizeRoles([ADMIN_ROLE]), asyn
  *       200:
  *         description: A list of payment records for the student
  */
-router.get('/student/payments', authMiddleware, authorizeRoles([ADMIN_ROLE, STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  // TODO: here other student can see any student details fix this
-  const studentId = req.query.student_id as string;
-  const year = req.query.year as string;
-  return getStudentPayments(req, res, studentId, year);
-});
+router.get(
+  '/student/payments',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE, STUDENT_ROLE]),
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    // TODO: here other student can see any student details fix this
+    const studentId = req.query.student_id as string;
+    const year = req.query.year as string;
+    return getStudentPayments(req, res, studentId, year);
+  }
+);
 
 /**
  * @swagger
@@ -193,9 +235,14 @@ router.get('/student/payments', authMiddleware, authorizeRoles([ADMIN_ROLE, STUD
  *       202:
  *         description: The updated payment object
  */
-router.put('/admin/student-fees', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  return editStudentFees(req, res);
-});
+router.put(
+  '/admin/student-fees',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE]),
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    return editStudentFees(req, res);
+  }
+);
 
 // // NOTE: this route is only to be run at backend dont make it public and was made to fix the fee Table
 // router.post('/feeHelper', authMiddleware, authorizeRoles([]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {

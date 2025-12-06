@@ -28,16 +28,16 @@ const router = express.Router();
  *         description: A list of predicted colleges based on score
  */
 router.post('/predict-colleges-by-score', async (req, res) => {
-    // const requestBody: ListCollegesByScore = req.body; // Get request body
-    // try {
-    //     const predictedColleges = await webController.predict_colleges_by_score(
-    //         dbInstance,
-    //         requestBody
-    //     );
-    //     return res.status(200).json(predictedColleges); // Return the predicted colleges
-    // } catch (error) {
-    //     return res.status(500).json({ success: false, message: 'Error predicting colleges by score', error });
-    // }
+  // const requestBody: ListCollegesByScore = req.body; // Get request body
+  // try {
+  //     const predictedColleges = await webController.predict_colleges_by_score(
+  //         dbInstance,
+  //         requestBody
+  //     );
+  //     return res.status(200).json(predictedColleges); // Return the predicted colleges
+  // } catch (error) {
+  //     return res.status(500).json({ success: false, message: 'Error predicting colleges by score', error });
+  // }
 });
 
 /**
@@ -57,16 +57,16 @@ router.post('/predict-colleges-by-score', async (req, res) => {
  *         description: A list of predicted colleges based on location
  */
 router.post('/predict-colleges-by-location', async (req, res) => {
-    // const requestBody: ListCollegesByLocation = req.body; // Get request body
-    // try {
-    //     const predictedColleges = await webController.predict_colleges_by_location(
-    //         dbInstance,
-    //         requestBody
-    //     );
-    //     return res.status(200).json(predictedColleges); // Return the predicted colleges
-    // } catch (error) {
-    //     return res.status(500).json({ success: false, message: 'Error predicting colleges by location', error });
-    // }
+  // const requestBody: ListCollegesByLocation = req.body; // Get request body
+  // try {
+  //     const predictedColleges = await webController.predict_colleges_by_location(
+  //         dbInstance,
+  //         requestBody
+  //     );
+  //     return res.status(200).json(predictedColleges); // Return the predicted colleges
+  // } catch (error) {
+  //     return res.status(500).json({ success: false, message: 'Error predicting colleges by location', error });
+  // }
 });
 
 export default router;

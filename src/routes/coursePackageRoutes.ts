@@ -1,7 +1,26 @@
 import express, { Request, Response } from 'express';
-import { createCoursePackage, deleteCoursePackage, getAllCoursePackages, getAllCoursePackagesIdName, getCoursePackageById, getProfessors, getStudentPackages, getSubjectPackageUsers, updateCoursePackage } from '../controllers/coursePackageController';
-import { AuthenticatedRequest, authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
-import { ADMIN_ROLE, GET_ALTERNATIVE, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
+import {
+  createCoursePackage,
+  deleteCoursePackage,
+  getAllCoursePackages,
+  getAllCoursePackagesIdName,
+  getCoursePackageById,
+  getProfessors,
+  getStudentPackages,
+  getSubjectPackageUsers,
+  updateCoursePackage,
+} from '../controllers/coursePackageController';
+import {
+  AuthenticatedRequest,
+  authMiddleware,
+  authorizeRoles,
+} from '../middlewares/authMiddleware';
+import {
+  ADMIN_ROLE,
+  GET_ALTERNATIVE,
+  PROFESSOR_ROLE,
+  STUDENT_ROLE,
+} from '../utils/consts';
 
 const router = express.Router();
 
@@ -29,9 +48,12 @@ const router = express.Router();
  *       200:
  *         description: A single course package object
  */
-router.get('/packages/:package_id', async (req: Request, res: Response): Promise<void> => {
-  return getCoursePackageById(req, res, req.params.package_id);
-});
+router.get(
+  '/packages/:package_id',
+  async (req: Request, res: Response): Promise<void> => {
+    return getCoursePackageById(req, res, req.params.package_id);
+  }
+);
 
 /**
  * @swagger
@@ -79,9 +101,14 @@ router.get('/packages', async (req: Request, res: Response): Promise<void> => {
  */
 
 // this function requires nice testing
-router.get('/package-users', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
-  return getSubjectPackageUsers(req, res);
-});
+router.get(
+  '/package-users',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE]),
+  async (req: Request, res: Response): Promise<void> => {
+    return getSubjectPackageUsers(req, res);
+  }
+);
 
 /**
  * @swagger
@@ -100,22 +127,27 @@ router.get('/package-users', authMiddleware, authorizeRoles([ADMIN_ROLE]), async
  *       200:
  *         description: A list of course packages for the student
  */
-router.get('/student-packages/:student_id', authMiddleware, authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE, STUDENT_ROLE]), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  // if (!req.user) {
-  //     res.status(401).json(errorJson("Please log in first", null));
-  //     return;
-  // }
+router.get(
+  '/student-packages/:student_id',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE, STUDENT_ROLE]),
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    // if (!req.user) {
+    //     res.status(401).json(errorJson("Please log in first", null));
+    //     return;
+    // }
 
-  // if (
-  //     !AUTH_ROLES.includes(req.user.role_name) &&
-  //     req.user.role_name !== PROFESSOR_ROLE &&
-  //     req.user.id != req.params.user_id
-  // ) {
-  //     res.status(403).json(errorJson("Unauthorized", null));
-  //     return;
-  // }
-  return getStudentPackages(req, res, req.params.student_id);
-});
+    // if (
+    //     !AUTH_ROLES.includes(req.user.role_name) &&
+    //     req.user.role_name !== PROFESSOR_ROLE &&
+    //     req.user.id != req.params.user_id
+    // ) {
+    //     res.status(403).json(errorJson("Unauthorized", null));
+    //     return;
+    // }
+    return getStudentPackages(req, res, req.params.student_id);
+  }
+);
 
 /**
  * @swagger
@@ -133,9 +165,14 @@ router.get('/student-packages/:student_id', authMiddleware, authorizeRoles([ADMI
  *       201:
  *         description: The created course package object
  */
-router.post('/packages', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
-  return createCoursePackage(req, res);
-});
+router.post(
+  '/packages',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE]),
+  async (req: Request, res: Response): Promise<void> => {
+    return createCoursePackage(req, res);
+  }
+);
 
 /**
  * @swagger
@@ -154,9 +191,14 @@ router.post('/packages', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (re
  *       204:
  *         description: Course package deleted successfully
  */
-router.delete('/packages/:package_id', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
-  return deleteCoursePackage(req, res, req.params.package_id);
-});
+router.delete(
+  '/packages/:package_id',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE]),
+  async (req: Request, res: Response): Promise<void> => {
+    return deleteCoursePackage(req, res, req.params.package_id);
+  }
+);
 
 /**
  * @swagger
@@ -174,9 +216,14 @@ router.delete('/packages/:package_id', authMiddleware, authorizeRoles([ADMIN_ROL
  *       202:
  *         description: The updated course package object
  */
-router.put('/packages', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
-  return updateCoursePackage(req, res);
-});
+router.put(
+  '/packages',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE]),
+  async (req: Request, res: Response): Promise<void> => {
+    return updateCoursePackage(req, res);
+  }
+);
 
 /**
  * @swagger
@@ -188,8 +235,13 @@ router.put('/packages', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req
  *       200:
  *         description: A list of professor objects
  */
-router.get('/professors', authMiddleware, authorizeRoles([ADMIN_ROLE]), async (req: Request, res: Response): Promise<void> => {
-  return getProfessors(req, res);
-});
+router.get(
+  '/professors',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE]),
+  async (req: Request, res: Response): Promise<void> => {
+    return getProfessors(req, res);
+  }
+);
 
 export default router;

@@ -4,8 +4,8 @@ interface Option {
 }
 
 export interface Question {
-  test_id: string,
-  question_text: string,
-  question_marks: string,
-  options: Option[],
+  test_id: string;
+  question_text: string;
+  question_marks: string;
+  options: Option[];
 }

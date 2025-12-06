@@ -1,5 +1,11 @@
 import express, { Request, Response } from 'express';
-import { createRole, deleteRole, getAllRoles, getRolesById, updateRole } from '../controllers/roleController';
+import {
+  createRole,
+  deleteRole,
+  getAllRoles,
+  getRolesById,
+  updateRole,
+} from '../controllers/roleController';
 
 const router = express.Router();
 
@@ -27,9 +33,12 @@ const router = express.Router();
  *       200:
  *         description: A single role object
  */
-router.get('/roles/:role_id', async (req: Request, res: Response): Promise<void> => {
-  return getRolesById(req, res, req.params.role_id);
-});
+router.get(
+  '/roles/:role_id',
+  async (req: Request, res: Response): Promise<void> => {
+    return getRolesById(req, res, req.params.role_id);
+  }
+);
 
 /**
  * @swagger

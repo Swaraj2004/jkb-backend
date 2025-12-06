@@ -8,7 +8,7 @@ export interface TestRequestBody {
 }
 
 export enum TestStatus {
-  Scheduled = "Scheduled",
-  InProgress = "InProgress",
-  Completed = "Completed",
+  Scheduled = 'Scheduled',
+  InProgress = 'InProgress',
+  Completed = 'Completed',
 }

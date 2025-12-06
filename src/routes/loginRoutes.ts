@@ -1,11 +1,14 @@
 import express, { Request, Response } from 'express';
 import { checkLoginStatus, login } from '../controllers/loginController';
-import { resetPassword, sendOTPOverEmail, verifyOTP } from '../utils/send_email';
+import {
+  resetPassword,
+  sendOTPOverEmail,
+  verifyOTP,
+} from '../utils/send_email';
 import { STATUS_CODES } from '../utils/consts';
 import { errorJson } from '../utils/common_funcs';
 
 const router = express.Router();
-
 
 /**
  * @swagger
@@ -32,9 +35,12 @@ const router = express.Router();
  */
 
 // function is incomplete and not tested
-router.post('/login-user', async (req: Request, res: Response): Promise<void> => {
-  return login(req, res);
-});
+router.post(
+  '/login-user',
+  async (req: Request, res: Response): Promise<void> => {
+    return login(req, res);
+  }
+);
 
 /**
  * @swagger
@@ -53,10 +59,13 @@ router.post('/login-user', async (req: Request, res: Response): Promise<void> =>
  *       200:
  *         description: User login status
  */
-router.post('/login-status/:user_id', async (req: Request, res: Response): Promise<void> => {
-  const userId = req.params.user_id;
-  return checkLoginStatus(req, res, userId);
-});
+router.post(
+  '/login-status/:user_id',
+  async (req: Request, res: Response): Promise<void> => {
+    const userId = req.params.user_id;
+    return checkLoginStatus(req, res, userId);
+  }
+);
 
 /**
  * @swagger
@@ -75,9 +84,12 @@ router.post('/login-status/:user_id', async (req: Request, res: Response): Promi
  *       200:
  *         description: OTP sent successfully
  */
-router.post('/send-otp/:user_email', async (req: Request, res: Response): Promise<void> => {
-  return sendOTPOverEmail(req, res, req.params.user_email);
-});
+router.post(
+  '/send-otp/:user_email',
+  async (req: Request, res: Response): Promise<void> => {
+    return sendOTPOverEmail(req, res, req.params.user_email);
+  }
+);
 
 /**
  * @swagger
@@ -102,11 +114,14 @@ router.post('/send-otp/:user_email', async (req: Request, res: Response): Promis
  *       200:
  *         description: OTP verified successfully
  */
-router.post('/verify-otp/:user_email/:otp_code', async (req: Request, res: Response): Promise<void> => {
-  const userEmail = req.params.user_email;
-  const otpCode = req.params.otp_code;
-  return verifyOTP(req, res, userEmail, parseInt(otpCode));
-});
+router.post(
+  '/verify-otp/:user_email/:otp_code',
+  async (req: Request, res: Response): Promise<void> => {
+    const userEmail = req.params.user_email;
+    const otpCode = req.params.otp_code;
+    return verifyOTP(req, res, userEmail, parseInt(otpCode));
+  }
+);
 
 /**
  * @swagger
@@ -124,13 +139,18 @@ router.post('/verify-otp/:user_email/:otp_code', async (req: Request, res: Respo
  *       200:
  *         description: Password reset successfully
  */
-router.post('/reset-password', async (req: Request, res: Response): Promise<void> => {
-  const { email_address, password } = req.query;
-  if (!email_address || !password) {
-    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Email address and Password required!", null));
-    return;
+router.post(
+  '/reset-password',
+  async (req: Request, res: Response): Promise<void> => {
+    const { email_address, password } = req.query;
+    if (!email_address || !password) {
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Email address and Password required!', null));
+      return;
+    }
+    return resetPassword(req, res, email_address as string, password as string);
   }
-  return resetPassword(req, res, email_address as string, password as string);
-});
+);
 
 export default router;

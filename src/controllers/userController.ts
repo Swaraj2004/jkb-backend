@@ -221,7 +221,9 @@ export const createUserAndStudent = async (
     //   return;
     // }
 
-    res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson('Record inserted Successfully', newUser.id));
+    res
+      .status(STATUS_CODES.CREATE_SUCCESS)
+      .json(successJson('Record inserted Successfully', newUser.id));
   } catch (error) {
     // console.error("create user error:", error);
     res

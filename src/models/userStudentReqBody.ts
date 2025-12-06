@@ -15,9 +15,9 @@ export interface UserStudentRequestBody {
     jee_score?: number;
     college_name?: string;
     referred_by?: string;
-    student_fees?: string;   // Decimal, so use string
-    total_fees?: string;     // Decimal, so use string
-    pending_fees?: string;   // Decimal, so use string
+    student_fees?: string; // Decimal, so use string
+    total_fees?: string; // Decimal, so use string
+    pending_fees?: string; // Decimal, so use string
     university_name?: string;
     jkb_centre?: string;
     semester?: string;

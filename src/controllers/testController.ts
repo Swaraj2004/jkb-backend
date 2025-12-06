@@ -9,29 +9,49 @@ import { AuthenticatedRequest } from '../middlewares/authMiddleware';
 import redisClient from '../utils/redisClient';
 
 // ====== Tests ======
-export const getTests = async (req: Request, res: Response, professor_id: string): Promise<void> => {
+export const getTests = async (
+  req: Request,
+  res: Response,
+  professor_id: string
+): Promise<void> => {
   try {
     if (!professor_id) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Professor Id required", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Professor Id required', null));
       return;
     }
 
-    const tests = await prismaClient.test.findMany({ where: { user_id: professor_id } });
+    const tests = await prismaClient.test.findMany({
+      where: { user_id: professor_id },
+    });
 
     if (tests.length === 0) {
-      res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("No Test found related to the professor_id", null));
+      res
+        .status(STATUS_CODES.SELECT_FAILURE)
+        .json(errorJson('No Test found related to the professor_id', null));
       return;
     }
 
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Test fetched Succesfully!", tests));
+    res
+      .status(STATUS_CODES.SELECT_SUCCESS)
+      .json(successJson('Test fetched Succesfully!', tests));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", null));
+    res
+      .status(STATUS_CODES.SELECT_FAILURE)
+      .json(errorJson('Internal Server Error', null));
   }
 };
 
-export const getTestStatus = async (req: Request, res: Response, test_id: string): Promise<void> => {
+export const getTestStatus = async (
+  req: Request,
+  res: Response,
+  test_id: string
+): Promise<void> => {
   if (!test_id) {
-    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test Id required", null));
+    res
+      .status(STATUS_CODES.BAD_REQUEST)
+      .json(errorJson('Test Id required', null));
     return;
   }
 
@@ -46,7 +66,9 @@ export const getTestStatus = async (req: Request, res: Response, test_id: string
       // }));
       // console.log("Redis Data:", keyValuePairs);
       if (testStatus) {
-        res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Test Status fetched successfully!", testStatus));
+        res
+          .status(STATUS_CODES.SELECT_SUCCESS)
+          .json(successJson('Test Status fetched successfully!', testStatus));
         return;
       }
     } else {
@@ -59,43 +81,64 @@ export const getTestStatus = async (req: Request, res: Response, test_id: string
   try {
     const test = await prismaClient.test.findUnique({
       where: { id: test_id },
-      select: { test_status: true, test_timestamp: true, total_time: true }
+      select: { test_status: true, test_timestamp: true, total_time: true },
     });
     if (!test) {
-      res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Test not found", null));
+      res
+        .status(STATUS_CODES.SELECT_FAILURE)
+        .json(errorJson('Test not found', null));
       return;
     }
 
-    const testStartTime = test.test_timestamp ? new Date(test.test_timestamp).getTime() : Date.now();
+    const testStartTime = test.test_timestamp
+      ? new Date(test.test_timestamp).getTime()
+      : Date.now();
 
-    if ((testStartTime + test.total_time * 60 * 1000) < Date.now()) {
+    if (testStartTime + test.total_time * 60 * 1000 < Date.now()) {
       await prismaClient.test.update({
         where: { id: test_id },
-        data: { test_status: TestStatus.Completed }
+        data: { test_status: TestStatus.Completed },
       });
       // NOTE: I have set the expiry time of the completed to 5 min for some req after test is Ended
       await redisClient.set(test_id, TestStatus.Completed, { EX: 5 * 60 });
-      res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Test Status fetched Succesfully!", TestStatus.Completed));
+      res
+        .status(STATUS_CODES.SELECT_SUCCESS)
+        .json(
+          successJson('Test Status fetched Succesfully!', TestStatus.Completed)
+        );
       return;
     }
     // console.log("Data from db:", test);
 
     try {
       if (redisClient.isReady)
-        await redisClient.set(test_id, test.test_status, { EX: (test.total_time || 30) * 60 });  // expiriy expects in seconds
-    } catch (redisErr) { }
+        await redisClient.set(test_id, test.test_status, {
+          EX: (test.total_time || 30) * 60,
+        }); // expiriy expects in seconds
+    } catch (redisErr) {}
 
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Test Status fetched Succesfully!", test.test_status));
+    res
+      .status(STATUS_CODES.SELECT_SUCCESS)
+      .json(successJson('Test Status fetched Succesfully!', test.test_status));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", null));
+    res
+      .status(STATUS_CODES.SELECT_FAILURE)
+      .json(errorJson('Internal Server Error', null));
   }
 };
 
 // Get test using subject_id
-export const getSubjectTests = async (req: Request, res: Response, subject_id: string, user_id: string): Promise<void> => {
+export const getSubjectTests = async (
+  req: Request,
+  res: Response,
+  subject_id: string,
+  user_id: string
+): Promise<void> => {
   try {
     if (!subject_id || !user_id) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Subject Id and user id required", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Subject Id and user id required', null));
       return;
     }
 
@@ -105,41 +148,62 @@ export const getSubjectTests = async (req: Request, res: Response, subject_id: s
         test_status: { not: TestStatus.Scheduled },
       },
       select: {
-        id: true, title: true, test_status: true, test_timestamp: true, total_time: true,
+        id: true,
+        title: true,
+        test_status: true,
+        test_timestamp: true,
+        total_time: true,
         testSubmissions: {
-          where: { user_id: user_id, },
-          select: { score: true, is_submitted: true }
-        }
-      }
+          where: { user_id: user_id },
+          select: { score: true, is_submitted: true },
+        },
+      },
     });
 
     if (tests.length == 0) {
-      res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("No Test found related to the subject_id", null));
+      res
+        .status(STATUS_CODES.SELECT_FAILURE)
+        .json(errorJson('No Test found related to the subject_id', null));
       return;
     }
 
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Test fetched Succesfully!", tests));
+    res
+      .status(STATUS_CODES.SELECT_SUCCESS)
+      .json(successJson('Test fetched Succesfully!', tests));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", null));
+    res
+      .status(STATUS_CODES.SELECT_FAILURE)
+      .json(errorJson('Internal Server Error', null));
   }
 };
 
-export const createTest = async (req: Request, res: Response, professorId: string): Promise<void> => {
+export const createTest = async (
+  req: Request,
+  res: Response,
+  professorId: string
+): Promise<void> => {
   try {
-    const { title, start_time, subject_id, test_duration }: TestRequestBody = req.body;
+    const { title, start_time, subject_id, test_duration }: TestRequestBody =
+      req.body;
     if (!title || !subject_id) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Request Body not complete.", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Request Body not complete.', null));
       return;
     }
 
     const startTime = start_time ? new Date(start_time) : new Date();
 
     if (start_time && isNaN(startTime.getTime())) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Invalid start_time format.", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Invalid start_time format.', null));
       return;
     }
     if (start_time && startTime.getTime() < Date.now()) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Start time cannot be in the past.", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Start time cannot be in the past.', null));
       return;
     }
 
@@ -150,35 +214,54 @@ export const createTest = async (req: Request, res: Response, professorId: strin
         title: title,
         test_timestamp: startTime,
         total_time: test_duration ?? undefined,
-      }
+      },
     });
 
-    res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Test created Succesfully", test.id));
+    res
+      .status(STATUS_CODES.CREATE_SUCCESS)
+      .json(successJson('Test created Succesfully', test.id));
   } catch (error) {
-    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Internal Server Error", null));
+    res
+      .status(STATUS_CODES.CREATE_FAILURE)
+      .json(errorJson('Internal Server Error', null));
   }
 };
 
-export const updateTest = async (req: Request, res: Response, testId: string): Promise<void> => {
+export const updateTest = async (
+  req: Request,
+  res: Response,
+  testId: string
+): Promise<void> => {
   try {
     if (!testId) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test Id required", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Test Id required', null));
       return;
     }
     const reqBody: TestRequestBody = req.body;
-    if (reqBody.test_status && !Object.values(TestStatus).includes(reqBody.test_status)) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Send valid test_status.", null));
+    if (
+      reqBody.test_status &&
+      !Object.values(TestStatus).includes(reqBody.test_status)
+    ) {
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Send valid test_status.', null));
       return;
     }
     const start_time = reqBody.start_time;
     const startTime = start_time ? new Date(start_time) : new Date();
 
     if (start_time && isNaN(startTime.getTime())) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Invalid start_time format.", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Invalid start_time format.', null));
       return;
     }
     if (start_time && startTime.getTime() < Date.now()) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Start time cannot be in the past.", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Start time cannot be in the past.', null));
       return;
     }
 
@@ -190,19 +273,29 @@ export const updateTest = async (req: Request, res: Response, testId: string): P
         test_timestamp: reqBody.start_time ? startTime : undefined,
         total_time: reqBody.test_duration ?? undefined,
         test_status: reqBody.test_status ?? undefined,
-      }
+      },
     });
 
-    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Updated Succesfully!", 1));
+    res
+      .status(STATUS_CODES.UPDATE_SUCCESS)
+      .json(successJson('Test Updated Succesfully!', 1));
   } catch (error) {
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", null));
+    res
+      .status(STATUS_CODES.UPDATE_FAILURE)
+      .json(errorJson('Internal Server Error', null));
   }
 };
 
-export const startTest = async (req: Request, res: Response, testId: string): Promise<void> => {
+export const startTest = async (
+  req: Request,
+  res: Response,
+  testId: string
+): Promise<void> => {
   try {
     if (!testId) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test Id required", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Test Id required', null));
       return;
     }
 
@@ -212,16 +305,18 @@ export const startTest = async (req: Request, res: Response, testId: string): Pr
         test_status: TestStatus.InProgress,
         test_timestamp: new Date(),
       },
-      select: { id: true, test_status: true, total_time: true }
+      select: { id: true, test_status: true, total_time: true },
     });
 
     try {
       //  NOTE: Redis Notes
-      // To check if the the client is connected and ready to send commands, use client.isReady which returns a boolean.client.isOpen is also available. 
-      // This returns true when the client’s underlying socket is open, and false when it isn’t(for example when the client is still 
+      // To check if the the client is connected and ready to send commands, use client.isReady which returns a boolean.client.isOpen is also available.
+      // This returns true when the client’s underlying socket is open, and false when it isn’t(for example when the client is still
       // connecting or reconnecting after a network error).
       if (redisClient.isReady) {
-        await redisClient.set(test.id, test.test_status, { EX: (test.total_time || 30) * 60 });  // expiriy expects in seconds
+        await redisClient.set(test.id, test.test_status, {
+          EX: (test.total_time || 30) * 60,
+        }); // expiriy expects in seconds
       } else {
         // logger.log("redis operations failed");
       }
@@ -229,48 +324,78 @@ export const startTest = async (req: Request, res: Response, testId: string): Pr
       // logger.log("redis operations failed");
     }
 
-    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Started Succesfully!", 1));
+    res
+      .status(STATUS_CODES.UPDATE_SUCCESS)
+      .json(successJson('Test Started Succesfully!', 1));
   } catch (error) {
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", null));
+    res
+      .status(STATUS_CODES.UPDATE_FAILURE)
+      .json(errorJson('Internal Server Error', null));
   }
 };
 
-export const endTest = async (req: Request, res: Response, testId: string): Promise<void> => {
+export const endTest = async (
+  req: Request,
+  res: Response,
+  testId: string
+): Promise<void> => {
   try {
     if (!testId) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test Id required", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Test Id required', null));
       return;
     }
     await prismaClient.test.update({
       where: { id: testId },
-      data: { test_status: TestStatus.Completed, }
+      data: { test_status: TestStatus.Completed },
     });
 
-    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Ended Succesfully!", 1));
+    res
+      .status(STATUS_CODES.UPDATE_SUCCESS)
+      .json(successJson('Test Ended Succesfully!', 1));
   } catch (error) {
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", null));
+    res
+      .status(STATUS_CODES.UPDATE_FAILURE)
+      .json(errorJson('Internal Server Error', null));
   }
 };
 
-export const deleteTest = async (req: Request, res: Response, testId: string): Promise<void> => {
+export const deleteTest = async (
+  req: Request,
+  res: Response,
+  testId: string
+): Promise<void> => {
   try {
     if (!testId) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test Id required", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Test Id required', null));
       return;
     }
-    await prismaClient.test.delete({ where: { id: testId }, });
+    await prismaClient.test.delete({ where: { id: testId } });
 
-    res.status(STATUS_CODES.DELETE_SUCCESS).json(successJson("Test Deleted Succesfully!", 1));
+    res
+      .status(STATUS_CODES.DELETE_SUCCESS)
+      .json(successJson('Test Deleted Succesfully!', 1));
   } catch (error) {
-    res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Internal Server Error", null));
+    res
+      .status(STATUS_CODES.DELETE_FAILURE)
+      .json(errorJson('Internal Server Error', null));
   }
 };
 
 // ====== Questions ======
-export const getQuestions = async (req: Request, res: Response, testId: string): Promise<void> => {
+export const getQuestions = async (
+  req: Request,
+  res: Response,
+  testId: string
+): Promise<void> => {
   try {
     if (!testId) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test Id required", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Test Id required', null));
       return;
     }
 
@@ -284,13 +409,15 @@ export const getQuestions = async (req: Request, res: Response, testId: string):
           select: {
             id: true,
             option_text: true,
-          }
+          },
         },
-        _count: { select: { options: { where: { is_correct: true } } } }
-      }
+        _count: { select: { options: { where: { is_correct: true } } } },
+      },
     });
     if (!questionOptions || questionOptions.length === 0) {
-      res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Question Not found", null));
+      res
+        .status(STATUS_CODES.SELECT_FAILURE)
+        .json(errorJson('Question Not found', null));
       return;
     }
     // console.log(questionOptions, testId);
@@ -303,18 +430,27 @@ export const getQuestions = async (req: Request, res: Response, testId: string):
       return { ...rest, multiple_choice };
     });
 
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Quesion and Options fetched Succesfully!", payload));
+    res
+      .status(STATUS_CODES.SELECT_SUCCESS)
+      .json(successJson('Quesion and Options fetched Succesfully!', payload));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", null));
+    res
+      .status(STATUS_CODES.SELECT_FAILURE)
+      .json(errorJson('Internal Server Error', null));
   }
 };
 
-export const createQuestion = async (req: Request, res: Response): Promise<void> => {
+export const createQuestion = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const reqBody: Question = req.body;
     const marks = parseInt(reqBody.question_marks);
     if (isNaN(marks)) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Question Marks should be a Number", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Question Marks should be a Number', null));
       return;
     }
 
@@ -335,20 +471,35 @@ export const createQuestion = async (req: Request, res: Response): Promise<void>
               is_correct: option.is_correct,
             })),
           },
-        }
+        },
       },
-      select: { id: true }
+      select: { id: true },
     });
 
-    res.status(STATUS_CODES.CREATE_SUCCESS).json(successJson("Question and Its Options Created Succesfully!", question.id));
+    res
+      .status(STATUS_CODES.CREATE_SUCCESS)
+      .json(
+        successJson(
+          'Question and Its Options Created Succesfully!',
+          question.id
+        )
+      );
   } catch (error) {
-    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("Internal Server Error", null));
+    res
+      .status(STATUS_CODES.CREATE_FAILURE)
+      .json(errorJson('Internal Server Error', null));
   }
 };
 
-export const updateQuestion = async (req: Request, res: Response, questionId: string): Promise<void> => {
+export const updateQuestion = async (
+  req: Request,
+  res: Response,
+  questionId: string
+): Promise<void> => {
   if (!questionId) {
-    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Question Id required", null));
+    res
+      .status(STATUS_CODES.BAD_REQUEST)
+      .json(errorJson('Question Id required', null));
     return;
   }
   try {
@@ -358,7 +509,9 @@ export const updateQuestion = async (req: Request, res: Response, questionId: st
     if (reqBody.question_marks) {
       marks = parseInt(reqBody.question_marks);
       if (isNaN(marks)) {
-        res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Question Marks should be a Number", null));
+        res
+          .status(STATUS_CODES.BAD_REQUEST)
+          .json(errorJson('Question Marks should be a Number', null));
         return;
       }
     }
@@ -369,7 +522,7 @@ export const updateQuestion = async (req: Request, res: Response, questionId: st
         data: {
           question_text: reqBody.question_text ?? undefined,
           marks,
-        }
+        },
       });
     } else {
       await prismaClient.testQuestion.update({
@@ -378,44 +531,66 @@ export const updateQuestion = async (req: Request, res: Response, questionId: st
           question_text: reqBody.question_text ?? undefined,
           marks: marks,
           options: {
-            deleteMany: {},  // first delete all the options before so as to avoid repetition
+            deleteMany: {}, // first delete all the options before so as to avoid repetition
             createMany: {
               data: reqBody.options.map((option) => ({
                 option_text: option.option_text,
                 is_correct: option.is_correct,
               })),
-            }
-          }
-        }
+            },
+          },
+        },
       });
     }
 
-    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Question updated successfully!", 1));
+    res
+      .status(STATUS_CODES.UPDATE_SUCCESS)
+      .json(successJson('Question updated successfully!', 1));
   } catch (error) {
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", null));
+    res
+      .status(STATUS_CODES.UPDATE_FAILURE)
+      .json(errorJson('Internal Server Error', null));
   }
 };
 
-export const deleteQuestion = async (req: Request, res: Response, questionId: string): Promise<void> => {
+export const deleteQuestion = async (
+  req: Request,
+  res: Response,
+  questionId: string
+): Promise<void> => {
   if (!questionId) {
-    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Question Id required", null));
+    res
+      .status(STATUS_CODES.BAD_REQUEST)
+      .json(errorJson('Question Id required', null));
     return;
   }
   try {
     // questionOptions will be deleted via onDetele:Cascade
-    await prismaClient.testQuestion.delete({ where: { id: questionId }, });
+    await prismaClient.testQuestion.delete({ where: { id: questionId } });
 
-    res.status(STATUS_CODES.DELETE_SUCCESS).json(successJson("Question and Related options deleted Succesfully!", null));
+    res
+      .status(STATUS_CODES.DELETE_SUCCESS)
+      .json(
+        successJson('Question and Related options deleted Succesfully!', null)
+      );
   } catch (error) {
-    res.status(STATUS_CODES.DELETE_FAILURE).json(errorJson("Internal Server Error", null));
+    res
+      .status(STATUS_CODES.DELETE_FAILURE)
+      .json(errorJson('Internal Server Error', null));
   }
 };
 
 // ====== Submissions ======
-export const getSubmissions = async (req: Request, res: Response, testId: string): Promise<void> => {
+export const getSubmissions = async (
+  req: Request,
+  res: Response,
+  testId: string
+): Promise<void> => {
   try {
     if (!testId) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test Id required in URL params", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Test Id required in URL params', null));
       return;
     }
 
@@ -426,28 +601,38 @@ export const getSubmissions = async (req: Request, res: Response, testId: string
         user_id: true,
         score: true,
         user: {
-          select: { full_name: true, }
+          select: { full_name: true },
         },
       },
     });
 
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Test Submission Found Succesfully!", testSubmissions));
+    res
+      .status(STATUS_CODES.SELECT_SUCCESS)
+      .json(successJson('Test Submission Found Succesfully!', testSubmissions));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", null));
+    res
+      .status(STATUS_CODES.SELECT_FAILURE)
+      .json(errorJson('Internal Server Error', null));
   }
 };
 
-export const saveStudentSubmissions = async (req: Request, res: Response, testSubmissionReqBody: TestSubmissionReqBody): Promise<void> => {
+export const saveStudentSubmissions = async (
+  req: Request,
+  res: Response,
+  testSubmissionReqBody: TestSubmissionReqBody
+): Promise<void> => {
   try {
     const { test_id, user_id, answer } = testSubmissionReqBody;
     if (!test_id || !user_id || !Array.isArray(answer)) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Invalid request body", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Invalid request body', null));
       return;
     }
     // take test_id, user_id from frontend
     // if they not have then they send test_id and user_id
-    // i have to save the submission if 
-    //    - if test_status !== TestStatus.InProgress 
+    // i have to save the submission if
+    //    - if test_status !== TestStatus.InProgress
     //    - test_timestamp + total_time > Date.now()
     // else  send the respective response
 
@@ -459,43 +644,55 @@ export const saveStudentSubmissions = async (req: Request, res: Response, testSu
         total_time: true,
         testSubmissions: {
           where: { user_id },
-          select: { id: true, is_submitted: true }
-        }
-      }
+          select: { id: true, is_submitted: true },
+        },
+      },
     });
 
     if (!test) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test with given test_id does not exist.", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Test with given test_id does not exist.', null));
       return;
     }
     // WARN: below condition should never occur logically
     if (!test.test_timestamp) {
-      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("The test_timestamp is missing.", null));
+      res
+        .status(STATUS_CODES.UPDATE_FAILURE)
+        .json(errorJson('The test_timestamp is missing.', null));
       return;
     }
     const now = Date.now();
     const startTime = test.test_timestamp.getTime();
     const endTime = startTime + test.total_time * 60 * 1000;
     if (startTime > now) {
-      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Test has not started yet.", null));
+      res
+        .status(STATUS_CODES.UPDATE_FAILURE)
+        .json(errorJson('Test has not started yet.', null));
       return;
     }
     if (endTime < now) {
-      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Test is ended, time is over.", null));
+      res
+        .status(STATUS_CODES.UPDATE_FAILURE)
+        .json(errorJson('Test is ended, time is over.', null));
       return;
     }
     if (test.test_status !== TestStatus.InProgress) {
-      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Test is not in progress.", null));
+      res
+        .status(STATUS_CODES.UPDATE_FAILURE)
+        .json(errorJson('Test is not in progress.', null));
       return;
     }
 
     // technically this should never occur replace with logger when implementing logs
     if (test.testSubmissions.length > 1) {
-      res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("User cannot have multiple testSubmission.", null));
+      res
+        .status(STATUS_CODES.UPDATE_FAILURE)
+        .json(errorJson('User cannot have multiple testSubmission.', null));
       return;
     }
 
-    let testSubmission: { id: string; is_submitted: boolean; } | null = null;
+    let testSubmission: { id: string; is_submitted: boolean } | null = null;
 
     if (test.testSubmissions.length === 0) {
       testSubmission = await prismaClient.testSubmission.create({
@@ -509,7 +706,9 @@ export const saveStudentSubmissions = async (req: Request, res: Response, testSu
       testSubmission = test.testSubmissions[0]; // as the length of the testSubmission is 1
 
       if (testSubmission.is_submitted) {
-        res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Submission is already finalized.", null));
+        res
+          .status(STATUS_CODES.UPDATE_FAILURE)
+          .json(errorJson('Submission is already finalized.', null));
         return;
       }
     }
@@ -536,15 +735,27 @@ export const saveStudentSubmissions = async (req: Request, res: Response, testSu
       }),
     ]);
 
-    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Submission Saved Succesfully!", testSubmission.id));
+    res
+      .status(STATUS_CODES.UPDATE_SUCCESS)
+      .json(
+        successJson('Test Submission Saved Succesfully!', testSubmission.id)
+      );
   } catch (error) {
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", null));
+    res
+      .status(STATUS_CODES.UPDATE_FAILURE)
+      .json(errorJson('Internal Server Error', null));
   }
 };
 
-export const endTestSubmission = async (req: Request, res: Response, test_submission_id: string): Promise<void> => {
+export const endTestSubmission = async (
+  req: Request,
+  res: Response,
+  test_submission_id: string
+): Promise<void> => {
   if (!test_submission_id) {
-    res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test Submission Id required.", null));
+    res
+      .status(STATUS_CODES.BAD_REQUEST)
+      .json(errorJson('Test Submission Id required.', null));
     return;
   }
   try {
@@ -552,7 +763,7 @@ export const endTestSubmission = async (req: Request, res: Response, test_submis
       where: { id: test_submission_id },
       select: {
         answers: {
-          select: { selected_option_id: true, question_id: true }
+          select: { selected_option_id: true, question_id: true },
         },
         test: {
           select: {
@@ -561,17 +772,19 @@ export const endTestSubmission = async (req: Request, res: Response, test_submis
                 id: true,
                 marks: true,
                 options: {
-                  select: { is_correct: true, id: true, }
-                }
-              }
-            }
-          }
+                  select: { is_correct: true, id: true },
+                },
+              },
+            },
+          },
         },
-      }
+      },
     });
 
     if (!testSubmission) {
-      res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("No submission of the student found.", null));
+      res
+        .status(STATUS_CODES.SELECT_FAILURE)
+        .json(errorJson('No submission of the student found.', null));
       return;
     }
 
@@ -582,8 +795,7 @@ export const endTestSubmission = async (req: Request, res: Response, test_submis
     for (const question of testSubmission.test.testQuestions) {
       const correctSet = new Set<string>();
       for (const opt of question.options) {
-        if (opt.is_correct)
-          correctSet.add(opt.id);
+        if (opt.is_correct) correctSet.add(opt.id);
       }
       correctMap.set(question.id, correctSet);
     }
@@ -601,7 +813,7 @@ export const endTestSubmission = async (req: Request, res: Response, test_submis
       answerMap.get(qid)!.add(oid);
     }
 
-    //  Compute the score 
+    //  Compute the score
     for (const question of testSubmission.test.testQuestions) {
       const correctAnswer = correctMap.get(question.id)!;
       const studentAnswer = answerMap.get(question.id);
@@ -613,20 +825,30 @@ export const endTestSubmission = async (req: Request, res: Response, test_submis
 
     await prismaClient.testSubmission.update({
       where: { id: test_submission_id },
-      data: { is_submitted: true, score: score }
+      data: { is_submitted: true, score: score },
     });
 
-    res.status(STATUS_CODES.UPDATE_SUCCESS).json(successJson("Test Submission Ended Succesfully!", 1));
+    res
+      .status(STATUS_CODES.UPDATE_SUCCESS)
+      .json(successJson('Test Submission Ended Succesfully!', 1));
   } catch (error) {
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson("Internal Server Error", null));
+    res
+      .status(STATUS_CODES.UPDATE_FAILURE)
+      .json(errorJson('Internal Server Error', null));
   }
 };
 
-
-export const getUserScore = async (req: AuthenticatedRequest, res: Response, test_submission_id: string, studentId?: string): Promise<void> => {
+export const getUserScore = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  test_submission_id: string,
+  studentId?: string
+): Promise<void> => {
   try {
     if (!test_submission_id) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test Submission Id required in URL params", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Test Submission Id required in URL params', null));
       return;
     }
     const user = req.user!;
@@ -634,7 +856,9 @@ export const getUserScore = async (req: AuthenticatedRequest, res: Response, tes
 
     if (role === STUDENT_ROLE) {
       if (!studentId || studentId !== user.user_id) {
-        res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Students can only view their own scores.", null));
+        res
+          .status(STATUS_CODES.BAD_REQUEST)
+          .json(errorJson('Students can only view their own scores.', null));
         return;
       }
     }
@@ -645,13 +869,19 @@ export const getUserScore = async (req: AuthenticatedRequest, res: Response, tes
     });
 
     if (!testSubmission) {
-      res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Test submission not found.", null));
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Test submission not found.', null));
       return;
     }
 
-    res.status(STATUS_CODES.SELECT_SUCCESS).json(successJson("Score calculated Succesfully!", testSubmission.score));
+    res
+      .status(STATUS_CODES.SELECT_SUCCESS)
+      .json(successJson('Score calculated Succesfully!', testSubmission.score));
   } catch (error) {
-    res.status(STATUS_CODES.SELECT_FAILURE).json(errorJson("Internal Server Error", null));
+    res
+      .status(STATUS_CODES.SELECT_FAILURE)
+      .json(errorJson('Internal Server Error', null));
   }
 };
 
