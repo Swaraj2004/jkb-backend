@@ -88,7 +88,8 @@ model Subject {
   packageSubjects   PackageSubject[]
   studentSubjects   StudentSubject[]
   tests             Test[]
-  subjectPayments   SubjectPayment[]  
+  subjectPayments   SubjectPayment[]
+  batches           Batch[]
 }
 
 model Package {
@@ -132,6 +133,7 @@ model StudentDetail {
   studentPackages StudentPackage[]
   attendance      Attendance[]
   fees            Fee[]
+  studentBatches  StudentBatch[]
 }
 
 model Fee {
@@ -204,6 +206,7 @@ model Lecture {
   id                String    @id @default(uuid()) @db.Uuid
   subject_id        String    @db.Uuid
   professor_id      String    @db.Uuid
+  batch_id          String    @db.Uuid
   lecture_mode      String
   remark            String?
   attendance_toggle Boolean   @default(true)
@@ -213,6 +216,7 @@ model Lecture {
 
   subject    Subject      @relation(fields: [subject_id], references: [id], onDelete: Cascade)
   professor  User         @relation(fields: [professor_id], references: [id], onDelete: Cascade)
+  batch      Batch        @relation(fields: [batch_id], references: [id], onDelete: Cascade)
   attendance Attendance[]
 }
 
@@ -224,6 +228,33 @@ model Attendance {
 
   lecture Lecture       @relation(fields: [lecture_id], references: [id], onDelete: Cascade)
   student StudentDetail @relation(fields: [student_id], references: [id], onDelete: Cascade)
+
+  @@unique([lecture_id, student_id])
+}
+
+model Batch {
+  id           String   @id @default(uuid()) @db.Uuid
+  subject_id   String   @db.Uuid
+  name         String
+  professor_id String   @db.Uuid
+  created_at   DateTime @default(now()) @db.Timestamptz()
+
+  professor User          @relation(fields: [professor_id], references: [id], onDelete: Cascade)
+  subject   Subject       @relation(fields: [subject_id], references: [id], onDelete: Cascade)
+  lectures  Lecture[]
+
+  studentBatches StudentBatch[]
+}
+
+model StudentBatch {
+  student_id String   @db.Uuid
+  batch_id   String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz()
+
+  student StudentDetail @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  batch   Batch         @relation(fields: [batch_id], references: [id], onDelete: Cascade)
+
+  @@id([student_id, batch_id])
 }
 
 model SubjectProfessor {
