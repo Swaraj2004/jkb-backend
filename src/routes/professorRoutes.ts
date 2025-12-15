@@ -6,8 +6,13 @@ import {
   getProfessorSubjects,
   updateProfessorLectures,
 } from '../controllers/professorController';
-import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
-import { ADMIN_ROLE, PROFESSOR_ROLE } from '../utils/consts';
+import {
+  AuthenticatedRequest,
+  authMiddleware,
+  authorizeRoles,
+} from '../middlewares/authMiddleware';
+import { ADMIN_ROLE, PROFESSOR_ROLE, STATUS_CODES } from '../utils/consts';
+import { errorJson } from '../utils/common_funcs';
 
 const router = express.Router();
 
@@ -138,6 +143,93 @@ router.delete(
   authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]),
   async (req: Request, res: Response): Promise<void> => {
     return deleteProfessorLectures(req, res);
+  }
+);
+
+// NOTE: Below everything is for Batch and hence their attendance
+
+function isValidRequest(
+  req: AuthenticatedRequest,
+  res: Response,
+  professorId: string
+): boolean {
+  if (!professorId) {
+    res
+      .status(STATUS_CODES.BAD_REQUEST)
+      .json(errorJson('Professor Id is missing', null));
+    return false;
+  }
+  if (
+    req.user!.role_name == PROFESSOR_ROLE &&
+    req.user!.user_id != professorId
+  ) {
+    res
+      .status(STATUS_CODES.FORBIDDEN_REQUEST)
+      .json(
+        errorJson(
+          'You cant access this endpoint as you are not who you claim to be.(You are recorded in tampering)',
+          null
+        )
+      );
+    return false;
+  }
+
+  return true;
+}
+
+// Get all batches for professor_id
+router.get(
+  '/batches/:professor_id',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]),
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const professorId = req.params.professor_id;
+
+    if (!isValidRequest(req, res, professorId)) return;
+
+    // re;
+  }
+);
+
+// Create all batches for professor_id
+router.post(
+  '/batches/:professor_id',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]),
+  async (req: Request, res: Response): Promise<void> => {
+    const professorId = req.params.professor_id;
+
+    if (!isValidRequest(req, res, professorId)) return;
+
+    // re;
+  }
+);
+
+// edit batches for professor_id
+router.post(
+  '/batches/:professor_id',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]),
+  async (req: Request, res: Response): Promise<void> => {
+    const professorId = req.params.professor_id;
+
+    if (!isValidRequest(req, res, professorId)) return;
+
+    // re;
+  }
+);
+
+// Delete batch for professor_id
+router.delete(
+  '/batches/:professor_id',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]),
+  async (req: Request, res: Response): Promise<void> => {
+    const professorId = req.params.professor_id;
+
+    if (!isValidRequest(req, res, professorId)) return;
+
+    // re;
   }
 );
 

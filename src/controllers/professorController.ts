@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { prismaClient } from '../utils/database';
 import { errorJson, successJson } from '../utils/common_funcs';
 import { STATUS_CODES } from '../utils/consts';
+import { LectureCreateDTO } from '../models/professor_req_body';
 
 /**
  * GET /professor/subjects?professor_id=...
@@ -75,21 +76,45 @@ export async function getProfessorLectures(
  * Creates a new lecture record.
  */
 export async function createProfessorLectures(
-  req: Request,
+  req: Request<{}, {}, LectureCreateDTO>,
   res: Response
 ): Promise<void> {
   try {
     const lectureData = req.body;
 
+    const required = ['subject_id', 'professor_id', 'batch_id', 'lecture_mode'];
+    const missing = required.filter(
+      (k) =>
+        !(
+          (lectureData as any)[k] !== undefined &&
+          (lectureData as any)[k] !== null &&
+          (lectureData as any)[k] !== ''
+        )
+    );
+
+    if (missing.length > 0) {
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(
+          errorJson(`Missing required fields: ${missing.join(', ')}`, null)
+        );
+      return;
+    }
+
+    const createPayload = {
+      subject_id: lectureData.subject_id,
+      professor_id: lectureData.professor_id,
+      batch_id: lectureData.batch_id,
+      lecture_mode: lectureData.lecture_mode,
+      remark: lectureData.remark ?? null,
+      attendance_toggle:
+        typeof lectureData.attendance_toggle === 'boolean'
+          ? lectureData.attendance_toggle
+          : true,
+      created_by: lectureData.created_by ?? lectureData.professor_id,
+    };
     const newLecture = await prismaClient.lecture.create({
-      data: {
-        subject_id: lectureData.subject_id,
-        professor_id: lectureData.professor_id,
-        lecture_mode: lectureData.lecture_mode,
-        remark: lectureData.remark,
-        attendance_toggle: lectureData.attendance_toggle,
-        created_by: lectureData.professor_id,
-      },
+      data: createPayload,
     });
 
     res
