@@ -55,7 +55,8 @@ model User {
   Test             Test[]
   TestSubmission   TestSubmission[]
 
-  Lecture Lecture[]
+  Lecture         Lecture[]
+  batchProfessors BatchProfessor[]
 }
 
 model UserRole {
@@ -168,10 +169,10 @@ model Payment {
   updated_at     DateTime? @updatedAt @db.Timestamptz()
   created_by     String?   @db.Uuid
 
-  student        User?           @relation(fields: [user_id], references: [id], onDelete: SetNull)
-  createdBy      User?           @relation("PaymentCreatedBy", fields: [created_by], references: [id])
-  fee            Fee?            @relation(fields: [fee_id], references: [id], onDelete: SetNull)
-  
+  student   User? @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  createdBy User? @relation("PaymentCreatedBy", fields: [created_by], references: [id])
+  fee       Fee?  @relation(fields: [fee_id], references: [id], onDelete: SetNull)
+
   subjectPayments SubjectPayment[]
   packagePayments PackagePayment[]
 }
@@ -233,17 +234,26 @@ model Attendance {
 }
 
 model Batch {
-  id           String   @id @default(uuid()) @db.Uuid
-  subject_id   String   @db.Uuid
-  name         String
-  professor_id String   @db.Uuid
-  created_at   DateTime @default(now()) @db.Timestamptz()
+  id         String   @id @default(uuid()) @db.Uuid
+  subject_id String   @db.Uuid
+  name       String
+  created_at DateTime @default(now()) @db.Timestamptz()
 
-  professor User          @relation(fields: [professor_id], references: [id], onDelete: Cascade)
-  subject   Subject       @relation(fields: [subject_id], references: [id], onDelete: Cascade)
-  lectures  Lecture[]
+  subject  Subject   @relation(fields: [subject_id], references: [id], onDelete: Cascade)
+  lectures Lecture[]
 
-  studentBatches StudentBatch[]
+  studentBatches  StudentBatch[]
+  batchProfessors BatchProfessor[]
+}
+
+model BatchProfessor {
+  batch_id     String @db.Uuid
+  professor_id String @db.Uuid
+
+  batch     Batch @relation(fields: [batch_id], references: [id], onDelete: Cascade)
+  professor User  @relation(fields: [professor_id], references: [id], onDelete: Cascade)
+
+  @@id([batch_id, professor_id])
 }
 
 model StudentBatch {
@@ -304,16 +314,16 @@ model StudentPackage {
 }
 
 model Test {
-  id                         String     @id @default(uuid()) @db.Uuid
-  user_id                    String     @db.Uuid // professor_id
-  subject_id                 String     @db.Uuid
-  title                      String
-  test_status                TestStatus @default(Scheduled)
+  id             String     @id @default(uuid()) @db.Uuid
+  user_id        String     @db.Uuid // professor_id
+  subject_id     String     @db.Uuid
+  title          String
+  test_status    TestStatus @default(Scheduled)
   // allow_multiple_submissions Boolean    @default(false) // for mulitple test_submission in future
-  test_timestamp             DateTime?  @db.Timestamptz()
-  total_time                 Int        @default(30) // time in minutes
-  created_at                 DateTime   @default(now()) @db.Timestamptz()
-  updated_at                 DateTime?  @updatedAt @db.Timestamptz()
+  test_timestamp DateTime?  @db.Timestamptz()
+  total_time     Int        @default(30) // time in minutes
+  created_at     DateTime   @default(now()) @db.Timestamptz()
+  updated_at     DateTime?  @updatedAt @db.Timestamptz()
 
   professor       User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
   subject         Subject          @relation(fields: [subject_id], references: [id], onDelete: Cascade)
@@ -328,12 +338,12 @@ enum TestStatus {
 }
 
 model TestQuestion {
-  id                String   @id @default(uuid()) @db.Uuid
-  test_id           String   @db.Uuid
-  question_text     String
+  id            String   @id @default(uuid()) @db.Uuid
+  test_id       String   @db.Uuid
+  question_text String
   // correct_option_id String   @unique @db.Uuid
-  marks             Int
-  created_at        DateTime @default(now()) @db.Timestamptz()
+  marks         Int
+  created_at    DateTime @default(now()) @db.Timestamptz()
 
   test    Test             @relation(fields: [test_id], references: [id], onDelete: Cascade)
   options QuestionOption[] @relation("QuestionOptions")
@@ -353,14 +363,14 @@ model QuestionOption {
   question TestQuestion @relation("QuestionOptions", fields: [question_id], references: [id], onDelete: Cascade)
 
   // testQuestionAsCorrect TestQuestion?          @relation("CorrectOption")
-  TestSubmissionAnswer  TestSubmissionAnswer[]
+  TestSubmissionAnswer TestSubmissionAnswer[]
 }
 
 model TestSubmission {
   id           String    @id @default(uuid()) @db.Uuid
   test_id      String    @db.Uuid
   user_id      String    @db.Uuid
-  score        Decimal   @db.Decimal(5,2) @default(0.00)
+  score        Decimal   @default(0.00) @db.Decimal(5, 2)
   is_submitted Boolean   @default(false)
   created_at   DateTime  @default(now()) @db.Timestamptz()
   updated_at   DateTime? @updatedAt @db.Timestamptz()
