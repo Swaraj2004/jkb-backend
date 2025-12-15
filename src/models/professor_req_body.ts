@@ -7,3 +7,9 @@ export type LectureCreateDTO = {
   attendance_toggle?: boolean;
   created_by?: string | null;
 };
+
+export type UpdateProfessorBatchDTO = {
+  batch_id: string;
+  name?: string;
+  student_ids?: string[];
+};

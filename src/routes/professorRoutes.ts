@@ -7,12 +7,19 @@ import {
   updateProfessorLectures,
 } from '../controllers/professorController';
 import {
+  createProfessorBatch,
+  deleteProfessorBatch,
+  getProfessorBatches,
+  updateProfessorBatch,
+} from '../controllers/productController';
+import {
   AuthenticatedRequest,
   authMiddleware,
   authorizeRoles,
 } from '../middlewares/authMiddleware';
 import { ADMIN_ROLE, PROFESSOR_ROLE, STATUS_CODES } from '../utils/consts';
 import { errorJson } from '../utils/common_funcs';
+import { UpdateProfessorBatchDTO } from '../models/professor_req_body';
 
 const router = express.Router();
 
@@ -187,11 +194,13 @@ router.get(
 
     if (!isValidRequest(req, res, professorId)) return;
 
-    // re;
+    return getProfessorBatches(req, res, professorId);
   }
 );
 
 // Create all batches for professor_id
+// ReqBody
+// const { subject_id, name } = req.body;
 router.post(
   '/batches/:professor_id',
   authMiddleware,
@@ -201,21 +210,27 @@ router.post(
 
     if (!isValidRequest(req, res, professorId)) return;
 
-    // re;
+    return createProfessorBatch(req, res, professorId);
   }
 );
 
 // edit batches for professor_id
-router.post(
+type ProfessorParams = {
+  professor_id: string;
+};
+router.put(
   '/batches/:professor_id',
   authMiddleware,
   authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]),
-  async (req: Request, res: Response): Promise<void> => {
+  async (
+    req: Request<ProfessorParams, {}, UpdateProfessorBatchDTO>,
+    res: Response
+  ): Promise<void> => {
     const professorId = req.params.professor_id;
 
     if (!isValidRequest(req, res, professorId)) return;
 
-    // re;
+    return updateProfessorBatch(req, res, professorId);
   }
 );
 
@@ -229,7 +244,7 @@ router.delete(
 
     if (!isValidRequest(req, res, professorId)) return;
 
-    // re;
+    return deleteProfessorBatch(req, res, professorId);
   }
 );
 
