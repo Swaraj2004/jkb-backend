@@ -10,6 +10,7 @@ import {
   createProfessorBatch,
   deleteProfessorBatch,
   getProfessorBatches,
+  getStudentBatches,
   updateProfessorBatch,
 } from '../controllers/productController';
 import {
@@ -17,7 +18,12 @@ import {
   authMiddleware,
   authorizeRoles,
 } from '../middlewares/authMiddleware';
-import { ADMIN_ROLE, PROFESSOR_ROLE, STATUS_CODES } from '../utils/consts';
+import {
+  ADMIN_ROLE,
+  PROFESSOR_ROLE,
+  STATUS_CODES,
+  STUDENT_ROLE,
+} from '../utils/consts';
 import { errorJson } from '../utils/common_funcs';
 import { UpdateProfessorBatchDTO } from '../models/professor_req_body';
 
@@ -215,6 +221,7 @@ router.post(
 );
 
 // edit batches for professor_id
+// const { batch_id, name, student_ids } = req.body;
 type ProfessorParams = {
   professor_id: string;
 };
@@ -245,6 +252,18 @@ router.delete(
     if (!isValidRequest(req, res, professorId)) return;
 
     return deleteProfessorBatch(req, res, professorId);
+  }
+);
+
+// Get all batches for student_id
+router.get(
+  '/studentBatches/:student_id',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE, STUDENT_ROLE]),
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const studentId = req.params.student_id;
+
+    return getStudentBatches(req, res, studentId);
   }
 );
 
