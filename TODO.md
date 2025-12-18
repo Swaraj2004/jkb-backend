@@ -89,3 +89,13 @@ Complete swagger docs for each api endpoint
 
 - [ ] Learn how Express `Request<Params, ResBody, ReqBody, ReqQuery>` generics work
 - [ ] Practice typing `req.body`, `req.params`, and `req.query` in real route handlers
+
+## redundant columns
+
+- Eliminate duplicate correct-option storage: pick is_correct or correct_option_id
+  (before doing this be sure of what you are doing is redundant)
+
+## Index columns
+
+- Use indexes to speed up frequent `WHERE`, `JOIN`, and `ORDER BY` queries; avoid them on rarely queried or frequently updated columns.
+- TODO: Read database internals (indexes, query planning, B-trees) in detail to understand performance trade-offs and corre
