@@ -6,7 +6,8 @@ import {
 } from '../middlewares/authMiddleware';
 import {
   getLectureAttendance,
-  getStudentAttendance,
+  getStudentBatchAttendance,
+  getStudentBatches,
   markAttendance,
 } from '../controllers/attendanceController';
 import {
@@ -132,7 +133,7 @@ router.post(
  *         description: A list of attendance records for the student
  */
 router.get(
-  '/student/attendance',
+  '/student/batches',
   authMiddleware,
   authorizeRoles([ADMIN_ROLE, STUDENT_ROLE, PROFESSOR_ROLE]),
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -151,7 +152,23 @@ router.get(
     // }
 
     const studentId = req.query.student_id;
-    return getStudentAttendance(req, res, studentId as string);
+    return getStudentBatches(req, res, studentId as string);
+  }
+);
+
+router.get(
+  '/student/batchAttendance',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE, STUDENT_ROLE, PROFESSOR_ROLE]),
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const studentId = req.query.student_id;
+    const batchId = req.query.batch_id;
+
+    return getStudentBatchAttendance(
+      res,
+      studentId as string,
+      batchId as string
+    );
   }
 );
 

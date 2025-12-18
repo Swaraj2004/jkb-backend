@@ -37,36 +37,6 @@ export async function getProfessorBatches(
   }
 }
 
-export async function getStudentBatches(
-  req: Request,
-  res: Response,
-  studentId: string
-): Promise<void> {
-  try {
-    if (!studentId) {
-      res
-        .status(STATUS_CODES.BAD_REQUEST)
-        .json(errorJson('student_id required', null));
-      return;
-    }
-
-    const studentBatches = await prismaClient.studentBatch.findMany({
-      where: { student_id: studentId },
-      select: { batch: true },
-    });
-
-    res
-      .status(STATUS_CODES.SELECT_SUCCESS)
-      .json(
-        successJson('Student Batches fetched successfully', studentBatches)
-      );
-  } catch (error) {
-    res
-      .status(STATUS_CODES.SELECT_FAILURE)
-      .json(errorJson('Internal Server Error', null));
-  }
-}
-
 export async function createProfessorBatch(
   req: Request,
   res: Response,

@@ -7,11 +7,10 @@ export async function getLectureAttendance(
   req: Request,
   res: Response,
   lectureId: string
-) {
+): Promise<void> {
   try {
     const lecture = await prismaClient.lecture.findUnique({
       where: { id: lectureId },
-      include: { subject: true },
     });
 
     if (!lecture) {
@@ -21,29 +20,25 @@ export async function getLectureAttendance(
       return;
     }
 
-    // Find packageIds containing the subject   (ask Swaraj Bhaiya what is the need of packages)
-    const packages = await prismaClient.package.findMany({
-      where: {
-        packageSubjects: {
-          some: { subject_id: lecture.subject_id },
+    // find students in the batch
+    const students = await prismaClient.batch.findUnique({
+      where: { id: lecture.batch_id },
+      select: {
+        studentBatches: {
+          select: {
+            student: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                    full_name: true,
+                  },
+                },
+              },
+            },
+          },
         },
       },
-      select: { id: true },
-    });
-    const packageIds = packages.map((pkg) => pkg.id);
-
-    // Find students enrolled in subject or packages
-    const students = await prismaClient.studentDetail.findMany({
-      where: {
-        OR: [
-          { studentSubjects: { some: { subject_id: lecture.subject_id } } }, // Students directly enrolled in the subject
-          { studentPackages: { some: { package_id: { in: packageIds } } } }, // Students enrolled via package
-        ],
-      },
-      include: {
-        user: { select: { full_name: true } },
-      },
-      // select: { id: true, college_name: true, },
     });
 
     // Get attendance records for current lecture
@@ -53,11 +48,10 @@ export async function getLectureAttendance(
     });
     const presentStudentIds = new Set(attendances.map((a) => a.student_id));
 
-    const studentAttendance = students.map((student) => ({
-      student_id: student.id,
+    const studentAttendance = students!.studentBatches.map(({ student }) => ({
+      student_id: student.user.id,
       student_name: student.user?.full_name || 'Unknown',
-      student_college: student.college_name || '',
-      present: presentStudentIds.has(student.id),
+      present: presentStudentIds.has(student.user.id),
     }));
 
     res
@@ -69,7 +63,8 @@ export async function getLectureAttendance(
       .json(errorJson('Internal server error', null));
   }
 }
-export async function getStudentAttendance(
+
+export async function getStudentBatches(
   req: Request,
   res: Response,
   studentId: string
@@ -81,95 +76,96 @@ export async function getStudentAttendance(
         .json(errorJson('StudentId not found', null));
       return;
     }
-    // 1. Validate student existence using user_id
-    const student = await prismaClient.studentDetail.findUnique({
+
+    const studentBatches = await prismaClient.studentDetail.findUnique({
       where: { user_id: studentId },
       include: {
-        studentSubjects: { select: { subject_id: true } },
-        studentPackages: {
-          // means collect subject which are enrolled in the packages
-          include: {
-            package: {
-              select: { packageSubjects: true },
+        // studentSubjects: { select: { subject_id: true } },
+        // studentPackages: {
+        //   // means collect subject which are enrolled in the packages
+        //   include: {
+        //     package: {
+        //       select: { packageSubjects: true },
+        //     },
+        //   },
+        // },
+        studentBatches: {
+          select: {
+            batch: {
+              select: { id: true, name: true },
             },
           },
         },
       },
     });
 
-    if (!student) {
-      res
-        .status(STATUS_CODES.SELECT_FAILURE)
-        .json(errorJson('Student not found', null));
-      return;
-    }
-
-    // 2. Collect all relevant subject IDs
-    const subjectIds = new Set<string>();
-
-    // Add subjects from direct enrollments
-    student.studentSubjects.forEach(({ subject_id }) =>
-      subjectIds.add(subject_id)
-    );
-
-    // first use studentPackages relation to get Packages that StudentDetail is related with
-    // then use package relation to get of StudentPackage
-    // then use PackageSubjects relation to get the subjects related to a package
-    student.studentPackages.forEach(({ package: pkg }) => {
-      pkg.packageSubjects.forEach((subject) =>
-        subjectIds.add(subject.subject_id)
+    res
+      .status(STATUS_CODES.SELECT_SUCCESS)
+      .json(
+        successJson('Attendance records retrieved successfully', studentBatches)
       );
-    });
+  } catch (error) {
+    res
+      .status(STATUS_CODES.SELECT_FAILURE)
+      .json(errorJson('Internal server error', null));
+  }
+}
 
-    if (subjectIds.size === 0) {
+export async function getStudentBatchAttendance(
+  res: Response,
+  studentId: string,
+  batchId: string
+) {
+  try {
+    if (!studentId || !batchId) {
       res
-        .status(STATUS_CODES.SELECT_FAILURE)
-        .json(errorJson('No enrolled subjects/packages found', null));
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('student_id and batch_id required', null));
       return;
     }
 
-    // 3. Get lectures with related data
-    const lectures = await prismaClient.lecture.findMany({
-      where: {
-        subject_id: {
-          in: Array.from(subjectIds),
+    const batch = await prismaClient.batch.findUnique({
+      where: { id: batchId },
+      select: {
+        name: true,
+        lectures: {
+          orderBy: { created_at: 'desc' },
+          include: {
+            attendance: {
+              where: { student_id: studentId },
+              select: { lecture_id: true },
+            },
+            professor: {
+              select: { full_name: true },
+            },
+          },
         },
       },
-      include: {
-        subject: { select: { name: true } },
-        professor: { select: { full_name: true } },
-      },
-      orderBy: { created_at: 'desc' },
     });
 
-    // 4. Get attendance records
-    const attendanceRecords = await prismaClient.attendance.findMany({
-      where: {
-        student_id: student.id,
-        lecture_id: { in: lectures.map((l) => l.id) },
-      },
-      select: { lecture_id: true },
-    });
+    if (!batch) {
+      res
+        .status(STATUS_CODES.SELECT_FAILURE)
+        .json(errorJson('Batch not found', null));
+      return;
+    }
 
-    const presentLectureIds = new Set(
-      attendanceRecords.map((record) => record.lecture_id)
-    );
-
-    // 5. Format response data
-    const attendanceData = lectures.map((lecture) => ({
+    const lecturesAttendance = batch.lectures.map((lecture) => ({
       lecture_id: lecture.id,
-      subject_name: lecture.subject.name,
-      professor_name: lecture.professor.full_name,
       lecture_mode: lecture.lecture_mode,
-      status: presentLectureIds.has(lecture.id) ? 'present' : 'absent',
+      professor_name: lecture.professor.full_name,
       attendance_toggle: lecture.attendance_toggle,
+      status: lecture.attendance.length > 0 ? 'present' : 'absent',
       created_at: lecture.created_at,
     }));
 
     res
       .status(STATUS_CODES.SELECT_SUCCESS)
       .json(
-        successJson('Attendance records retrieved successfully', attendanceData)
+        successJson(
+          'Attendance records retrieved successfully',
+          lecturesAttendance
+        )
       );
   } catch (error) {
     res
@@ -192,6 +188,8 @@ export async function markAttendance(
       return;
     }
 
+    // NOTE: this can have implication that if no lecture exist then also attendance
+    // will be created which will have no effect on current lecture attendance but still a kind of bug
     const attendance = await prismaClient.attendance.create({
       data: {
         lecture_id: lectureId,
@@ -201,7 +199,9 @@ export async function markAttendance(
 
     res
       .status(STATUS_CODES.CREATE_SUCCESS)
-      .json(successJson('Attendance Marked Successfully', attendance.id));
+      .json(
+        successJson('Attendance Marked Successfully', attendance.lecture_id)
+      );
   } catch (error) {
     res
       .status(STATUS_CODES.CREATE_FAILURE)

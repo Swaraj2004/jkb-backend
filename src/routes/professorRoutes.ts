@@ -10,7 +10,6 @@ import {
   createProfessorBatch,
   deleteProfessorBatch,
   getProfessorBatches,
-  getStudentBatches,
   updateProfessorBatch,
 } from '../controllers/productController';
 import {
@@ -79,6 +78,16 @@ router.get(
   (req: Request, res: Response): Promise<void> => {
     const professorId = req.query.professor_id as string;
     return getProfessorLectures(req, res, professorId);
+  }
+);
+
+router.get(
+  '/batchLectures',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]),
+  (req: Request, res: Response): Promise<void> => {
+    const batchId = req.query.batch_id as string;
+    return getProfessorLectures(req, res, batchId);
   }
 );
 
@@ -252,18 +261,6 @@ router.delete(
     if (!isValidRequest(req, res, professorId)) return;
 
     return deleteProfessorBatch(req, res, professorId);
-  }
-);
-
-// Get all batches for student_id
-router.get(
-  '/studentBatches/:student_id',
-  authMiddleware,
-  authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE, STUDENT_ROLE]),
-  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    const studentId = req.params.student_id;
-
-    return getStudentBatches(req, res, studentId);
   }
 );
 

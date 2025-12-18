@@ -6,7 +6,6 @@ import {
   updateSubject,
   deleteSubject,
   getSubjectUsers,
-  getSubjectAttendance,
   getStudentSubjects,
   createStudentSubjectStudentPackages,
 } from '../controllers/subjectController';
@@ -109,14 +108,15 @@ router.get(
  *       200:
  *         description: Attendance records for the subject
  */
-router.get(
-  '/subject-attendance',
-  authMiddleware,
-  authorizeRoles([ADMIN_ROLE]),
-  async (req: Request, res: Response): Promise<void> => {
-    return getSubjectAttendance(req, res);
-  }
-);
+// NOTE: not required
+// router.get(
+//   '/subject-attendance',
+//   authMiddleware,
+//   authorizeRoles([ADMIN_ROLE]),
+//   async (req: Request, res: Response): Promise<void> => {
+//     return getSubjectAttendance(req, res);
+//   }
+// );
 
 /**
  * @swagger

@@ -64,7 +64,49 @@ export async function getProfessorLectures(
       .status(STATUS_CODES.SELECT_SUCCESS)
       .json(successJson('Lectures fetched successfully', lectures));
   } catch (error) {
-    console.error('Error fetching lectures:', error);
+    // console.error('Error fetching lectures:', error);
+    res
+      .status(STATUS_CODES.SELECT_FAILURE)
+      .json(errorJson('Internal Server Error', null));
+  }
+}
+
+// get lectures for the given batch_id
+export async function getBatchLectures(
+  req: Request,
+  res: Response,
+  batchId: string
+): Promise<void> {
+  try {
+    if (!batchId) {
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Batch ID is required', null));
+      return;
+    }
+
+    const batchLectures = await prismaClient.batch.findMany({
+      where: { id: batchId },
+      select: {
+        id: true,
+        lectures: {
+          select: {
+            id: true,
+            lecture_mode: true,
+            attendance_toggle: true,
+            professor: {
+              select: { full_name: true },
+            },
+          },
+        },
+      },
+    });
+
+    res
+      .status(STATUS_CODES.SELECT_SUCCESS)
+      .json(successJson('Batch Lectures fetched successfully', batchLectures));
+  } catch (error) {
+    // console.error('Error fetching lectures:', error);
     res
       .status(STATUS_CODES.SELECT_FAILURE)
       .json(errorJson('Internal Server Error', null));
@@ -82,27 +124,24 @@ export async function createProfessorLectures(
   try {
     const lectureData = req.body;
 
-    const required = ['subject_id', 'professor_id', 'batch_id', 'lecture_mode'];
-    const missing = required.filter(
-      (k) =>
-        !(
-          (lectureData as any)[k] !== undefined &&
-          (lectureData as any)[k] !== null &&
-          (lectureData as any)[k] !== ''
-        )
-    );
-
-    if (missing.length > 0) {
+    if (
+      !lectureData.subject_id ||
+      !lectureData.professor_id ||
+      !lectureData.batch_id ||
+      !lectureData.lecture_mode
+    ) {
       res
         .status(STATUS_CODES.BAD_REQUEST)
         .json(
-          errorJson(`Missing required fields: ${missing.join(', ')}`, null)
+          errorJson(
+            'Missing required fields: subject_id, professor_id, batch_id, lecture_mode',
+            null
+          )
         );
       return;
     }
 
     const createPayload = {
-      subject_id: lectureData.subject_id,
       professor_id: lectureData.professor_id,
       batch_id: lectureData.batch_id,
       lecture_mode: lectureData.lecture_mode,
@@ -111,7 +150,6 @@ export async function createProfessorLectures(
         typeof lectureData.attendance_toggle === 'boolean'
           ? lectureData.attendance_toggle
           : true,
-      created_by: lectureData.created_by ?? lectureData.professor_id,
     };
     const newLecture = await prismaClient.lecture.create({
       data: createPayload,

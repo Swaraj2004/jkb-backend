@@ -221,7 +221,6 @@ model Lecture {
 }
 
 model Attendance {
-  id         String   @id @default(uuid()) @db.Uuid
   lecture_id String   @db.Uuid
   student_id String   @db.Uuid
   created_at DateTime @default(now()) @db.Timestamptz()
@@ -229,7 +228,7 @@ model Attendance {
   lecture Lecture       @relation(fields: [lecture_id], references: [id], onDelete: Cascade)
   student StudentDetail @relation(fields: [student_id], references: [id], onDelete: Cascade)
 
-  @@unique([lecture_id, student_id])
+  @@id([lecture_id, student_id])
 }
 
 model Batch {

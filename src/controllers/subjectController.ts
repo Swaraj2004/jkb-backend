@@ -493,46 +493,47 @@ export async function getSubjectUsers(
   }
 }
 
-export async function getSubjectAttendance(
-  req: Request,
-  res: Response
-): Promise<void> {
-  try {
-    const { subject_id } = req.query;
-    if (!subject_id) {
-      res
-        .status(STATUS_CODES.BAD_REQUEST)
-        .json(errorJson('Subject Id absent', null));
-      return;
-    }
-    const attendanceRecords = await prismaClient.attendance.findMany({
-      where: {
-        lecture: { subject_id: subject_id as string },
-      },
-      // include: {
-      //     lecture: {
-      //         select: { id: true, subject_id: true, created_at: true }
-      //     },
-      //     student: {
-      //         select: { id: true, full_name: true, email: true }
-      //     }
-      // }
-    });
-
-    res
-      .status(STATUS_CODES.SELECT_SUCCESS)
-      .json(
-        successJson(
-          'Subject attendance fetched successfully',
-          attendanceRecords
-        )
-      );
-  } catch (error) {
-    res
-      .status(STATUS_CODES.SELECT_FAILURE)
-      .json(errorJson('Failed to fetch subject attendance', null));
-  }
-}
+// NOTE: not required
+// export async function getSubjectAttendance(
+//   req: Request,
+//   res: Response
+// ): Promise<void> {
+//   try {
+//     const { subject_id } = req.query;
+//     if (!subject_id) {
+//       res
+//         .status(STATUS_CODES.BAD_REQUEST)
+//         .json(errorJson('Subject Id absent', null));
+//       return;
+//     }
+//     const attendanceRecords = await prismaClient.attendance.findMany({
+//       where: {
+//         lecture: { subject_id: subject_id as string },
+//       },
+//       // include: {
+//       //     lecture: {
+//       //         select: { id: true, subject_id: true, created_at: true }
+//       //     },
+//       //     student: {
+//       //         select: { id: true, full_name: true, email: true }
+//       //     }
+//       // }
+//     });
+//
+//     res
+//       .status(STATUS_CODES.SELECT_SUCCESS)
+//       .json(
+//         successJson(
+//           'Subject attendance fetched successfully',
+//           attendanceRecords
+//         )
+//       );
+//   } catch (error) {
+//     res
+//       .status(STATUS_CODES.SELECT_FAILURE)
+//       .json(errorJson('Failed to fetch subject attendance', null));
+//   }
+// }
 
 // Get subjects for student_id
 export async function getStudentSubjects(
