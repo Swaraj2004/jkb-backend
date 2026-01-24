@@ -99,3 +99,8 @@ Complete swagger docs for each api endpoint
 
 - Use indexes to speed up frequent `WHERE`, `JOIN`, and `ORDER BY` queries; avoid them on rarely queried or frequently updated columns.
 - TODO: Read database internals (indexes, query planning, B-trees) in detail to understand performance trade-offs and corre
+
+## Response code 204
+
+- Use **204 No Content** when an operation succeeds but there is nothing meaningful to return (e.g., DELETE, idempotent updates).
+- TODO: Replace empty `200 {}` responses with `204` where no response body is required.
