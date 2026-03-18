@@ -28,6 +28,8 @@ export async function getLectureAttendance(
           select: {
             student: {
               select: {
+                // TODO: while checking it is checking the student_id not the user_id
+                id: true,
                 user: {
                   select: {
                     id: true,
@@ -41,17 +43,21 @@ export async function getLectureAttendance(
       },
     });
 
+    // console.log(students);
+
     // Get attendance records for current lecture
     const attendances = await prismaClient.attendance.findMany({
       where: { lecture_id: lectureId },
       select: { student_id: true },
     });
+    // console.log('\n\n', attendances, '\n');
     const presentStudentIds = new Set(attendances.map((a) => a.student_id));
+    // console.log('\n', presentStudentIds, '\n');
 
     const studentAttendance = students!.studentBatches.map(({ student }) => ({
       student_id: student.user.id,
       student_name: student.user?.full_name || 'Unknown',
-      present: presentStudentIds.has(student.user.id),
+      present: presentStudentIds.has(student.id),
     }));
 
     res
@@ -203,8 +209,10 @@ export async function markAttendance(
         successJson('Attendance Marked Successfully', attendance.lecture_id)
       );
   } catch (error) {
+    // const message =
+    //   error instanceof Error ? error.message : 'Something went wrong';
     res
       .status(STATUS_CODES.CREATE_FAILURE)
-      .json(errorJson('Internal server error', null));
+      .json(errorJson('Internal Server error!', null));
   }
 }
