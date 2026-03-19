@@ -34,6 +34,14 @@ export async function getCarrerPrediction(
     return;
   }
 
+  const email_regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!email_regex.test(body.email)) {
+    res
+      .status(STATUS_CODES.BAD_REQUEST)
+      .json(errorJson('Invalid email format', null));
+    return;
+  }
+
   // INFO: below 4 lines of code can help you to get all the available models for gemini_url
   // docs - https://ai.google.dev/gemini-api/docs/api-key
   // const LIST_URL = `https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_API_KEYS[0]}`;
