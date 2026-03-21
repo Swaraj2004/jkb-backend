@@ -115,6 +115,8 @@ export async function getCarrerPrediction(
           null
         )
       );
+    // const message = err instanceof Error ? err.message : 'Something went wrong';
+    // res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson(message, null));
   }
 }
 
@@ -175,6 +177,7 @@ async function sendRespone(
   }
   // retry with other api key
   currentIndex = (currentIndex + 1) % GEMINI_API_KEYS.length;
+  // console.log(GEMINI_API_KEYS[currentIndex]);
   data = await getGeminiResponse(gemini_url, currentIndex, payload);
   return sendRespone(data, payload, res, round - 1, emailId);
 }
@@ -192,6 +195,7 @@ async function getGeminiResponse(
     body: JSON.stringify(payload),
   });
   const data = await response.json();
+  // console.log(data);
   return data;
 }
 
