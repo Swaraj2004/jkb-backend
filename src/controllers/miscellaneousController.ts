@@ -18,6 +18,7 @@ import { ContactEnquiryReqBody } from '../models/contact_enquiry_req_body';
 import { branchPrompt, carrerPrompt } from '../utils/prompts';
 import { sendEmail } from '../utils/send_email';
 import { FacebookEnquiryReqBody } from '../models/facebook_enq_req_body';
+import { marked } from 'marked';
 
 let currentIndex = 0;
 
@@ -96,16 +97,16 @@ export async function getCarrerPrediction(
     };
 
     const data = await getGeminiResponse(gemini_url, currentIndex, payload);
-    if (sendEmail) {
-      return sendRespone(
-        data,
-        payload,
-        res,
-        GEMINI_API_KEYS.length,
-        newEnquiry.email
-      );
-    }
-    return sendRespone(data, payload, res, GEMINI_API_KEYS.length, null);
+    // if (sendEmail) {
+    // sendRespone(data, payload, res, GEMINI_API_KEYS.length, newEnquiry.email);
+    // }
+    return sendRespone(
+      data,
+      payload,
+      res,
+      GEMINI_API_KEYS.length,
+      newEnquiry.email
+    );
   } catch (err) {
     res
       .status(STATUS_CODES.CREATE_FAILURE)
@@ -139,9 +140,10 @@ async function sendRespone(
     const reply = data.candidates[0].content.parts[0].text;
     if (emailId) {
       const subject = 'Your Career Prediction Report';
+      const htmlreply = await marked(reply);
       const sentEmail = sendEmail(
         subject,
-        reply,
+        htmlreply,
         emailId,
         fromEmail,
         smtpServer,
@@ -159,10 +161,10 @@ async function sendRespone(
           );
         return;
       }
-      res
-        .status(STATUS_CODES.CREATE_SUCCESS)
-        .json(successJson('Email sent Successfully!', null));
-      return;
+      // res
+      //   .status(STATUS_CODES.CREATE_SUCCESS)
+      //   .json(successJson('Email sent Successfully!', null));
+      // return;
     }
 
     res

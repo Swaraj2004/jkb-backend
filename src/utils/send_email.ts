@@ -93,7 +93,9 @@ export async function sendEmail(
       from,
       to,
       subject,
-      text: body,
+      // TODO: fix if breaks
+      // text: body,
+      html: body,
     });
     // console.log("Email sent: ", info.response);
     return true;
