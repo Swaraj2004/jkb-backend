@@ -11,7 +11,7 @@ import {
   deleteProfessorBatch,
   getProfessorBatches,
   updateProfessorBatch,
-} from '../controllers/productController';
+} from '../controllers/batchController';
 import {
   AuthenticatedRequest,
   authMiddleware,

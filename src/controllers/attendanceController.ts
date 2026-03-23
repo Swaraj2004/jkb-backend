@@ -1,16 +1,79 @@
 import { Request, Response } from 'express';
 import { prismaClient } from '../utils/database';
 import { errorJson, successJson } from '../utils/common_funcs';
-import { STATUS_CODES } from '../utils/consts';
+import {
+  ADMIN_ROLE,
+  PROFESSOR_ROLE,
+  STUDENT_ROLE,
+  SUPER_ADMIN_ROLE,
+  STATUS_CODES,
+} from '../utils/consts';
+import { AuthenticatedRequest } from '../middlewares/authMiddleware';
+
+async function resolveStudentDetailId(
+  req: AuthenticatedRequest,
+  studentIdFromClient?: string
+): Promise<string | null> {
+  const role = req.user?.role_name;
+  if (role === STUDENT_ROLE) {
+    // Contract: student_id = StudentDetail.id, but JWT has user_id.
+    const studentDetail = await prismaClient.studentDetail.findUnique({
+      where: { user_id: req.user!.user_id },
+      select: { id: true },
+    });
+    return studentDetail?.id ?? null;
+  }
+
+  // ADMIN/SUPER_ADMIN/PROFESSOR can look up by client-provided StudentDetail.id
+  if (
+    role === ADMIN_ROLE ||
+    role === SUPER_ADMIN_ROLE ||
+    role === PROFESSOR_ROLE
+  ) {
+    return studentIdFromClient ?? null;
+  }
+
+  return null;
+}
+
+async function isStudentEnrolledInBatch(
+  studentDetailId: string,
+  batchId: string
+): Promise<boolean> {
+  const enrollment = await prismaClient.studentBatch.findFirst({
+    where: { student_id: studentDetailId, batch_id: batchId },
+    select: { student_id: true },
+  });
+  return !!enrollment;
+}
+
+async function isProfessorAssignedToBatch(
+  professorId: string,
+  batchId: string
+): Promise<boolean> {
+  const access = await prismaClient.batchProfessor.findFirst({
+    where: { professor_id: professorId, batch_id: batchId },
+    select: { professor_id: true },
+  });
+  return !!access;
+}
 
 export async function getLectureAttendance(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   lectureId: string
 ): Promise<void> {
   try {
+    if (!lectureId) {
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('lectureId is required', null));
+      return;
+    }
+
     const lecture = await prismaClient.lecture.findUnique({
       where: { id: lectureId },
+      select: { id: true, professor_id: true, batch_id: true },
     });
 
     if (!lecture) {
@@ -18,6 +81,16 @@ export async function getLectureAttendance(
         .status(STATUS_CODES.SELECT_FAILURE)
         .json(errorJson('Lecture not found', null));
       return;
+    }
+
+    // Professors can only access attendance of lectures they own.
+    if (req.user?.role_name === PROFESSOR_ROLE) {
+      if (lecture.professor_id !== req.user.user_id) {
+        res
+          .status(STATUS_CODES.FORBIDDEN_REQUEST)
+          .json(errorJson('Forbidden: lecture does not belong to you', null));
+        return;
+      }
     }
 
     // find students in the batch
@@ -28,7 +101,6 @@ export async function getLectureAttendance(
           select: {
             student: {
               select: {
-                // TODO: while checking it is checking the student_id not the user_id
                 id: true,
                 user: {
                   select: {
@@ -43,19 +115,20 @@ export async function getLectureAttendance(
       },
     });
 
-    // console.log(students);
-
-    // Get attendance records for current lecture
-    const attendances = await prismaClient.attendance.findMany({
+    const presentAttendance = await prismaClient.attendance.findMany({
       where: { lecture_id: lectureId },
       select: { student_id: true },
     });
-    // console.log('\n\n', attendances, '\n');
-    const presentStudentIds = new Set(attendances.map((a) => a.student_id));
-    // console.log('\n', presentStudentIds, '\n');
 
-    const studentAttendance = students!.studentBatches.map(({ student }) => ({
-      student_id: student.user.id,
+    const presentStudentIds = new Set(
+      presentAttendance.map((a) => a.student_id)
+    );
+
+    const batchStudents = students?.studentBatches ?? [];
+
+    const studentAttendance = batchStudents.map(({ student }) => ({
+      // Contract: Attendance.student_id = StudentDetail.id
+      student_id: student.id,
       student_name: student.user?.full_name || 'Unknown',
       present: presentStudentIds.has(student.id),
     }));
@@ -71,30 +144,27 @@ export async function getLectureAttendance(
 }
 
 export async function getStudentBatches(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   studentId: string
 ) {
   try {
-    if (!studentId) {
+    const role = req.user?.role_name;
+    const resolvedStudentDetailId =
+      role === STUDENT_ROLE
+        ? await resolveStudentDetailId(req, undefined)
+        : await resolveStudentDetailId(req, studentId);
+
+    if (!resolvedStudentDetailId) {
       res
         .status(STATUS_CODES.BAD_REQUEST)
-        .json(errorJson('StudentId not found', null));
+        .json(errorJson('StudentId not found or invalid', null));
       return;
     }
 
     const studentBatches = await prismaClient.studentDetail.findUnique({
-      where: { user_id: studentId },
-      include: {
-        // studentSubjects: { select: { subject_id: true } },
-        // studentPackages: {
-        //   // means collect subject which are enrolled in the packages
-        //   include: {
-        //     package: {
-        //       select: { packageSubjects: true },
-        //     },
-        //   },
-        // },
+      where: { id: resolvedStudentDetailId },
+      select: {
         studentBatches: {
           select: {
             batch: {
@@ -118,15 +188,26 @@ export async function getStudentBatches(
 }
 
 export async function getStudentBatchAttendance(
+  req: AuthenticatedRequest,
   res: Response,
   studentId: string,
   batchId: string
 ) {
   try {
-    if (!studentId || !batchId) {
+    if (!batchId) {
       res
         .status(STATUS_CODES.BAD_REQUEST)
-        .json(errorJson('student_id and batch_id required', null));
+        .json(errorJson('batch_id required', null));
+      return;
+    }
+
+    const resolvedStudentDetailId =
+      (await resolveStudentDetailId(req, studentId)) ?? null;
+
+    if (!resolvedStudentDetailId) {
+      res
+        .status(STATUS_CODES.SELECT_FAILURE)
+        .json(errorJson('Student record not found', null));
       return;
     }
 
@@ -138,7 +219,7 @@ export async function getStudentBatchAttendance(
           orderBy: { created_at: 'desc' },
           include: {
             attendance: {
-              where: { student_id: studentId },
+              where: { student_id: resolvedStudentDetailId },
               select: { lecture_id: true },
             },
             professor: {
@@ -154,6 +235,31 @@ export async function getStudentBatchAttendance(
         .status(STATUS_CODES.SELECT_FAILURE)
         .json(errorJson('Batch not found', null));
       return;
+    }
+
+    // Students can only see their own batches.
+    if (req.user?.role_name === STUDENT_ROLE) {
+      const enrolled = await isStudentEnrolledInBatch(
+        resolvedStudentDetailId,
+        batchId
+      );
+      if (!enrolled) {
+        res
+          .status(STATUS_CODES.FORBIDDEN_REQUEST)
+          .json(errorJson('Forbidden: not enrolled in this batch', null));
+        return;
+      }
+    }
+
+    // If professor views, keep access limited to batches they are assigned to.
+    if (req.user?.role_name === PROFESSOR_ROLE) {
+      const ok = await isProfessorAssignedToBatch(req.user.user_id, batchId);
+      if (!ok) {
+        res
+          .status(STATUS_CODES.FORBIDDEN_REQUEST)
+          .json(errorJson('Forbidden: not assigned to this batch', null));
+        return;
+      }
     }
 
     const lecturesAttendance = batch.lectures.map((lecture) => ({
@@ -181,25 +287,94 @@ export async function getStudentBatchAttendance(
 }
 
 export async function markAttendance(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   lectureId: string,
   studentId: string
 ) {
   try {
-    if (!lectureId || !studentId) {
+    if (!lectureId) {
       res
         .status(STATUS_CODES.BAD_REQUEST)
-        .json(errorJson('LectureId and StudentId required', null));
+        .json(errorJson('LectureId required', null));
       return;
     }
 
-    // NOTE: this can have implication that if no lecture exist then also attendance
-    // will be created which will have no effect on current lecture attendance but still a kind of bug
+    const lecture = await prismaClient.lecture.findUnique({
+      where: { id: lectureId },
+      select: {
+        id: true,
+        attendance_toggle: true,
+        professor_id: true,
+        batch_id: true,
+      },
+    });
+
+    if (!lecture) {
+      res
+        .status(STATUS_CODES.SELECT_FAILURE)
+        .json(errorJson('Lecture not found', null));
+      return;
+    }
+
+    if (!lecture.attendance_toggle) {
+      res
+        .status(STATUS_CODES.FORBIDDEN_REQUEST)
+        .json(errorJson('Attendance is closed for this lecture', null));
+      return;
+    }
+
+    const resolvedStudentDetailId = await resolveStudentDetailId(
+      req,
+      studentId
+    );
+
+    if (!resolvedStudentDetailId) {
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('Invalid student_id', null));
+      return;
+    }
+
+    // Professors can mark only for lectures they own.
+    if (req.user?.role_name === PROFESSOR_ROLE) {
+      if (lecture.professor_id !== req.user.user_id) {
+        res
+          .status(STATUS_CODES.FORBIDDEN_REQUEST)
+          .json(errorJson('Forbidden: lecture does not belong to you', null));
+        return;
+      }
+    }
+
+    // Validate student is enrolled in lecture's batch.
+    const enrolled = await isStudentEnrolledInBatch(
+      resolvedStudentDetailId,
+      lecture.batch_id
+    );
+    if (!enrolled) {
+      res
+        .status(STATUS_CODES.FORBIDDEN_REQUEST)
+        .json(errorJson('Forbidden: not enrolled in this lecture batch', null));
+      return;
+    }
+
+    // Idempotent marking: if attendance row already exists, return success.
+    const existing = await prismaClient.attendance.findFirst({
+      where: { lecture_id: lectureId, student_id: resolvedStudentDetailId },
+      select: { lecture_id: true, student_id: true },
+    });
+
+    if (existing) {
+      res
+        .status(STATUS_CODES.CREATE_SUCCESS)
+        .json(successJson('Attendance already marked', existing.lecture_id));
+      return;
+    }
+
     const attendance = await prismaClient.attendance.create({
       data: {
         lecture_id: lectureId,
-        student_id: studentId,
+        student_id: resolvedStudentDetailId,
       },
     });
 
@@ -214,5 +389,125 @@ export async function markAttendance(
     res
       .status(STATUS_CODES.CREATE_FAILURE)
       .json(errorJson('Internal Server error!', null));
+  }
+}
+
+export async function toggleLectureAttendance(
+  req: AuthenticatedRequest,
+  res: Response,
+  lectureId: string
+): Promise<void> {
+  try {
+    if (!lectureId) {
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('lectureId is required', null));
+      return;
+    }
+
+    const { attendance_toggle } = req.body as { attendance_toggle?: unknown };
+    if (typeof attendance_toggle !== 'boolean') {
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('attendance_toggle must be a boolean', null));
+      return;
+    }
+
+    const lecture = await prismaClient.lecture.findUnique({
+      where: { id: lectureId },
+      select: { id: true, professor_id: true },
+    });
+
+    if (!lecture) {
+      res
+        .status(STATUS_CODES.SELECT_FAILURE)
+        .json(errorJson('Lecture not found', null));
+      return;
+    }
+
+    if (req.user?.role_name === PROFESSOR_ROLE) {
+      if (lecture.professor_id !== req.user.user_id) {
+        res
+          .status(STATUS_CODES.FORBIDDEN_REQUEST)
+          .json(errorJson('Forbidden: lecture does not belong to you', null));
+        return;
+      }
+    }
+
+    const updated = await prismaClient.lecture.update({
+      where: { id: lectureId },
+      data: { attendance_toggle },
+      select: { id: true, attendance_toggle: true },
+    });
+
+    res
+      .status(STATUS_CODES.UPDATE_SUCCESS)
+      .json(successJson('Lecture attendance toggled successfully', updated));
+  } catch (error) {
+    res
+      .status(STATUS_CODES.UPDATE_FAILURE)
+      .json(errorJson('Internal Server Error', null));
+  }
+}
+
+export async function toggleBatchAttendance(
+  req: AuthenticatedRequest,
+  res: Response,
+  batchId: string
+): Promise<void> {
+  try {
+    if (!batchId) {
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('batchId is required', null));
+      return;
+    }
+
+    const { attendance_toggle } = req.body as { attendance_toggle?: unknown };
+    if (typeof attendance_toggle !== 'boolean') {
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('attendance_toggle must be a boolean', null));
+      return;
+    }
+
+    if (req.user?.role_name === PROFESSOR_ROLE) {
+      const ok = await isProfessorAssignedToBatch(req.user.user_id, batchId);
+      if (!ok) {
+        res
+          .status(STATUS_CODES.FORBIDDEN_REQUEST)
+          .json(errorJson('Forbidden: not assigned to this batch', null));
+        return;
+      }
+    }
+
+    const batchExists = await prismaClient.batch.findUnique({
+      where: { id: batchId },
+      select: { id: true },
+    });
+
+    if (!batchExists) {
+      res
+        .status(STATUS_CODES.SELECT_FAILURE)
+        .json(errorJson('Batch not found', null));
+      return;
+    }
+
+    const result = await prismaClient.lecture.updateMany({
+      where: { batch_id: batchId },
+      data: { attendance_toggle },
+    });
+
+    res.status(STATUS_CODES.UPDATE_SUCCESS).json(
+      successJson('Batch attendance toggled successfully', {
+        batch_id: batchId,
+        updated_lectures: result.count,
+        attendance_toggle,
+      })
+    );
+  } catch (error) {
+    res
+      .status(STATUS_CODES.UPDATE_FAILURE)
+      .json(errorJson('Internal Server Error', null));
   }
 }

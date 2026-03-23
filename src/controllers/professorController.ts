@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import { prismaClient } from '../utils/database';
 import { errorJson, successJson } from '../utils/common_funcs';
-import { STATUS_CODES } from '../utils/consts';
+import { PROFESSOR_ROLE, STATUS_CODES } from '../utils/consts';
 import { LectureCreateDTO } from '../models/professor_req_body';
+import { AuthenticatedRequest } from '../middlewares/authMiddleware';
 
 /**
  * GET /professor/subjects?professor_id=...
@@ -141,6 +142,40 @@ export async function createProfessorLectures(
       return;
     }
 
+    // If the caller is a professor, ensure they are assigned to the batch and
+    // that they are creating a lecture for themselves (not someone else).
+    const role = (req as AuthenticatedRequest).user?.role_name;
+    const callerUserId = (req as AuthenticatedRequest).user?.user_id;
+
+    if (role === PROFESSOR_ROLE) {
+      if (!callerUserId || lectureData.professor_id !== callerUserId) {
+        res
+          .status(STATUS_CODES.FORBIDDEN_REQUEST)
+          .json(errorJson('Forbidden: cannot create lecture for others', null));
+        return;
+      }
+
+      const access = await prismaClient.batchProfessor.findFirst({
+        where: {
+          batch_id: lectureData.batch_id,
+          professor_id: lectureData.professor_id,
+        },
+        select: { professor_id: true },
+      });
+
+      if (!access) {
+        res
+          .status(STATUS_CODES.FORBIDDEN_REQUEST)
+          .json(
+            errorJson(
+              'Forbidden: professor is not assigned to this batch',
+              null
+            )
+          );
+        return;
+      }
+    }
+
     const createPayload = {
       professor_id: lectureData.professor_id,
       batch_id: lectureData.batch_id,
@@ -182,18 +217,64 @@ export async function updateProfessorLectures(
       return;
     }
 
-    await prismaClient.lecture.update({
+    // TODO: improve this if possible
+    const rawValue = updatedLecture.attendance_toggle;
+    let attendanceToggle: boolean;
+
+    if (rawValue === true || rawValue === false) {
+      attendanceToggle = rawValue;
+    } else if (rawValue === 'true') {
+      attendanceToggle = true;
+    } else if (rawValue === 'false') {
+      attendanceToggle = false;
+    } else {
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('attendance_toggle must be true or false', null));
+      return;
+    }
+
+    const lecture = await prismaClient.lecture.findUnique({
       where: { id: updatedLecture.id },
-      data: { attendance_toggle: updatedLecture.attendance_toggle },
+      select: { id: true, professor_id: true },
     });
 
-    res
-      .status(STATUS_CODES.UPDATE_SUCCESS)
-      .json(successJson('Lecture updated successfully', 1));
+    if (!lecture) {
+      res
+        .status(STATUS_CODES.SELECT_FAILURE)
+        .json(errorJson('Lecture not found', null));
+      return;
+    }
+
+    const role = (req as AuthenticatedRequest).user?.role_name;
+    const callerUserId = (req as AuthenticatedRequest).user?.user_id;
+
+    // Professors can only toggle lectures they own.
+    if (role === PROFESSOR_ROLE) {
+      if (!callerUserId || lecture.professor_id !== callerUserId) {
+        res
+          .status(STATUS_CODES.FORBIDDEN_REQUEST)
+          .json(errorJson('Forbidden: lecture does not belong to you', null));
+        return;
+      }
+    }
+
+    res.status(STATUS_CODES.UPDATE_SUCCESS).json(
+      successJson(
+        'Lecture updated successfully',
+        (
+          await prismaClient.lecture.update({
+            where: { id: updatedLecture.id },
+            data: { attendance_toggle: attendanceToggle },
+            select: { id: true, attendance_toggle: true },
+          })
+        ).id
+      )
+    );
   } catch (error) {
-    res
-      .status(STATUS_CODES.UPDATE_FAILURE)
-      .json(errorJson('Internal Server Error', null));
+    const message =
+      error instanceof Error ? error.message : 'Internal Server Error';
+    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson(message, null));
   }
 }
 

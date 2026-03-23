@@ -8,12 +8,13 @@ import {
   getLectureAttendance,
   getStudentBatchAttendance,
   getStudentBatches,
+  toggleBatchAttendance,
+  toggleLectureAttendance,
   markAttendance,
 } from '../controllers/attendanceController';
 import {
   ADMIN_ROLE,
   PROFESSOR_ROLE,
-  STATUS_CODES,
   STUDENT_ROLE,
 } from '../utils/consts';
 
@@ -72,20 +73,35 @@ router.get(
  */
 router.put(
   '/lectures/:lecture_id/toggle-attendance',
-  async (req: Request, res: Response): Promise<void> => {
-    // const lectureId = req.params.lecture_id; // Get lecture ID from the path parameters
-    // const updateData = { record_id: lectureId, attendance_toggle: false };
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]),
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const lectureId = req.params.lecture_id;
+    return toggleLectureAttendance(req, res, lectureId);
+  }
+);
 
-    // const updatedLecture = await webController.update_record(
-    //     dbInstance,
-    //     req.user,
-    //     new LectureUpdateToggle(updateData),
-    //     LECTURE_COLLECTION_NAME
-    // );
-
-    res
-      .send(STATUS_CODES.BAD_REQUEST)
-      .json({ 'message': 'Never Implemented does it even exsits?' });
+/**
+ * @swagger
+ * /api/v3/batches/{batch_id}/toggle-attendance:
+ *   put:
+ *     tags: [Attendance Management]
+ *     summary: Toggle attendance for all lectures in a batch
+ *     parameters:
+ *       - in: path
+ *         name: batch_id
+ *         required: true
+ *         description: The ID of the batch to update
+ *         schema:
+ *           type: string
+ */
+router.put(
+  '/batches/:batch_id/toggle-attendance',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]),
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const batchId = req.params.batch_id;
+    return toggleBatchAttendance(req, res, batchId);
   }
 );
 
@@ -165,6 +181,7 @@ router.get(
     const batchId = req.query.batch_id;
 
     return getStudentBatchAttendance(
+      req,
       res,
       studentId as string,
       batchId as string
