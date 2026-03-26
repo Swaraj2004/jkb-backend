@@ -12,4 +12,6 @@ export type UpdateProfessorBatchDTO = {
   batch_id: string;
   name?: string;
   student_ids?: string[];
+  // Assign multiple professors to the batch (BatchProfessor.professor_id -> User.id)
+  professor_ids?: string[];
 };

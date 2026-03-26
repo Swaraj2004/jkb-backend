@@ -169,27 +169,25 @@ router.delete(
 );
 
 // NOTE: Below everything is for Batch and hence their attendance
-
-function isValidRequest(
+function isValidProfessorIdQuery(
   req: AuthenticatedRequest,
   res: Response,
-  professorId: string
+  professorId: string | undefined
 ): boolean {
   if (!professorId) {
     res
       .status(STATUS_CODES.BAD_REQUEST)
-      .json(errorJson('Professor Id is missing', null));
+      .json(errorJson('professor_id query param is required', null));
     return false;
   }
-  if (
-    req.user!.role_name == PROFESSOR_ROLE &&
-    req.user!.user_id != professorId
-  ) {
+
+  // Prevent professor from requesting someone else.
+  if (req.user!.role_name === PROFESSOR_ROLE && req.user!.user_id !== professorId) {
     res
       .status(STATUS_CODES.FORBIDDEN_REQUEST)
       .json(
         errorJson(
-          'You cant access this endpoint as you are not who you claim to be.(You are recorded in tampering)',
+          'Forbidden: you are not allowed to access other professors data',
           null
         )
       );
@@ -199,68 +197,48 @@ function isValidRequest(
   return true;
 }
 
-// Get all batches for professor_id
+// Get all batches assigned to a professor (admin can query any professor)
 router.get(
-  '/batches/:professor_id',
+  '/batches',
   authMiddleware,
   authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]),
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    const professorId = req.params.professor_id;
-
-    if (!isValidRequest(req, res, professorId)) return;
-
-    return getProfessorBatches(req, res, professorId);
+    const professorId = req.query.professor_id as string | undefined;
+    if (!isValidProfessorIdQuery(req, res, professorId)) return;
+    return getProfessorBatches(req, res, professorId as string);
   }
 );
 
-// Create all batches for professor_id
-// ReqBody
-// const { subject_id, name } = req.body;
+// Admin creates a new batch WITHOUT assigning professors yet
 router.post(
-  '/batches/:professor_id',
+  '/batches',
   authMiddleware,
-  authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]),
+  authorizeRoles([ADMIN_ROLE]),
   async (req: Request, res: Response): Promise<void> => {
-    const professorId = req.params.professor_id;
-
-    if (!isValidRequest(req, res, professorId)) return;
-
-    return createProfessorBatch(req, res, professorId);
+    return createProfessorBatch(req, res);
   }
 );
 
-// edit batches for professor_id
-// const { batch_id, name, student_ids } = req.body;
-type ProfessorParams = {
-  professor_id: string;
-};
+// Admin updates a batch: set `student_ids` and/or `professor_ids`
 router.put(
-  '/batches/:professor_id',
+  '/batches',
   authMiddleware,
-  authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]),
+  authorizeRoles([ADMIN_ROLE]),
   async (
-    req: Request<ProfessorParams, {}, UpdateProfessorBatchDTO>,
+    req: Request<{}, {}, UpdateProfessorBatchDTO>,
     res: Response
   ): Promise<void> => {
-    const professorId = req.params.professor_id;
-
-    if (!isValidRequest(req, res, professorId)) return;
-
-    return updateProfessorBatch(req, res, professorId);
+    return updateProfessorBatch(req, res);
   }
 );
 
-// Delete batch for professor_id
+// Admin deletes a batch
 router.delete(
-  '/batches/:professor_id',
+  '/batches',
   authMiddleware,
-  authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]),
+  authorizeRoles([ADMIN_ROLE]),
   async (req: Request, res: Response): Promise<void> => {
-    const professorId = req.params.professor_id;
-
-    if (!isValidRequest(req, res, professorId)) return;
-
-    return deleteProfessorBatch(req, res, professorId);
+    return deleteProfessorBatch(req, res);
   }
 );
 

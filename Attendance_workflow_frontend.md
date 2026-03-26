@@ -3,6 +3,7 @@
 This document lists the **exact** endpoints and request/response shapes used by the attendance feature.
 
 ## Base info
+
 - **Base URL prefix**: all endpoints below start with `/api/v3`
 - **Auth**: send header `Authorization: Bearer <jwt>`
 - **Roles**: `student`, `professor`, `admin`, `super_admin`
@@ -12,6 +13,7 @@ This document lists the **exact** endpoints and request/response shapes used by 
   - For `STUDENT_ROLE`, backend derives `StudentDetail.id` from JWT automatically where applicable.
 
 ## Workflow (high level)
+
 1. Admin assigns **professors + students** to a batch.
 2. Professor creates a lecture for that batch.
 3. Professor starts attendance by toggling lecture (or batch lectures) `attendance_toggle = true`.
@@ -22,6 +24,7 @@ This document lists the **exact** endpoints and request/response shapes used by 
 ## Attendance endpoints (mounted by `src/routes/attendanceRoutes.ts`)
 
 ### 1) Get attendance for a lecture (Professor/Admin)
+
 **GET** `/api/v3/lectures/:lecture_id/attendance`
 
 - **Auth roles**: `admin`, `professor` (also works for `super_admin` because of middleware)
@@ -53,6 +56,7 @@ This document lists the **exact** endpoints and request/response shapes used by 
 ---
 
 ### 2) Toggle attendance for a specific lecture (Professor/Admin)
+
 **PUT** `/api/v3/lectures/:lecture_id/toggle-attendance`
 
 - **Auth roles**: `admin`, `professor` (+ `super_admin`)
@@ -84,6 +88,7 @@ This document lists the **exact** endpoints and request/response shapes used by 
 ---
 
 ### 3) Toggle attendance for all lectures in a batch (Professor/Admin)
+
 **PUT** `/api/v3/batches/:batch_id/toggle-attendance`
 
 - **Auth roles**: `admin`, `professor` (+ `super_admin`)
@@ -117,6 +122,7 @@ This document lists the **exact** endpoints and request/response shapes used by 
 ---
 
 ### 4) Mark attendance (Student/Professor/Admin)
+
 **POST** `/api/v3/student/mark-attendance`
 
 - **Auth roles**: `student`, `professor`, `admin` (+ `super_admin`)
@@ -166,6 +172,7 @@ This document lists the **exact** endpoints and request/response shapes used by 
 ---
 
 ### 5) Get batches for a student (Student/Admin/Professor)
+
 **GET** `/api/v3/student/batches`
 
 - **Auth roles**: `student`, `professor`, `admin` (+ `super_admin`)
@@ -197,6 +204,7 @@ This document lists the **exact** endpoints and request/response shapes used by 
 ---
 
 ### 6) Get per-lecture attendance status for a batch (Student/Admin/Professor)
+
 **GET** `/api/v3/student/batchAttendance`
 
 - **Auth roles**: `student`, `professor`, `admin` (+ `super_admin`)
@@ -229,21 +237,25 @@ This document lists the **exact** endpoints and request/response shapes used by 
 ```
 
 ## Professor endpoints that Attendance depends on (mounted by `src/routes/professorRoutes.ts`)
+
 These are mounted under `/api/v3/professor`.
 
 ### A) Professor subjects
+
 **GET** `/api/v3/professor/subjects?professor_id=<User.id>`
 
 - **Auth roles**: `admin`, `professor` (+ `super_admin`)
 - **Response**: list of `Subject` rows.
 
 ### B) Professor lectures
+
 **GET** `/api/v3/professor/lectures?professor_id=<User.id>`
 
 - **Auth roles**: `admin`, `professor` (+ `super_admin`)
 - **Response**: list of `Lecture` rows.
 
 ### C) Create lecture
+
 **POST** `/api/v3/professor/lectures`
 
 - **Auth roles**: `admin`, `professor` (+ `super_admin`)
@@ -275,6 +287,7 @@ These are mounted under `/api/v3/professor`.
 ```
 
 ### D) Update lecture attendance toggle (alternate route)
+
 **PUT** `/api/v3/professor/lectures`
 
 - **Auth roles**: `admin`, `professor` (+ `super_admin`)
@@ -289,28 +302,37 @@ These are mounted under `/api/v3/professor`.
 
 - **Professor rule**: if caller is `professor`, lecture must belong to them.
 
-### E) Professor batches (admin-managed, professor-scoped)
-Mounted under `/api/v3/professor/batches/:professor_id`
+### E) Batch management (admin + professor)
 
-- **GET** `/api/v3/professor/batches/:professor_id`
-  - returns batches assigned to professor
-- **POST** `/api/v3/professor/batches/:professor_id`
+Mounted under `/api/v3/professor/batches`
+
+- **GET** `/api/v3/professor/batches?professor_id=<User.id>`
+  - returns batches assigned to the given professor
+- **POST** `/api/v3/professor/batches`
+  - **Auth**: `admin` (or `super_admin`)
   - body: `{ "subject_id": "Subject.id", "name": "Batch name" }`
-- **PUT** `/api/v3/professor/batches/:professor_id`
+  - creates the batch **without** assigning professors yet
+- **PUT** `/api/v3/professor/batches`
+  - **Auth**: `admin` (or `super_admin`)
   - body (from `UpdateProfessorBatchDTO`):
 
 ```json
 {
   "batch_id": "Batch.id",
   "name": "optional string",
-  "student_ids": ["StudentDetail.id"]
+  "student_ids": ["StudentDetail.id"],
+  "professor_ids": ["User.id"]
 }
 ```
 
-- **DELETE** `/api/v3/professor/batches/:professor_id`
+- **Professor assignment happens here** via `professor_ids` (backend replaces existing `BatchProfessor` rows for that batch).
+
+- **DELETE** `/api/v3/professor/batches`
+  - **Auth**: `admin` (or `super_admin`)
   - body: `{ "batch_id": "Batch.id" }`
 
 ## Notes / gotchas for frontend
+
 - **Student vs User ids**:
   - Wherever you see `student_id` in attendance APIs, it means **`StudentDetail.id`**.
   - If you only have `User.id` for a student, you must first resolve it (backend does this automatically for logged-in `STUDENT_ROLE`).
@@ -319,4 +341,3 @@ Mounted under `/api/v3/professor/batches/:professor_id`
 - **Status meaning**:
   - `"present"` means an attendance row exists.
   - `"absent"` means no row exists (no separate absent row is created).
-

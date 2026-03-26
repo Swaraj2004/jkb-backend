@@ -39,8 +39,7 @@ export async function getProfessorBatches(
 
 export async function createProfessorBatch(
   req: Request,
-  res: Response,
-  professorId: string
+  res: Response
 ): Promise<void> {
   try {
     const { subject_id, name } = req.body;
@@ -56,11 +55,6 @@ export async function createProfessorBatch(
       data: {
         subject_id: subject_id,
         name: name,
-        batchProfessors: {
-          create: {
-            professor_id: professorId,
-          },
-        },
       },
     });
 
@@ -76,28 +70,32 @@ export async function createProfessorBatch(
 
 export async function updateProfessorBatch(
   req: Request,
-  res: Response,
-  professorId: string
+  res: Response
 ): Promise<void> {
   try {
-    const { batch_id, name, student_ids } = req.body;
+    const { batch_id, name, student_ids, professor_ids } = req.body;
     if (!batch_id) {
       res
         .status(STATUS_CODES.BAD_REQUEST)
         .json(errorJson('batch_id are required', null));
       return;
     }
-    if (!name && !student_ids) {
+
+    const hasAnyUpdate =
+      name !== undefined || student_ids !== undefined || professor_ids !== undefined;
+
+    if (!hasAnyUpdate) {
       res
         .status(STATUS_CODES.BAD_REQUEST)
         .json(
           errorJson(
-            'At least one of `name` or `student_ids` must be provided',
+            'At least one of `name`, `student_ids`, or `professor_ids` must be provided',
             null
           )
         );
       return;
     }
+
     if (student_ids !== undefined && !Array.isArray(student_ids)) {
       res
         .status(STATUS_CODES.BAD_REQUEST)
@@ -105,31 +103,40 @@ export async function updateProfessorBatch(
       return;
     }
 
-    const access = await prismaClient.batchProfessor.findUnique({
-      where: { batch_id_professor_id: { batch_id, professor_id: professorId } },
-    });
-    if (!access) {
+    if (professor_ids !== undefined && !Array.isArray(professor_ids)) {
       res
-        .status(STATUS_CODES.FORBIDDEN_REQUEST)
-        .json(errorJson('You are not assigned to this batch', null));
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson('professor_ids must be an array of professor IDs', null));
       return;
     }
 
-    await prismaClient.batch.update({
-      where: { id: batch_id },
-      data: {
-        name,
-        studentBatches: student_ids
-          ? {
-              deleteMany: { batch_id },
-              createMany: {
-                data: student_ids.map((student_id: string) => ({
-                  student_id,
-                })),
-              },
-            }
-          : undefined,
-      },
+    await prismaClient.$transaction(async (prisma) => {
+      const updateData: any = {};
+      if (name !== undefined) updateData.name = name;
+      if (student_ids !== undefined) {
+        updateData.studentBatches = {
+          deleteMany: { batch_id },
+          createMany: {
+            data: student_ids.map((student_id: string) => ({ student_id })),
+          },
+        };
+      }
+
+      await prisma.batch.update({
+        where: { id: batch_id },
+        data: updateData,
+      });
+
+      if (professor_ids !== undefined) {
+        await prisma.batchProfessor.deleteMany({ where: { batch_id } });
+        await prisma.batchProfessor.createMany({
+          data: professor_ids.map((professor_id: string) => ({
+            batch_id,
+            professor_id,
+          })),
+          skipDuplicates: true,
+        });
+      }
     });
 
     res
@@ -144,8 +151,7 @@ export async function updateProfessorBatch(
 
 export async function deleteProfessorBatch(
   req: Request,
-  res: Response,
-  professorId: string
+  res: Response
 ): Promise<void> {
   try {
     const { batch_id } = req.body;
@@ -153,16 +159,6 @@ export async function deleteProfessorBatch(
       res
         .status(STATUS_CODES.BAD_REQUEST)
         .json(errorJson('batch_id is required', null));
-      return;
-    }
-
-    const access = await prismaClient.batchProfessor.findUnique({
-      where: { batch_id_professor_id: { batch_id, professor_id: professorId } },
-    });
-    if (!access) {
-      res
-        .status(STATUS_CODES.FORBIDDEN_REQUEST)
-        .json(errorJson('You are not assigned to this batch', null));
       return;
     }
 
