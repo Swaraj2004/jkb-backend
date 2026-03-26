@@ -357,3 +357,17 @@ export async function getProfessors(
       .json(errorJson('Server error', null));
   }
 }
+
+export async function getBatches(req: Request, res: Response): Promise<void> {
+  try {
+    const batches = await prismaClient.batch.findMany();
+
+    res
+      .status(STATUS_CODES.SELECT_SUCCESS)
+      .json(successJson('Batches Fetched Successfully!', batches));
+  } catch (error: any) {
+    res
+      .status(STATUS_CODES.SELECT_FAILURE)
+      .json(errorJson('Server error', null));
+  }
+}

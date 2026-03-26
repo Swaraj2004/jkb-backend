@@ -4,6 +4,7 @@ import {
   deleteCoursePackage,
   getAllCoursePackages,
   getAllCoursePackagesIdName,
+  getBatches,
   getCoursePackageById,
   getProfessors,
   getStudentPackages,
@@ -241,6 +242,15 @@ router.get(
   authorizeRoles([ADMIN_ROLE]),
   async (req: Request, res: Response): Promise<void> => {
     return getProfessors(req, res);
+  }
+);
+
+router.get(
+  '/batches',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE]),
+  async (req: Request, res: Response): Promise<void> => {
+    return getBatches(req, res);
   }
 );
 
