@@ -371,3 +371,51 @@ export async function getBatches(req: Request, res: Response): Promise<void> {
       .json(errorJson('Server error', null));
   }
 }
+
+export async function getBatchDetails(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const batch_id = req.params.batch_id;
+    const batches = await prismaClient.batch.findUnique({
+      where: { id: batch_id },
+      select: {
+        name: true,
+        id: true,
+        batchProfessors: {
+          select: {
+            professor: {
+              select: {
+                id: true,
+                full_name: true,
+              },
+            },
+          },
+        },
+        studentBatches: {
+          select: {
+            student: {
+              select: {
+                id: true,
+                user: {
+                  select: {
+                    full_name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    res
+      .status(STATUS_CODES.SELECT_SUCCESS)
+      .json(successJson('Batches Fetched Successfully!', batches));
+  } catch (error: any) {
+    res
+      .status(STATUS_CODES.SELECT_FAILURE)
+      .json(errorJson('Server error', null));
+  }
+}

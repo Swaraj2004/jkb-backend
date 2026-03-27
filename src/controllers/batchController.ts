@@ -82,7 +82,9 @@ export async function updateProfessorBatch(
     }
 
     const hasAnyUpdate =
-      name !== undefined || student_ids !== undefined || professor_ids !== undefined;
+      name !== undefined ||
+      student_ids !== undefined ||
+      professor_ids !== undefined;
 
     if (!hasAnyUpdate) {
       res
@@ -106,7 +108,9 @@ export async function updateProfessorBatch(
     if (professor_ids !== undefined && !Array.isArray(professor_ids)) {
       res
         .status(STATUS_CODES.BAD_REQUEST)
-        .json(errorJson('professor_ids must be an array of professor IDs', null));
+        .json(
+          errorJson('professor_ids must be an array of professor IDs', null)
+        );
       return;
     }
 
