@@ -194,6 +194,7 @@ export async function createProfessorLectures(
       .status(STATUS_CODES.CREATE_SUCCESS)
       .json(successJson('Lecture created successfully', newLecture.id));
   } catch (error) {
+    console.log(error);
     res
       .status(STATUS_CODES.CREATE_FAILURE)
       .json(errorJson('Internal Server Error', null));
