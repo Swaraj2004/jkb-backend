@@ -185,6 +185,11 @@ export async function createProfessorLectures(
         typeof lectureData.attendance_toggle === 'boolean'
           ? lectureData.attendance_toggle
           : true,
+      total_count:
+        lectureData.attendance_toggle === true ||
+        lectureData.attendance_toggle === 'true'
+          ? 1
+          : 0,
     };
     const newLecture = await prismaClient.lecture.create({
       data: createPayload,
@@ -211,6 +216,7 @@ export async function updateProfessorLectures(
 ): Promise<void> {
   try {
     const updatedLecture = req.body;
+
     if (!updatedLecture.id) {
       res
         .status(STATUS_CODES.BAD_REQUEST)
@@ -218,17 +224,16 @@ export async function updateProfessorLectures(
       return;
     }
 
-    // TODO: improve this if possible
     const rawValue = updatedLecture.attendance_toggle;
-    let attendanceToggle: boolean;
 
-    if (rawValue === true || rawValue === false) {
-      attendanceToggle = rawValue;
-    } else if (rawValue === 'true') {
-      attendanceToggle = true;
-    } else if (rawValue === 'false') {
-      attendanceToggle = false;
-    } else {
+    const attendanceToggle =
+      rawValue === true || rawValue === 'true'
+        ? true
+        : rawValue === false || rawValue === 'false'
+          ? false
+          : null;
+
+    if (attendanceToggle === null) {
       res
         .status(STATUS_CODES.BAD_REQUEST)
         .json(errorJson('attendance_toggle must be true or false', null));
@@ -250,7 +255,7 @@ export async function updateProfessorLectures(
     const role = (req as AuthenticatedRequest).user?.role_name;
     const callerUserId = (req as AuthenticatedRequest).user?.user_id;
 
-    // Professors can only toggle lectures they own.
+    // Professors can only toggle their lectures
     if (role === PROFESSOR_ROLE) {
       if (!callerUserId || lecture.professor_id !== callerUserId) {
         res
@@ -260,22 +265,32 @@ export async function updateProfessorLectures(
       }
     }
 
-    res.status(STATUS_CODES.UPDATE_SUCCESS).json(
-      successJson(
-        'Lecture updated successfully',
-        (
-          await prismaClient.lecture.update({
-            where: { id: updatedLecture.id },
-            data: { attendance_toggle: attendanceToggle },
-            select: { id: true, attendance_toggle: true },
-          })
-        ).id
-      )
-    );
+    const updated = await prismaClient.lecture.update({
+      where: { id: updatedLecture.id },
+      data: {
+        attendance_toggle: attendanceToggle,
+        ...(attendanceToggle === true && {
+          total_count: {
+            increment: 1,
+          },
+        }),
+      },
+      select: {
+        id: true,
+        attendance_toggle: true,
+        total_count: true,
+      },
+    });
+
+    res
+      .status(STATUS_CODES.UPDATE_SUCCESS)
+      .json(successJson('Lecture updated successfully', updated.id));
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Internal Server Error';
-    res.status(STATUS_CODES.UPDATE_FAILURE).json(errorJson(message, null));
+    // const message =
+    //   error instanceof Error ? error.message : 'Internal Server Error';
+    res
+      .status(STATUS_CODES.UPDATE_FAILURE)
+      .json(errorJson('Internal server error', null));
   }
 }
 

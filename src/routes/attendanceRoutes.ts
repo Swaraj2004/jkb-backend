@@ -12,11 +12,7 @@ import {
   toggleLectureAttendance,
   markAttendance,
 } from '../controllers/attendanceController';
-import {
-  ADMIN_ROLE,
-  PROFESSOR_ROLE,
-  STUDENT_ROLE,
-} from '../utils/consts';
+import { ADMIN_ROLE, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
 
 const router = express.Router();
 
@@ -95,15 +91,16 @@ router.put(
  *         schema:
  *           type: string
  */
-router.put(
-  '/batches/:batch_id/toggle-attendance',
-  authMiddleware,
-  authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]),
-  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    const batchId = req.params.batch_id;
-    return toggleBatchAttendance(req, res, batchId);
-  }
-);
+// TODO: see if needed
+// router.put(
+//   '/batches/:batch_id/toggle-attendance',
+//   authMiddleware,
+//   authorizeRoles([ADMIN_ROLE, PROFESSOR_ROLE]),
+//   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+//     const batchId = req.params.batch_id;
+//     return toggleBatchAttendance(req, res, batchId);
+//   }
+// );
 
 /**
  * @swagger

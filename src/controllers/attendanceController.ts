@@ -73,7 +73,12 @@ export async function getLectureAttendance(
 
     const lecture = await prismaClient.lecture.findUnique({
       where: { id: lectureId },
-      select: { id: true, professor_id: true, batch_id: true },
+      select: {
+        id: true,
+        professor_id: true,
+        batch_id: true,
+        total_count: true,
+      },
     });
 
     if (!lecture) {
@@ -83,7 +88,6 @@ export async function getLectureAttendance(
       return;
     }
 
-    // Professors can only access attendance of lectures they own.
     if (req.user?.role_name === PROFESSOR_ROLE) {
       if (lecture.professor_id !== req.user.user_id) {
         res
@@ -93,7 +97,7 @@ export async function getLectureAttendance(
       }
     }
 
-    // find students in the batch
+    // Get all students in batch
     const students = await prismaClient.batch.findUnique({
       where: { id: lecture.batch_id },
       select: {
@@ -104,7 +108,6 @@ export async function getLectureAttendance(
                 id: true,
                 user: {
                   select: {
-                    id: true,
                     full_name: true,
                   },
                 },
@@ -115,23 +118,34 @@ export async function getLectureAttendance(
       },
     });
 
-    const presentAttendance = await prismaClient.attendance.findMany({
+    // Get attendance records (count)
+    const attendanceRecords = await prismaClient.attendance.findMany({
       where: { lecture_id: lectureId },
-      select: { student_id: true },
+      select: {
+        student_id: true,
+        count: true,
+      },
     });
 
-    const presentStudentIds = new Set(
-      presentAttendance.map((a) => a.student_id)
+    // Map student_id -> count
+    const attendanceMap = new Map(
+      attendanceRecords.map((a) => [a.student_id, a.count])
     );
 
     const batchStudents = students?.studentBatches ?? [];
 
-    const studentAttendance = batchStudents.map(({ student }) => ({
-      // Contract: Attendance.student_id = StudentDetail.id
-      student_id: student.id,
-      student_name: student.user?.full_name || 'Unknown',
-      present: presentStudentIds.has(student.id),
-    }));
+    const studentAttendance = batchStudents.map(({ student }) => {
+      const count = attendanceMap.get(student.id) || 0;
+      const total = lecture.total_count || 0;
+
+      return {
+        student_id: student.id,
+        student_name: student.user?.full_name || 'Unknown',
+        attended_count: count,
+        total_count: total,
+        percentage: total > 0 ? (count / total) * 100 : 0,
+      };
+    });
 
     res
       .status(STATUS_CODES.SELECT_SUCCESS)
@@ -220,7 +234,7 @@ export async function getStudentBatchAttendance(
           include: {
             attendance: {
               where: { student_id: resolvedStudentDetailId },
-              select: { lecture_id: true },
+              select: { count: true },
             },
             professor: {
               select: { full_name: true },
@@ -237,7 +251,7 @@ export async function getStudentBatchAttendance(
       return;
     }
 
-    // Students can only see their own batches.
+    // Student access check
     if (req.user?.role_name === STUDENT_ROLE) {
       const enrolled = await isStudentEnrolledInBatch(
         resolvedStudentDetailId,
@@ -251,7 +265,7 @@ export async function getStudentBatchAttendance(
       }
     }
 
-    // If professor views, keep access limited to batches they are assigned to.
+    // Professor access check
     if (req.user?.role_name === PROFESSOR_ROLE) {
       const ok = await isProfessorAssignedToBatch(req.user.user_id, batchId);
       if (!ok) {
@@ -262,14 +276,21 @@ export async function getStudentBatchAttendance(
       }
     }
 
-    const lecturesAttendance = batch.lectures.map((lecture) => ({
-      lecture_id: lecture.id,
-      lecture_mode: lecture.lecture_mode,
-      professor_name: lecture.professor.full_name,
-      attendance_toggle: lecture.attendance_toggle,
-      status: lecture.attendance.length > 0 ? 'present' : 'absent',
-      created_at: lecture.created_at,
-    }));
+    const lecturesAttendance = batch.lectures.map((lecture) => {
+      const count = lecture.attendance[0]?.count || 0;
+      const total = lecture.total_count || 0;
+
+      return {
+        lecture_id: lecture.id,
+        lecture_mode: lecture.lecture_mode,
+        professor_name: lecture.professor.full_name,
+        attendance_toggle: lecture.attendance_toggle,
+        attended_count: count,
+        total_count: total,
+        percentage: total > 0 ? (count / total) * 100 : 0,
+        created_at: lecture.created_at,
+      };
+    });
 
     res
       .status(STATUS_CODES.SELECT_SUCCESS)
@@ -306,6 +327,7 @@ export async function markAttendance(
         id: true,
         attendance_toggle: true,
         professor_id: true,
+        total_count: true,
         batch_id: true,
       },
     });
@@ -336,7 +358,7 @@ export async function markAttendance(
       return;
     }
 
-    // Professors can mark only for lectures they own.
+    // Professors can mark only for their lecture
     if (req.user?.role_name === PROFESSOR_ROLE) {
       if (lecture.professor_id !== req.user.user_id) {
         res
@@ -346,11 +368,12 @@ export async function markAttendance(
       }
     }
 
-    // Validate student is enrolled in lecture's batch.
+    // Check student enrollment in batch
     const enrolled = await isStudentEnrolledInBatch(
       resolvedStudentDetailId,
       lecture.batch_id
     );
+
     if (!enrolled) {
       res
         .status(STATUS_CODES.FORBIDDEN_REQUEST)
@@ -358,25 +381,49 @@ export async function markAttendance(
       return;
     }
 
-    // Idempotent marking: if attendance row already exists, return success.
-    const existing = await prismaClient.attendance.findFirst({
-      where: { lecture_id: lectureId, student_id: resolvedStudentDetailId },
-      select: { lecture_id: true, student_id: true },
+    const existing = await prismaClient.attendance.findUnique({
+      where: {
+        lecture_id_student_id: {
+          lecture_id: lectureId,
+          student_id: resolvedStudentDetailId,
+        },
+      },
+      select: { count: true },
     });
+
+    let attendance;
 
     if (existing) {
-      res
-        .status(STATUS_CODES.CREATE_SUCCESS)
-        .json(successJson('Attendance already marked', existing.lecture_id));
-      return;
-    }
+      if (existing.count >= lecture.total_count) {
+        res
+          .status(STATUS_CODES.CREATE_SUCCESS)
+          .json(successJson('Already marked for this session', lectureId));
+        return;
+      }
 
-    const attendance = await prismaClient.attendance.create({
-      data: {
-        lecture_id: lectureId,
-        student_id: resolvedStudentDetailId,
-      },
-    });
+      attendance = await prismaClient.attendance.update({
+        where: {
+          lecture_id_student_id: {
+            lecture_id: lectureId,
+            student_id: resolvedStudentDetailId,
+          },
+        },
+        data: {
+          count: {
+            increment: 1,
+          },
+        },
+      });
+    } else {
+      // First ever attendance
+      attendance = await prismaClient.attendance.create({
+        data: {
+          lecture_id: lectureId,
+          student_id: resolvedStudentDetailId,
+          count: 1,
+        },
+      });
+    }
 
     res
       .status(STATUS_CODES.CREATE_SUCCESS)
@@ -384,8 +431,6 @@ export async function markAttendance(
         successJson('Attendance Marked Successfully', attendance.lecture_id)
       );
   } catch (error) {
-    // const message =
-    //   error instanceof Error ? error.message : 'Something went wrong';
     res
       .status(STATUS_CODES.CREATE_FAILURE)
       .json(errorJson('Internal Server error!', null));
@@ -405,7 +450,12 @@ export async function toggleLectureAttendance(
       return;
     }
 
-    const { attendance_toggle } = req.body as { attendance_toggle?: unknown };
+    let { attendance_toggle } = req.body as { attendance_toggle?: any };
+
+    // Convert string to boolean
+    if (attendance_toggle === 'true') attendance_toggle = true;
+    if (attendance_toggle === 'false') attendance_toggle = false;
+
     if (typeof attendance_toggle !== 'boolean') {
       res
         .status(STATUS_CODES.BAD_REQUEST)
@@ -436,13 +486,24 @@ export async function toggleLectureAttendance(
 
     const updated = await prismaClient.lecture.update({
       where: { id: lectureId },
-      data: { attendance_toggle },
-      select: { id: true, attendance_toggle: true },
+      data: {
+        attendance_toggle,
+        ...(attendance_toggle === true && {
+          total_count: {
+            increment: 1,
+          },
+        }),
+      },
+      select: {
+        id: true,
+        attendance_toggle: true,
+        total_count: true,
+      },
     });
 
     res
       .status(STATUS_CODES.UPDATE_SUCCESS)
-      .json(successJson('Lecture attendance toggled successfully', updated));
+      .json(successJson('Lecture attendance toggled successfully', updated.id));
   } catch (error) {
     res
       .status(STATUS_CODES.UPDATE_FAILURE)

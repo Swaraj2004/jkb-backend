@@ -4,7 +4,7 @@ export type LectureCreateDTO = {
   batch_id: string;
   lecture_mode: string;
   remark?: string | null;
-  attendance_toggle?: boolean;
+  attendance_toggle?: boolean | string;
   created_by?: string | null;
 };
 
