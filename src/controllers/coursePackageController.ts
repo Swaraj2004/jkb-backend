@@ -403,24 +403,25 @@ export async function getBatchDetails(
                     full_name: true,
                   },
                 },
-                _count: {
+                attendance: {
                   select: {
-                    attendance: {
-                      where: {
-                        lecture: {
-                          batch_id: batch_id,
-                        },
+                    count: true,
+                    lecture: {
+                      select: {
+                        remark: true,
+                        total_count: true,
                       },
                     },
                   },
                 },
               },
             },
-          },
-        },
-        _count: {
-          select: {
-            lectures: true,
+            batch: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
           },
         },
       },

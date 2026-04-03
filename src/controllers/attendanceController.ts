@@ -7,6 +7,7 @@ import {
   STUDENT_ROLE,
   SUPER_ADMIN_ROLE,
   STATUS_CODES,
+  ATTENDANCE_WAIT_TIME,
 } from '../utils/consts';
 import { AuthenticatedRequest } from '../middlewares/authMiddleware';
 
@@ -388,7 +389,7 @@ export async function markAttendance(
           student_id: resolvedStudentDetailId,
         },
       },
-      select: { count: true },
+      select: { count: true, updated_at: true },
     });
 
     let attendance;
@@ -398,6 +399,17 @@ export async function markAttendance(
         res
           .status(STATUS_CODES.CREATE_SUCCESS)
           .json(successJson('Already marked for this session', lectureId));
+        return;
+      }
+      const now = new Date();
+      const lastUpdated = new Date(existing.updated_at);
+      const diffInMs = now.getTime() - lastUpdated.getTime();
+      const diffInMins = diffInMs / (1000 * 60);
+      // console.log(diffInMins);
+      if (diffInMins < ATTENDANCE_WAIT_TIME) {
+        res
+          .status(STATUS_CODES.UPDATE_FAILURE)
+          .json(errorJson('Wait to mark-attendance again.', lectureId));
         return;
       }
 
