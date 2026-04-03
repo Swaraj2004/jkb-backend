@@ -404,10 +404,16 @@ export async function getBatchDetails(
                   },
                 },
                 attendance: {
+                  where: {
+                    lecture: {
+                      batch_id: batch_id,
+                    },
+                  },
                   select: {
                     count: true,
                     lecture: {
                       select: {
+                        id: true,
                         remark: true,
                         total_count: true,
                       },
