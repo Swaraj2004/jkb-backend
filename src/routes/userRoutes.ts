@@ -13,13 +13,7 @@ import {
   authMiddleware,
   authorizeRoles,
 } from '../middlewares/authMiddleware';
-import {
-  ADMIN_ROLE,
-  DEFAULT_QUERRY_LIMIT,
-  DEFAULT_QUERRY_OFFSET,
-  PROFESSOR_ROLE,
-  STUDENT_ROLE,
-} from '../utils/consts';
+import { ADMIN_ROLE, PROFESSOR_ROLE, STUDENT_ROLE } from '../utils/consts';
 import { errorJson } from '../utils/common_funcs';
 
 const router = express.Router();

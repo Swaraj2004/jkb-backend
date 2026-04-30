@@ -372,6 +372,11 @@ export const getUsers = async (
           gte: startDate,
           lt: endDate,
         },
+        userRole: {
+          some: {
+            role: { name: STUDENT_ROLE },
+          },
+        },
       },
       // packages, subject, branch
       select: {
