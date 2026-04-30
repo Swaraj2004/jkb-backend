@@ -299,7 +299,7 @@ export const getUserById = async (
     // console.error(error);
     res
       .status(STATUS_CODES.SELECT_FAILURE)
-      .json(errorJson('Failed to fetch users', null));
+      .json(errorJson('Failed to fetch user by id.', null));
   }
 };
 
@@ -368,15 +368,35 @@ export const getUsers = async (
       // skip: isNaN(skipValue) ? 0 : skipValue,
       // take: isNaN(takeValue) ? 20 : takeValue,
       where: {
-        created_at: {
-          gte: startDate,
-          lt: endDate,
-        },
-        userRole: {
-          some: {
-            role: { name: STUDENT_ROLE },
+        OR: [
+          // Students WITH year filter
+          {
+            AND: [
+              {
+                userRole: {
+                  some: {
+                    role: { name: STUDENT_ROLE },
+                  },
+                },
+              },
+              {
+                created_at: {
+                  gte: startDate,
+                  lt: endDate,
+                },
+              },
+            ],
           },
-        },
+
+          // Non-students WITHOUT year filter
+          {
+            userRole: {
+              none: {
+                role: { name: STUDENT_ROLE },
+              },
+            },
+          },
+        ],
       },
       // packages, subject, branch
       select: {
