@@ -4,12 +4,14 @@ import { Request, Response } from 'express';
 import { errorJson } from '../utils/common_funcs';
 import {
   ACCESS_TOKEN_EXPIRE_MINUTES,
+  LOGGING_INFO,
   STATUS_CODES,
   TZ_INDIA,
 } from '../utils/consts';
 import { prismaClient } from '../utils/database';
 import { TokenPayload } from '../utils/jwt_payload';
 import { createAccessToken } from '../utils/jwt_token';
+import { logAuthEvent } from '../logging/logger_helper';
 
 export async function login(req: Request, res: Response): Promise<void> {
   try {
@@ -65,6 +67,17 @@ export async function login(req: Request, res: Response): Promise<void> {
     await prismaClient.user.update({
       where: { id: userRecord.id },
       data: { lastlogin: now },
+    });
+
+    logAuthEvent({
+      event: 'USER_LOGIN_SUCCESS',
+      level: LOGGING_INFO,
+      user: {
+        id: userRecord.id,
+        email: userRecord.email,
+        role: userRole.role.name,
+      },
+      req_ip: req.ip ?? 'unkwown',
     });
 
     // Build the response payload.

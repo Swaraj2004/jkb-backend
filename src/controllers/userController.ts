@@ -4,15 +4,16 @@ import { prismaClient } from '../utils/database';
 import {
   DEFAULT_QUERRY_LIMIT,
   DEFAULT_QUERRY_OFFSET,
+  LOGGING_INFO,
   SALT,
   STATUS_CODES,
   STUDENT_ROLE,
 } from '../utils/consts';
-import { Roles, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import { successJson, errorJson } from '../utils/common_funcs';
 import { UserStudentRequestBody } from '../models/userStudentReqBody';
 import { getTotalAmout } from './studentDetailsController';
-import { Decimal } from '@prisma/client/runtime/library';
+import { logAuthEvent } from '../logging/logger_helper';
 
 interface RequestBody extends User {
   role_id: string;
@@ -56,6 +57,21 @@ export const createUser = async (
           },
         },
       },
+      select: {
+        id: true,
+        email: true,
+      },
+    });
+
+    logAuthEvent({
+      event: 'USER_CREATED',
+      level: LOGGING_INFO,
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        role: userRole.name,
+      },
+      req_ip: req.ip ?? 'unknown',
     });
 
     res
@@ -101,6 +117,17 @@ export const createStudent = async (
           },
         },
       },
+    });
+
+    logAuthEvent({
+      event: 'USER_CREATED',
+      level: LOGGING_INFO,
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        role: STUDENT_ROLE,
+      },
+      req_ip: req.ip ?? 'unknown',
     });
 
     res
@@ -220,6 +247,16 @@ export const createUserAndStudent = async (
     //   res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson("User creation failed!", null));
     //   return;
     // }
+    logAuthEvent({
+      event: 'USER_CREATED',
+      level: LOGGING_INFO,
+      user: {
+        id: newUser.id,
+        email: user.email,
+        role: STUDENT_ROLE,
+      },
+      req_ip: req.ip ?? 'unknown',
+    });
 
     res
       .status(STATUS_CODES.CREATE_SUCCESS)
@@ -446,6 +483,17 @@ export const deleteUser = async (
   try {
     const user = await prismaClient.user.delete({
       where: { id: userId },
+      select: { id: true, email: true },
+    });
+
+    logAuthEvent({
+      event: 'USER_DELETED',
+      level: LOGGING_INFO,
+      user: {
+        id: user.id,
+        email: user.email,
+      },
+      req_ip: req.ip ?? 'unknown',
     });
 
     res

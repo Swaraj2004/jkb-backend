@@ -46,3 +46,5 @@ export const STATUS_CODES = {
 // const LECTURE_COLLECTION_NAME = 'lectures'; // Define your lecture collection name
 // const ATTENDANCE_COLLECTION_NAME = 'attendance'; // Define your attendance collection name
 export const ATTENDANCE_WAIT_TIME = 2; // in minutes
+export const LOGGING_INFO = 'info';
+export const MAX_LOG_FILE_SIZE = '5m';

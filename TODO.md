@@ -28,6 +28,10 @@ Complete swagger docs for each api endpoint
 ## 3️⃣ 📝 Logging Enhancement with Winston
 
 3.1. Integrate **Winston**, a powerful and flexible logging library, to enable scalable and structured logging across the Express app.
+    - set up winston and winston-daily-rotate-file.
+    - Use cron with some cloud storage to save log files.
+    - https://betterstack.com/community/guides/logging/how-to-install-setup-and-use-winston-and-morgan-to-log-node-js-applications/
+
 
 ---
 
