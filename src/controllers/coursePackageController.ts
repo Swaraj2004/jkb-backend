@@ -378,65 +378,115 @@ export async function getBatchDetails(
 ): Promise<void> {
   try {
     const batch_id = req.params.batch_id;
-    const batches = await prismaClient.batch.findUnique({
-      where: { id: batch_id },
-      select: {
-        name: true,
-        id: true,
-        batchProfessors: {
-          select: {
-            professor: {
-              select: {
-                id: true,
-                full_name: true,
+
+    const [batches, lectures] = await Promise.all([
+      prismaClient.batch.findUnique({
+        where: { id: batch_id },
+
+        select: {
+          name: true,
+          id: true,
+
+          batchProfessors: {
+            select: {
+              professor: {
+                select: {
+                  id: true,
+                  full_name: true,
+                },
               },
             },
           },
-        },
-        studentBatches: {
-          select: {
-            student: {
-              select: {
-                id: true,
-                user: {
-                  select: {
-                    full_name: true,
-                  },
-                },
-                attendance: {
-                  where: {
-                    lecture: {
-                      batch_id: batch_id,
+
+          studentBatches: {
+            select: {
+              student: {
+                select: {
+                  id: true,
+
+                  user: {
+                    select: {
+                      full_name: true,
                     },
                   },
-                  select: {
-                    count: true,
-                    lecture: {
-                      select: {
-                        id: true,
-                        remark: true,
-                        total_count: true,
+
+                  attendance: {
+                    where: {
+                      lecture: {
+                        batch_id: batch_id,
+                      },
+                    },
+
+                    select: {
+                      count: true,
+
+                      lecture: {
+                        select: {
+                          id: true,
+                          remark: true,
+                          total_count: true,
+                        },
                       },
                     },
                   },
                 },
               },
-            },
-            batch: {
-              select: {
-                id: true,
-                name: true,
+
+              batch: {
+                select: {
+                  id: true,
+                  name: true,
+                },
               },
             },
           },
         },
-      },
+      }),
+
+      prismaClient.lecture.findMany({
+        where: {
+          batch_id: batch_id,
+        },
+
+        select: {
+          id: true,
+          remark: true,
+          total_count: true,
+        },
+      }),
+    ]);
+
+    if (!batches) {
+      res.status(404).json(errorJson('Batch not found', null));
+      return;
+    }
+
+    batches.studentBatches.forEach((studentBatch) => {
+      const existingLectureIds = new Set(
+        studentBatch.student.attendance.map((a) => a.lecture.id)
+      );
+
+      lectures.forEach((lecture) => {
+        if (!existingLectureIds.has(lecture.id)) {
+          studentBatch.student.attendance.push({
+            count: 0,
+
+            lecture: {
+              id: lecture.id,
+              remark: lecture.remark,
+              total_count: lecture.total_count,
+            },
+          });
+        }
+      });
     });
 
     res
       .status(STATUS_CODES.SELECT_SUCCESS)
       .json(successJson('Batches Fetched Successfully!', batches));
   } catch (error: any) {
+    console.log(error);
+
     res
       .status(STATUS_CODES.SELECT_FAILURE)
       .json(errorJson('Server error', null));

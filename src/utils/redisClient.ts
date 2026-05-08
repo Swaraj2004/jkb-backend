@@ -4,6 +4,9 @@ const redisClient = createClient();
 
 redisClient.on('error', (err): void => {
   console.log('Redis client error');
+  // console.log('Redis client error - ', err);
+  // NOTE: ECONNREFUSED is when the process of redis is not on in backgraound
+  // as one of the processes
 });
 
 (async (): Promise<void> => {
