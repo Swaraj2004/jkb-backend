@@ -126,7 +126,7 @@ export async function createProfessorLectures(
     const lectureData = req.body;
 
     if (
-      !lectureData.subject_id ||
+      // !lectureData.subject_id ||
       !lectureData.professor_id ||
       !lectureData.batch_id ||
       !lectureData.lecture_mode
@@ -135,7 +135,7 @@ export async function createProfessorLectures(
         .status(STATUS_CODES.BAD_REQUEST)
         .json(
           errorJson(
-            'Missing required fields: subject_id, professor_id, batch_id, lecture_mode',
+            'Missing required fields: professor_id, batch_id, lecture_mode',
             null
           )
         );
