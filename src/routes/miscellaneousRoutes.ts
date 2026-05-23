@@ -12,7 +12,10 @@ import {
   getFacebookEnquiry,
   getQnaEnquiry,
   getBranchEnquiry,
+  createLead,
+  getLeads,
 } from '../controllers/miscellaneousController';
+import { LeadReqBody } from '../models/lead_req_body';
 import { ContactEnquiryReqBody } from '../models/contact_enquiry_req_body';
 import { authMiddleware, authorizeRoles } from '../middlewares/authMiddleware';
 import { FacebookEnquiryReqBody } from '../models/facebook_enq_req_body';
@@ -70,6 +73,19 @@ router.get(
   (req: Request, res: Response): Promise<void> => {
     const { limit, offset } = req.query;
     return getBranchEnquiry(req, res, limit as string, offset as string);
+  }
+);
+
+router.post('/leads', (req: Request, res: Response): Promise<void> => {
+  const body: LeadReqBody = req.body;
+  return createLead(req, res, body);
+});
+router.get(
+  '/leads',
+  authMiddleware,
+  authorizeRoles([ADMIN_ROLE]),
+  (_req: Request, res: Response): Promise<void> => {
+    return getLeads(res);
   }
 );
 

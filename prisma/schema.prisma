@@ -460,3 +460,14 @@ model FacebookEnquiry {
   message    String?
   created_at DateTime @default(now()) @db.Timestamptz()
 }
+
+model Lead {
+  id             String   @id @default(cuid())
+  name           String
+  email          String?
+  phone          String?
+  socialUsername String?
+  source         String   @default("other")
+  message        String?
+  createdAt      DateTime @default(now())
+}

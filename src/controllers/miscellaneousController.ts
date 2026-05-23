@@ -18,6 +18,7 @@ import { ContactEnquiryReqBody } from '../models/contact_enquiry_req_body';
 import { branchPrompt, carrerPrompt } from '../utils/prompts';
 import { sendEmail } from '../utils/send_email';
 import { FacebookEnquiryReqBody } from '../models/facebook_enq_req_body';
+import { LeadReqBody } from '../models/lead_req_body';
 import { marked } from 'marked';
 
 let currentIndex = 0;
@@ -507,6 +508,100 @@ export async function createFacebookEnquiry(
       .json(errorJson('Facebook Enquiry not saved Unsuccessful!', null));
   }
 }
+function trimOptionalString(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function resolveSocialUsername(
+  body: LeadReqBody & Record<string, unknown>
+): string | null {
+  return (
+    trimOptionalString(body.socialUsername) ??
+    trimOptionalString(body.instagramUsername)
+  );
+}
+
+export async function createLead(
+  req: Request,
+  res: Response,
+  body: LeadReqBody
+): Promise<void> {
+  const name = typeof body.name === 'string' ? body.name.trim() : '';
+
+  if (!name) {
+    res
+      .status(STATUS_CODES.BAD_REQUEST)
+      .json(errorJson('Name is required', null));
+    return;
+  }
+
+  const email =
+    typeof body.email === 'string' && body.email.trim()
+      ? body.email.trim()
+      : undefined;
+
+  const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (email && !EMAIL_REGEX.test(email)) {
+    res
+      .status(STATUS_CODES.BAD_REQUEST)
+      .json(errorJson('Invalid email format', null));
+    return;
+  }
+
+  const source = trimOptionalString(body.source);
+  if (source !== null && source.length > 100) {
+    res
+      .status(STATUS_CODES.BAD_REQUEST)
+      .json(errorJson('Source must be 100 characters or fewer', null));
+    return;
+  }
+
+  try {
+    const lead = await prismaClient.lead.create({
+      data: {
+        name,
+        email: email ?? null,
+        phone: trimOptionalString(body.phone),
+        socialUsername: resolveSocialUsername(
+          body as LeadReqBody & Record<string, unknown>
+        ),
+        source: source ?? undefined,
+        message: trimOptionalString(body.message),
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        socialUsername: true,
+        source: true,
+        message: true,
+        createdAt: true,
+      },
+    });
+
+    res
+      .status(STATUS_CODES.CREATE_SUCCESS)
+      .json(successJson('Lead captured successfully', lead));
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : 'Failed to capture lead';
+    res.status(STATUS_CODES.CREATE_FAILURE).json(errorJson(message, null));
+  }
+}
+export async function getLeads(res: Response): Promise<void> {
+  try {
+    const leads = await prismaClient.lead.findMany();
+    res
+      .status(STATUS_CODES.SELECT_SUCCESS)
+      .json(successJson('Leads fetched successfully.', leads));
+  } catch (err) {
+    res
+      .status(STATUS_CODES.SELECT_FAILURE)
+      .json(errorJson('Failed to fetch all leads', null));
+  }
+}
+
 export async function getFacebookEnquiry(
   req: Request,
   res: Response,
